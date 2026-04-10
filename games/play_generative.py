@@ -358,7 +358,7 @@ def main():
         else:
             # Regular action
             print("\n")
-            print_box("Generating DM response... please wait", width=82)
+            print_box("🌊 Streaming DM response from Mistral...", width=82)
 
             result = engine.process_player_action(action)
 

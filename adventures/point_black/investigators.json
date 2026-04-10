@@ -1,0 +1,110 @@
+[
+  {
+    "name": "Detective Morgan",
+    "occupation": "Private Investigator",
+    "starting_entry": 1,
+    "characteristics": {
+      "STR": 65,
+      "CON": 65,
+      "SIZ": 60,
+      "DEX": 65,
+      "INT": 80,
+      "APP": 60,
+      "POW": 70,
+      "EDU": 85,
+      "HP": 13,
+      "SAN": 70,
+      "Luck": 50,
+      "Magic_Points": 14
+    },
+    "skills": {
+      "Investigate": 60,
+      "Library": 50,
+      "Persuade": 40,
+      "Spot Hidden": 55,
+      "Psychology": 45
+    },
+    "available_cash": 500
+  },
+  {
+    "name": "Dr. Elizabeth Chen",
+    "occupation": "Occult Scholar",
+    "starting_entry": 1,
+    "characteristics": {
+      "STR": 50,
+      "CON": 60,
+      "SIZ": 50,
+      "DEX": 55,
+      "INT": 90,
+      "APP": 65,
+      "POW": 85,
+      "EDU": 95,
+      "HP": 10,
+      "SAN": 75,
+      "Luck": 55,
+      "Magic_Points": 17
+    },
+    "skills": {
+      "Library": 70,
+      "Occult": 65,
+      "Language (Latin)": 60,
+      "Psychology": 50,
+      "Science (Astronomy)": 45
+    },
+    "available_cash": 300
+  },
+  {
+    "name": "Captain James Redford",
+    "occupation": "Coast Guard Officer",
+    "starting_entry": 1,
+    "characteristics": {
+      "STR": 75,
+      "CON": 70,
+      "SIZ": 75,
+      "DEX": 70,
+      "INT": 70,
+      "APP": 65,
+      "POW": 60,
+      "EDU": 75,
+      "HP": 15,
+      "SAN": 65,
+      "Luck": 50,
+      "Magic_Points": 12
+    },
+    "skills": {
+      "Navigate": 70,
+      "Survival (Sea)": 60,
+      "First Aid": 55,
+      "Pilot (Boat)": 65,
+      "Firearms (Revolver)": 50
+    },
+    "available_cash": 400
+  },
+  {
+    "name": "Sister Margaret O'Brien",
+    "occupation": "Nun & Theologian",
+    "starting_entry": 1,
+    "characteristics": {
+      "STR": 50,
+      "CON": 65,
+      "SIZ": 55,
+      "DEX": 60,
+      "INT": 75,
+      "APP": 70,
+      "POW": 80,
+      "EDU": 80,
+      "HP": 11,
+      "SAN": 80,
+      "Luck": 60,
+      "Magic_Points": 16
+    },
+    "skills": {
+      "Religion": 75,
+      "Psychology": 60,
+      "Persuade": 65,
+      "Library": 55,
+      "Occult": 40
+    },
+    "available_cash": 200
+  }
+]

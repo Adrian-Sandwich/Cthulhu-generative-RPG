@@ -1,0 +1,180 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                                                                           ║
+║               ALONE AGAINST THE DARK - Quick Start Guide                 ║
+║                                                                           ║
+║                      Immersive Adventure Engine                          ║
+║                                                                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+PROYECT STRUCTURE:
+─────────────────
+
+✅ Estructura LIMPIA y ORGANIZADA en carpetas:
+
+  core/               Motores del juego (game_universal.py, game_enhanced.py, game_immersive.py)
+  games/              Scripts para jugar (play_immersive.py es el PRINCIPAL)
+  tools/              Herramientas (parsear, reparar aventuras)
+  adventures/         Aventuras listas para jugar
+                      ├── point_black/     ← Demostración (26 entradas)
+                      ├── tide/            ← Aventura clásica (243 entradas)
+                      └── dark/            ← Aventura completa (594 entradas)
+  docs/               Documentación completa
+  images/             Para imágenes (vacío, listo para usar)
+  audio/              Para música/SFX (vacío, listo para usar)
+  archive/            Archivos viejos/backup (no necesarios)
+
+
+CÓMO JUGAR AHORA (3 SEGUNDOS):
+──────────────────────────────
+
+1. Abre terminal
+2. Ve a la carpeta: cd ~/src/Cthulhu
+3. Ejecuta:        python3 games/play_immersive.py
+4. Selecciona:     Point Black Lighthouse
+5. ¡Disfruta!
+
+
+ARCHIVOS CLAVE:
+───────────────
+
+Para JUGAR:
+  → games/play_immersive.py       (versión inmersiva con atmosfera)
+
+Para CREAR aventuras:
+  → docs/STORY_FORMAT_SPEC.md     (especificación de formato)
+  → tools/document_to_json.py     (convertir .txt a .json automático)
+
+Para ENTENDER:
+  → INDEX.md                       (índice completo)
+  → docs/IMMERSIVE_ADVENTURE_SYSTEM.md  (guía completa)
+  → docs/STRUCTURE.md              (arquitectura técnica)
+
+
+CREAR TU PRIMERA AVENTURA (5 PASOS):
+────────────────────────────────────
+
+1. Lee la especificación:
+   cat docs/STORY_FORMAT_SPEC.md
+
+2. Escribe tu aventura en formato simple:
+   nano mi_aventura.txt
+   
+   Formato:
+   ─────────
+   [ENTRY 001]
+   [TYPE: adventure]
+   [TITLE: Mi Primera Escena]
+   
+   Tu narrativa aquí...
+   
+   → Ir a lugar A, go to 002
+   → Ir a lugar B, go to 003
+   
+   ---
+   
+   [ENTRY 002]
+   [TYPE: encounter]
+   ...
+
+3. Convierte a JSON automático:
+   python3 tools/document_to_json.py mi_aventura.txt --output mi_aventura.json --validate
+
+4. Copia a carpeta:
+   mkdir -p adventures/mi_aventura
+   cp mi_aventura.* adventures/mi_aventura/
+
+5. ¡Juega!
+   python3 games/play_immersive.py
+
+
+AVENTURAS DISPONIBLES:
+─────────────────────
+
+Point Black Lighthouse     26 entradas    6 finales     DEMOSTRACIÓN
+Alone Against the TIDE     243 entradas   Multi-paths   CLÁSICA
+Alone Against the DARK     594 entradas   ÉPICA         MÁS COMPLETA
+
+
+ESTRUCTURA VISUAL:
+
+Tu Historia (texto plano)
+       ↓
+   [document_to_json.py] ← Automático
+       ↓
+   entries.json (datos puros)
+       + mi_aventura.immersive.json (atmosfera, objetos)
+       ↓
+   [game_immersive.py] ← Motor
+       ↓
+   [play_immersive.py] ← Interfaz
+       ↓
+   ✨ EXPERIENCIA INMERSIVA ✨
+
+
+COMANDOS ÚTILES:
+────────────────
+
+# Jugar
+python3 games/play_immersive.py
+
+# Crear aventura
+python3 tools/document_to_json.py mi_aventura.txt --output mi_aventura.json --validate
+
+# Ver documentación
+cat docs/STORY_FORMAT_SPEC.md
+cat docs/IMMERSIVE_ADVENTURE_SYSTEM.md
+
+# Ver estructura
+cat INDEX.md
+
+# Listar aventuras
+ls -la adventures/*/
+
+# Listar archivos en raíz (limpio)
+ls -la core games tools adventures docs
+
+
+CARACTERÍSTICAS:
+────────────────
+
+✅ Aventuras en texto plano (fácil de escribir)
+✅ Parseo automático a JSON (sin errores)
+✅ Motor inmersivo (atmosfera, objetos, imágenes, música)
+✅ Múltiples versiones de juego (simple, mejorada, inmersiva)
+✅ Sistema de D100 (Call of Cthulhu)
+✅ Soporte para save/load
+✅ Documentación completa
+✅ Estructura limpia y organizada
+
+
+PRÓXIMAS MEJORAS (FÁCILES):
+──────────────────────────
+
+1. Agregar imágenes a aventuras
+2. Agregar música de ambientación
+3. Agregar efectos de sonido
+4. Sistema de inventario expandido
+5. Variables dinámicas (stats afectan ramificaciones)
+6. Sistema de encuentros aleatorios
+
+
+SOPORTE:
+─────────
+
+Si algo no funciona:
+  1. Verifica que estés en ~/src/Cthulhu
+  2. Lee docs/STRUCTURE.md
+  3. Revisa el archivo de aventura (.txt)
+  4. Ejecuta con --validate
+
+Si encuentras un bug:
+  1. Reporta el número de entrada
+  2. Copia el error
+  3. Verifica que el destino exista
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+    ¡Listo! Ejecuta: python3 games/play_immersive.py
+
+═══════════════════════════════════════════════════════════════════════════

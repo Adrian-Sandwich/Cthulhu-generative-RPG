@@ -1,0 +1,1225 @@
+{
+  "stats": {
+    "valid": 0,
+    "mismatch": 0,
+    "missing_in_pdf": 0,
+    "extra_in_json": 243
+  },
+  "problems": [
+    {
+      "entry": 1,
+      "issue": "En JSON pero no en PDF",
+      "json": "The sun sinks low on the horizon as you board the "
+    },
+    {
+      "entry": 2,
+      "issue": "En JSON pero no en PDF",
+      "json": "Dr. Eleanor Woods You position yourself close to t"
+    },
+    {
+      "entry": 3,
+      "issue": "En JSON pero no en PDF",
+      "json": "You take your first steps onto the pier with the r"
+    },
+    {
+      "entry": 4,
+      "issue": "En JSON pero no en PDF",
+      "json": "You choose your words carefully before replying, n"
+    },
+    {
+      "entry": 5,
+      "issue": "En JSON pero no en PDF",
+      "json": "You call out to Joshua to explain himself, half ex"
+    },
+    {
+      "entry": 6,
+      "issue": "En JSON pero no en PDF",
+      "json": ""
+    },
+    {
+      "entry": 7,
+      "issue": "En JSON pero no en PDF",
+      "json": "You feel that the information in the journal is es"
+    },
+    {
+      "entry": 8,
+      "issue": "En JSON pero no en PDF",
+      "json": "You look the idol over. It is made of a sea-green "
+    },
+    {
+      "entry": 9,
+      "issue": "En JSON pero no en PDF",
+      "json": "You wake in the morning, grateful for the rest. Yo"
+    },
+    {
+      "entry": 10,
+      "issue": "En JSON pero no en PDF",
+      "json": "Given your recent escape, it would not be wise to "
+    },
+    {
+      "entry": 11,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 13 Banyu, the Buddhist monk, chats casually with"
+    },
+    {
+      "entry": 12,
+      "issue": "En JSON pero no en PDF",
+      "json": "16 Your business here is completed. You see the cr"
+    },
+    {
+      "entry": 13,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 18 You tell the ferryman you\u2019re an author workin"
+    },
+    {
+      "entry": 14,
+      "issue": "En JSON pero no en PDF",
+      "json": "22 You make your way to the stage, navigating arou"
+    },
+    {
+      "entry": 15,
+      "issue": "En JSON pero no en PDF",
+      "json": "While the estate sale seems interesting, you would"
+    },
+    {
+      "entry": 16,
+      "issue": "En JSON pero no en PDF",
+      "json": "32 A cursory inspection of your personal belonging"
+    },
+    {
+      "entry": 17,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 35 The murmuring of the crowd dies down and peop"
+    },
+    {
+      "entry": 18,
+      "issue": "En JSON pero no en PDF",
+      "json": "40 You take the hint and decide to leave them be b"
+    },
+    {
+      "entry": 19,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 43 You take her hand in yours and bring it to yo"
+    },
+    {
+      "entry": 20,
+      "issue": "En JSON pero no en PDF",
+      "json": "48 It would seem one of the other collectors here "
+    },
+    {
+      "entry": 21,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 53 The vase hits you squarely in the chest, shat"
+    },
+    {
+      "entry": 22,
+      "issue": "En JSON pero no en PDF",
+      "json": "57 61 58 62 You manage a smile and stumble through"
+    },
+    {
+      "entry": 23,
+      "issue": "En JSON pero no en PDF",
+      "json": "You approach the huddled group and introduce yours"
+    },
+    {
+      "entry": 24,
+      "issue": "En JSON pero no en PDF",
+      "json": "68 You consider that the officer is merely unconsc"
+    },
+    {
+      "entry": 25,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 72 You recognize the man\u2019s style of dress to be "
+    },
+    {
+      "entry": 26,
+      "issue": "En JSON pero no en PDF",
+      "json": "75 Try as you might, you are unable to get the doo"
+    },
+    {
+      "entry": 27,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 77 You take a knee and begin twisting the combin"
+    },
+    {
+      "entry": 28,
+      "issue": "En JSON pero no en PDF",
+      "json": "In a daze, you look down at the pool of blood form"
+    },
+    {
+      "entry": 29,
+      "issue": "En JSON pero no en PDF",
+      "json": "Lumbering lazily in your general direction, the hi"
+    },
+    {
+      "entry": 30,
+      "issue": "En JSON pero no en PDF",
+      "json": "87 You carry a bobby pin on you for just such an o"
+    },
+    {
+      "entry": 31,
+      "issue": "En JSON pero no en PDF",
+      "json": "90 You walk into town, toward the Harris address. "
+    },
+    {
+      "entry": 32,
+      "issue": "En JSON pero no en PDF",
+      "json": "96 Joshua aims the gun at you, and you freeze in s"
+    },
+    {
+      "entry": 33,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 101 You try to convince the officer that you hav"
+    },
+    {
+      "entry": 34,
+      "issue": "En JSON pero no en PDF",
+      "json": "107 You spot a paperclip lying just outside the ba"
+    },
+    {
+      "entry": 35,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 110 You turn your attention to the set of stairs"
+    },
+    {
+      "entry": 36,
+      "issue": "En JSON pero no en PDF",
+      "json": "114 You direct your attention away from any distra"
+    },
+    {
+      "entry": 37,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 116 You look over the characters scrawled in blo"
+    },
+    {
+      "entry": 38,
+      "issue": "En JSON pero no en PDF",
+      "json": "120 You aim your weapon at Joshua and pull the tri"
+    },
+    {
+      "entry": 39,
+      "issue": "En JSON pero no en PDF",
+      "json": "Your room has been ransacked. The bed is overturne"
+    },
+    {
+      "entry": 40,
+      "issue": "En JSON pero no en PDF",
+      "json": "Your gut tells you something is wrong here. You fe"
+    },
+    {
+      "entry": 41,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 131 You pause outside the hotel doorway, listeni"
+    },
+    {
+      "entry": 42,
+      "issue": "En JSON pero no en PDF",
+      "json": "135 You make your way through the empty streets of"
+    },
+    {
+      "entry": 43,
+      "issue": "En JSON pero no en PDF",
+      "json": "136 You chase after Amelia Harris. She\u2019s vanished "
+    },
+    {
+      "entry": 44,
+      "issue": "En JSON pero no en PDF",
+      "json": "squeezes into the room with you. It is slow and lu"
+    },
+    {
+      "entry": 45,
+      "issue": "En JSON pero no en PDF",
+      "json": "139 You skid down the side of the cliff, slamming "
+    },
+    {
+      "entry": 46,
+      "issue": "En JSON pero no en PDF",
+      "json": "146 You creep out of your cell as quietly as you c"
+    },
+    {
+      "entry": 47,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 150 The flooded town You resolve to simply wait "
+    },
+    {
+      "entry": 48,
+      "issue": "En JSON pero no en PDF",
+      "json": "it hasn\u2019t moved since its head broke free of the l"
+    },
+    {
+      "entry": 49,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 156 You cautiously descend the stairs, which cre"
+    },
+    {
+      "entry": 50,
+      "issue": "En JSON pero no en PDF",
+      "json": "160 You set off through the streets of Esbury and "
+    },
+    {
+      "entry": 51,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 164 You hurry through the shrouded streets and t"
+    },
+    {
+      "entry": 52,
+      "issue": "En JSON pero no en PDF",
+      "json": "169 You wander for quite some time, unable to find"
+    },
+    {
+      "entry": 53,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 171 You quickly duck into the hotel, avoiding wh"
+    },
+    {
+      "entry": 54,
+      "issue": "En JSON pero no en PDF",
+      "json": "175 You wade forward, into the water, and feel the"
+    },
+    {
+      "entry": 55,
+      "issue": "En JSON pero no en PDF",
+      "json": "177 You hurriedly draw your gun and fire into the "
+    },
+    {
+      "entry": 56,
+      "issue": "En JSON pero no en PDF",
+      "json": "182 You are a second too late. You scramble to get"
+    },
+    {
+      "entry": 57,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 184 You march through the night, moving more slo"
+    },
+    {
+      "entry": 58,
+      "issue": "En JSON pero no en PDF",
+      "json": "187 You can barely see anything in the fog, so you"
+    },
+    {
+      "entry": 59,
+      "issue": "En JSON pero no en PDF",
+      "json": "As you read it over, you marvel at the impossibili"
+    },
+    {
+      "entry": 60,
+      "issue": "En JSON pero no en PDF",
+      "json": "191 You throw yourself to the ground, making sure "
+    },
+    {
+      "entry": 61,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 196 On reaching the top of the stairs, you emerg"
+    },
+    {
+      "entry": 62,
+      "issue": "En JSON pero no en PDF",
+      "json": "201 You gather up a pair of sticks and try to rub "
+    },
+    {
+      "entry": 63,
+      "issue": "En JSON pero no en PDF",
+      "json": "You take a knee and begin twisting the combination"
+    },
+    {
+      "entry": 64,
+      "issue": "En JSON pero no en PDF",
+      "json": "You find yourself dangling over the edge of the be"
+    },
+    {
+      "entry": 65,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 208 You sprint through the foggy streets of Esbu"
+    },
+    {
+      "entry": 66,
+      "issue": "En JSON pero no en PDF",
+      "json": "There is also an empty sack on the table that was "
+    },
+    {
+      "entry": 67,
+      "issue": "En JSON pero no en PDF",
+      "json": "You quickly reach for the firearm at your side. Yo"
+    },
+    {
+      "entry": 68,
+      "issue": "En JSON pero no en PDF",
+      "json": "216 You manage to calm the man, assuring him that "
+    },
+    {
+      "entry": 69,
+      "issue": "En JSON pero no en PDF",
+      "json": "218 You turn the hardened clay cylinders over in y"
+    },
+    {
+      "entry": 70,
+      "issue": "En JSON pero no en PDF",
+      "json": "224 Try as you might, you cannot find any way to s"
+    },
+    {
+      "entry": 71,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 227 You stare at Banyu as he completes his chant"
+    },
+    {
+      "entry": 72,
+      "issue": "En JSON pero no en PDF",
+      "json": "you are unable to translate the scrawls on the alt"
+    },
+    {
+      "entry": 73,
+      "issue": "En JSON pero no en PDF",
+      "json": "You have died. Unfortunately, you couldn\u2019t escape "
+    },
+    {
+      "entry": 74,
+      "issue": "En JSON pero no en PDF",
+      "json": "238 You prowl the town, hoping desperately to find"
+    },
+    {
+      "entry": 75,
+      "issue": "En JSON pero no en PDF",
+      "json": "B 240 Looking through the book, you become deeply "
+    },
+    {
+      "entry": 76,
+      "issue": "En JSON pero no en PDF",
+      "json": "242 You have died, burned alive as an offering to "
+    },
+    {
+      "entry": 77,
+      "issue": "En JSON pero no en PDF",
+      "json": "You simply have no idea what you\u2019re looking at. Th"
+    },
+    {
+      "entry": 78,
+      "issue": "En JSON pero no en PDF",
+      "json": ""
+    },
+    {
+      "entry": 79,
+      "issue": "En JSON pero no en PDF",
+      "json": ""
+    },
+    {
+      "entry": 80,
+      "issue": "En JSON pero no en PDF",
+      "json": ""
+    },
+    {
+      "entry": 81,
+      "issue": "En JSON pero no en PDF",
+      "json": ""
+    },
+    {
+      "entry": 82,
+      "issue": "En JSON pero no en PDF",
+      "json": ""
+    },
+    {
+      "entry": 83,
+      "issue": "En JSON pero no en PDF",
+      "json": "Nicholas Johnson is a writer from Lakeland, Florid"
+    },
+    {
+      "entry": 84,
+      "issue": "En JSON pero no en PDF",
+      "json": "Originally trained as a biomedical scientist, Lynn"
+    },
+    {
+      "entry": 85,
+      "issue": "En JSON pero no en PDF",
+      "json": "M. WAYNE MILLER ENnie Award winning illustrator M."
+    },
+    {
+      "entry": 86,
+      "issue": "En JSON pero no en PDF",
+      "json": "From a very young age, Doruk wanted to create mons"
+    },
+    {
+      "entry": 87,
+      "issue": "En JSON pero no en PDF",
+      "json": ""
+    },
+    {
+      "entry": 88,
+      "issue": "En JSON pero no en PDF",
+      "json": "\u00ae \u00ae Alone Against THE TIDE Solitaire Adventure by "
+    },
+    {
+      "entry": 89,
+      "issue": "En JSON pero no en PDF",
+      "json": "You ask after Prof. Harris\u2019 widow, Amelia. Mr. San"
+    },
+    {
+      "entry": 90,
+      "issue": "En JSON pero no en PDF",
+      "json": "You walk into town, toward the Harris address. Eve"
+    },
+    {
+      "entry": 91,
+      "issue": "En JSON pero no en PDF",
+      "json": "The vase shoots past you and into the wall, shatte"
+    },
+    {
+      "entry": 92,
+      "issue": "En JSON pero no en PDF",
+      "json": "Something draws you to the curious idol, and you f"
+    },
+    {
+      "entry": 93,
+      "issue": "En JSON pero no en PDF",
+      "json": "As before, you sense Joshua\u2019s frustration and real"
+    },
+    {
+      "entry": 94,
+      "issue": "En JSON pero no en PDF",
+      "json": "You underbid on the item, thinking you would be ab"
+    },
+    {
+      "entry": 95,
+      "issue": "En JSON pero no en PDF",
+      "json": "You fire wildly at the creature before you, unnerv"
+    },
+    {
+      "entry": 96,
+      "issue": "En JSON pero no en PDF",
+      "json": "Joshua aims the gun at you, and you freeze in shoc"
+    },
+    {
+      "entry": 97,
+      "issue": "En JSON pero no en PDF",
+      "json": "You rush the man, and swing for his head. Your blo"
+    },
+    {
+      "entry": 98,
+      "issue": "En JSON pero no en PDF",
+      "json": "Your hunches are never wrong. Whatever that office"
+    },
+    {
+      "entry": 99,
+      "issue": "En JSON pero no en PDF",
+      "json": "You turn your weapon in Amelia\u2019s general direction"
+    },
+    {
+      "entry": 100,
+      "issue": "En JSON pero no en PDF",
+      "json": "You feel that the knowledge in these pages could v"
+    },
+    {
+      "entry": 101,
+      "issue": "En JSON pero no en PDF",
+      "json": "You try to convince the officer that you have a pa"
+    },
+    {
+      "entry": 102,
+      "issue": "En JSON pero no en PDF",
+      "json": "You approach the strange man. He seems well-travel"
+    },
+    {
+      "entry": 103,
+      "issue": "En JSON pero no en PDF",
+      "json": "You decide on a fair bid for the gemstone-studded "
+    },
+    {
+      "entry": 104,
+      "issue": "En JSON pero no en PDF",
+      "json": "You tell the man that you\u2019re a collector of antiqu"
+    },
+    {
+      "entry": 105,
+      "issue": "En JSON pero no en PDF",
+      "json": "For an officer of the law, Officer Powell possesse"
+    },
+    {
+      "entry": 106,
+      "issue": "En JSON pero no en PDF",
+      "json": "After getting dressed and eating the modest breakf"
+    },
+    {
+      "entry": 107,
+      "issue": "En JSON pero no en PDF",
+      "json": "You spot a paperclip lying just outside the bars o"
+    },
+    {
+      "entry": 108,
+      "issue": "En JSON pero no en PDF",
+      "json": "You reach into your pocket and produce the bobby p"
+    },
+    {
+      "entry": 109,
+      "issue": "En JSON pero no en PDF",
+      "json": "You hear the clattering and banging in the next ro"
+    },
+    {
+      "entry": 110,
+      "issue": "En JSON pero no en PDF",
+      "json": "You turn your attention to the set of stairs oppos"
+    },
+    {
+      "entry": 111,
+      "issue": "En JSON pero no en PDF",
+      "json": "You leave the scuffle behind you, happy to put tha"
+    },
+    {
+      "entry": 112,
+      "issue": "En JSON pero no en PDF",
+      "json": "You roll to the side and press yourself up against"
+    },
+    {
+      "entry": 113,
+      "issue": "En JSON pero no en PDF",
+      "json": "You let out a frightened scream as the creature lu"
+    },
+    {
+      "entry": 114,
+      "issue": "En JSON pero no en PDF",
+      "json": "You direct your attention away from any distractio"
+    },
+    {
+      "entry": 115,
+      "issue": "En JSON pero no en PDF",
+      "json": "You struggle against your bonds as you begin to pa"
+    },
+    {
+      "entry": 116,
+      "issue": "En JSON pero no en PDF",
+      "json": "You look over the characters scrawled in blood acr"
+    },
+    {
+      "entry": 117,
+      "issue": "En JSON pero no en PDF",
+      "json": "You attempt to roll out of the way of the lumberin"
+    },
+    {
+      "entry": 118,
+      "issue": "En JSON pero no en PDF",
+      "json": "You fall to your knees, press your ear to the safe"
+    },
+    {
+      "entry": 119,
+      "issue": "En JSON pero no en PDF",
+      "json": "Judging by the direction you\u2019ve been traveling, th"
+    },
+    {
+      "entry": 120,
+      "issue": "En JSON pero no en PDF",
+      "json": "You aim your weapon at Joshua and pull the trigger"
+    },
+    {
+      "entry": 121,
+      "issue": "En JSON pero no en PDF",
+      "json": "You wait for Joshua to strike, timing your reactio"
+    },
+    {
+      "entry": 122,
+      "issue": "En JSON pero no en PDF",
+      "json": "Feeling that it\u2019s the best course of action right "
+    },
+    {
+      "entry": 123,
+      "issue": "En JSON pero no en PDF",
+      "json": "You push the door aside and enter the bedroom. The"
+    },
+    {
+      "entry": 124,
+      "issue": "En JSON pero no en PDF",
+      "json": "125 You pack what remains of your belongings into "
+    },
+    {
+      "entry": 125,
+      "issue": "En JSON pero no en PDF",
+      "json": "You pack what remains of your belongings into your"
+    },
+    {
+      "entry": 126,
+      "issue": "En JSON pero no en PDF",
+      "json": "You don\u2019t know why you hadn\u2019t realized it before. "
+    },
+    {
+      "entry": 127,
+      "issue": "En JSON pero no en PDF",
+      "json": "You turn your attention to Officer Powell and plea"
+    },
+    {
+      "entry": 128,
+      "issue": "En JSON pero no en PDF",
+      "json": "You examine the extraordinary altar. The most read"
+    },
+    {
+      "entry": 129,
+      "issue": "En JSON pero no en PDF",
+      "json": "You take a step toward the man. He hears your appr"
+    },
+    {
+      "entry": 130,
+      "issue": "En JSON pero no en PDF",
+      "json": "You ask Amelia about Joshua, his relationship to h"
+    },
+    {
+      "entry": 131,
+      "issue": "En JSON pero no en PDF",
+      "json": "You pause outside the hotel doorway, listening for"
+    },
+    {
+      "entry": 132,
+      "issue": "En JSON pero no en PDF",
+      "json": "You throw yourself to the floor with all haste, tr"
+    },
+    {
+      "entry": 133,
+      "issue": "En JSON pero no en PDF",
+      "json": "You throw a punch at Joshua\u2019s face and send him st"
+    },
+    {
+      "entry": 134,
+      "issue": "En JSON pero no en PDF",
+      "json": "You exit your room and make your way to the hotel\u2019"
+    },
+    {
+      "entry": 135,
+      "issue": "En JSON pero no en PDF",
+      "json": "You make your way through the empty streets of Esb"
+    },
+    {
+      "entry": 136,
+      "issue": "En JSON pero no en PDF",
+      "json": "You chase after Amelia Harris. She\u2019s vanished in t"
+    },
+    {
+      "entry": 137,
+      "issue": "En JSON pero no en PDF",
+      "json": "You decide to put your misgivings aside and simply"
+    },
+    {
+      "entry": 138,
+      "issue": "En JSON pero no en PDF",
+      "json": "You awake, stripped of any weapons, and tied to a "
+    },
+    {
+      "entry": 139,
+      "issue": "En JSON pero no en PDF",
+      "json": "You skid down the side of the cliff, slamming agai"
+    },
+    {
+      "entry": 140,
+      "issue": "En JSON pero no en PDF",
+      "json": "You turn around and leave the door closed behind y"
+    },
+    {
+      "entry": 141,
+      "issue": "En JSON pero no en PDF",
+      "json": "It\u2019s too risky to let Amelia go right now, so you "
+    },
+    {
+      "entry": 142,
+      "issue": "En JSON pero no en PDF",
+      "json": "Fearing that someone might be in danger, or perhap"
+    },
+    {
+      "entry": 143,
+      "issue": "En JSON pero no en PDF",
+      "json": "You roll over one another, punching and kicking an"
+    },
+    {
+      "entry": 144,
+      "issue": "En JSON pero no en PDF",
+      "json": "You open the door but it catches a draft, slamming"
+    },
+    {
+      "entry": 145,
+      "issue": "En JSON pero no en PDF",
+      "json": "Reflexively, you drop to the ground behind the cou"
+    },
+    {
+      "entry": 146,
+      "issue": "En JSON pero no en PDF",
+      "json": "You creep out of your cell as quietly as you can. "
+    },
+    {
+      "entry": 147,
+      "issue": "En JSON pero no en PDF",
+      "json": "You make your way through the foggy streets of Esb"
+    },
+    {
+      "entry": 148,
+      "issue": "En JSON pero no en PDF",
+      "json": "You step out into the fog, hoping to find someone "
+    },
+    {
+      "entry": 149,
+      "issue": "En JSON pero no en PDF",
+      "json": "You try a door and find it locked. You move down t"
+    },
+    {
+      "entry": 150,
+      "issue": "En JSON pero no en PDF",
+      "json": "You resolve to simply wait it out. You have a wond"
+    },
+    {
+      "entry": 151,
+      "issue": "En JSON pero no en PDF",
+      "json": "You make your way through Esbury\u2019s streets, confir"
+    },
+    {
+      "entry": 152,
+      "issue": "En JSON pero no en PDF",
+      "json": "You are locked in a desperate struggle with Joshua"
+    },
+    {
+      "entry": 153,
+      "issue": "En JSON pero no en PDF",
+      "json": "You pause to consider the strange green coloration"
+    },
+    {
+      "entry": 154,
+      "issue": "En JSON pero no en PDF",
+      "json": "Though you put a sizeable bid in for the idol, a t"
+    },
+    {
+      "entry": 155,
+      "issue": "En JSON pero no en PDF",
+      "json": "Instinctively, you retreat toward the cover of the"
+    },
+    {
+      "entry": 156,
+      "issue": "En JSON pero no en PDF",
+      "json": "You cautiously descend the stairs, which creak ben"
+    },
+    {
+      "entry": 157,
+      "issue": "En JSON pero no en PDF",
+      "json": "You duck the blow and dodge out of the man\u2019s way a"
+    },
+    {
+      "entry": 158,
+      "issue": "En JSON pero no en PDF",
+      "json": "This trip would be arduous even on a good day, but"
+    },
+    {
+      "entry": 159,
+      "issue": "En JSON pero no en PDF",
+      "json": "You throw yourself out of the way of the careening"
+    },
+    {
+      "entry": 160,
+      "issue": "En JSON pero no en PDF",
+      "json": "You set off through the streets of Esbury and into"
+    },
+    {
+      "entry": 161,
+      "issue": "En JSON pero no en PDF",
+      "json": "Try as you might, you are unable to get the door o"
+    },
+    {
+      "entry": 162,
+      "issue": "En JSON pero no en PDF",
+      "json": "You turn to run\u2014somewhere, anywhere, just away fro"
+    },
+    {
+      "entry": 163,
+      "issue": "En JSON pero no en PDF",
+      "json": "You steel yourself against the pain in your leg. Y"
+    },
+    {
+      "entry": 164,
+      "issue": "En JSON pero no en PDF",
+      "json": "You hurry through the shrouded streets and take re"
+    },
+    {
+      "entry": 165,
+      "issue": "En JSON pero no en PDF",
+      "json": "You approach the house and place your hand on the "
+    },
+    {
+      "entry": 166,
+      "issue": "En JSON pero no en PDF",
+      "json": "You give in to your panic and let it wash over you"
+    },
+    {
+      "entry": 167,
+      "issue": "En JSON pero no en PDF",
+      "json": "Just before your feet leave the ground, you throw "
+    },
+    {
+      "entry": 168,
+      "issue": "En JSON pero no en PDF",
+      "json": "You swing at Joshua. You manage to land a few soli"
+    },
+    {
+      "entry": 169,
+      "issue": "En JSON pero no en PDF",
+      "json": "You wander for quite some time, unable to find any"
+    },
+    {
+      "entry": 170,
+      "issue": "En JSON pero no en PDF",
+      "json": "You stumble through the woods, leaning heavily on "
+    },
+    {
+      "entry": 171,
+      "issue": "En JSON pero no en PDF",
+      "json": "You quickly duck into the hotel, avoiding whoever "
+    },
+    {
+      "entry": 172,
+      "issue": "En JSON pero no en PDF",
+      "json": "You fall to your knees, press your ear to the safe"
+    },
+    {
+      "entry": 173,
+      "issue": "En JSON pero no en PDF",
+      "json": "You cannot gather the courage to leave the safety "
+    },
+    {
+      "entry": 174,
+      "issue": "En JSON pero no en PDF",
+      "json": "You skid down a steep slope toward the cliff edge,"
+    },
+    {
+      "entry": 175,
+      "issue": "En JSON pero no en PDF",
+      "json": "You wade forward, into the water, and feel the gro"
+    },
+    {
+      "entry": 176,
+      "issue": "En JSON pero no en PDF",
+      "json": "You\u2019re too slow and Joshua plunges the blade into "
+    },
+    {
+      "entry": 177,
+      "issue": "En JSON pero no en PDF",
+      "json": "You hurriedly draw your gun and fire into the crea"
+    },
+    {
+      "entry": 178,
+      "issue": "En JSON pero no en PDF",
+      "json": "You fix your eyes first on the strange altar, and "
+    },
+    {
+      "entry": 179,
+      "issue": "En JSON pero no en PDF",
+      "json": "With no immediate threat to yourself, you\u2019re free "
+    },
+    {
+      "entry": 180,
+      "issue": "En JSON pero no en PDF",
+      "json": "Try as you might, you are unable to pry the blade "
+    },
+    {
+      "entry": 181,
+      "issue": "En JSON pero no en PDF",
+      "json": "You decide that you\u2019ve seen enough of Joshua\u2019s hou"
+    },
+    {
+      "entry": 182,
+      "issue": "En JSON pero no en PDF",
+      "json": "You are a second too late. You scramble to get out"
+    },
+    {
+      "entry": 183,
+      "issue": "En JSON pero no en PDF",
+      "json": "You yank your hand free of the cold, clammy grasp "
+    },
+    {
+      "entry": 184,
+      "issue": "En JSON pero no en PDF",
+      "json": "You march through the night, moving more slowly an"
+    },
+    {
+      "entry": 185,
+      "issue": "En JSON pero no en PDF",
+      "json": "Your fear spurs you on. You drag your injured leg "
+    },
+    {
+      "entry": 186,
+      "issue": "En JSON pero no en PDF",
+      "json": "You sprint through Esbury\u2019s foggy streets, breathi"
+    },
+    {
+      "entry": 187,
+      "issue": "En JSON pero no en PDF",
+      "json": "You can barely see anything in the fog, so you try"
+    },
+    {
+      "entry": 188,
+      "issue": "En JSON pero no en PDF",
+      "json": "You reach into your pocket and produce the bobby p"
+    },
+    {
+      "entry": 189,
+      "issue": "En JSON pero no en PDF",
+      "json": "You gather some suitably dry wood then reach into "
+    },
+    {
+      "entry": 190,
+      "issue": "En JSON pero no en PDF",
+      "json": "You settle down in Boston for the next few days in"
+    },
+    {
+      "entry": 191,
+      "issue": "En JSON pero no en PDF",
+      "json": "You throw yourself to the ground, making sure you "
+    },
+    {
+      "entry": 192,
+      "issue": "En JSON pero no en PDF",
+      "json": "The door swings inward, rattling on its hinges. Th"
+    },
+    {
+      "entry": 193,
+      "issue": "En JSON pero no en PDF",
+      "json": "You splash through the rising water as best you ca"
+    },
+    {
+      "entry": 194,
+      "issue": "En JSON pero no en PDF",
+      "json": "You are through with this place. You want nothing "
+    },
+    {
+      "entry": 195,
+      "issue": "En JSON pero no en PDF",
+      "json": "You look the idol over. It\u2019s made of a sea-green s"
+    },
+    {
+      "entry": 196,
+      "issue": "En JSON pero no en PDF",
+      "json": "On reaching the top of the stairs, you emerge into"
+    },
+    {
+      "entry": 197,
+      "issue": "En JSON pero no en PDF",
+      "json": "You run on for some distance, dashing between the "
+    },
+    {
+      "entry": 198,
+      "issue": "En JSON pero no en PDF",
+      "json": "You march on as best you can, putting one foot in "
+    },
+    {
+      "entry": 199,
+      "issue": "En JSON pero no en PDF",
+      "json": "Try as you might, you\u2019re unable to break the thing"
+    },
+    {
+      "entry": 200,
+      "issue": "En JSON pero no en PDF",
+      "json": "You collect yourself and step out into the mist, d"
+    },
+    {
+      "entry": 201,
+      "issue": "En JSON pero no en PDF",
+      "json": "You gather up a pair of sticks and try to rub them"
+    },
+    {
+      "entry": 202,
+      "issue": "En JSON pero no en PDF",
+      "json": "203 You open the door to find a bedroom, much as y"
+    },
+    {
+      "entry": 203,
+      "issue": "En JSON pero no en PDF",
+      "json": "You open the door to find a bedroom, much as you\u2019d"
+    },
+    {
+      "entry": 204,
+      "issue": "En JSON pero no en PDF",
+      "json": "You turn the hardened clay cylinders over in your "
+    },
+    {
+      "entry": 205,
+      "issue": "En JSON pero no en PDF",
+      "json": ""
+    },
+    {
+      "entry": 206,
+      "issue": "En JSON pero no en PDF",
+      "json": "You walk to the edge of the trail and gather some "
+    },
+    {
+      "entry": 207,
+      "issue": "En JSON pero no en PDF",
+      "json": "You push aside the door and enter the bedroom. The"
+    },
+    {
+      "entry": 208,
+      "issue": "En JSON pero no en PDF",
+      "json": "You sprint through the foggy streets of Esbury, br"
+    },
+    {
+      "entry": 209,
+      "issue": "En JSON pero no en PDF",
+      "json": "You make your best attempt to swim through the wat"
+    },
+    {
+      "entry": 210,
+      "issue": "En JSON pero no en PDF",
+      "json": "You stand over the table of curious artifacts, con"
+    },
+    {
+      "entry": 211,
+      "issue": "En JSON pero no en PDF",
+      "json": "You try to find somewhere you can wait out the flo"
+    },
+    {
+      "entry": 212,
+      "issue": "En JSON pero no en PDF",
+      "json": "You don\u2019t hear it until it\u2019s upon you: a loud spla"
+    },
+    {
+      "entry": 213,
+      "issue": "En JSON pero no en PDF",
+      "json": "211 You try to find somewhere you can wait out the"
+    },
+    {
+      "entry": 214,
+      "issue": "En JSON pero no en PDF",
+      "json": "The thing takes a swipe at you, connecting solidly"
+    },
+    {
+      "entry": 215,
+      "issue": "En JSON pero no en PDF",
+      "json": "You rush across the street and into the church, al"
+    },
+    {
+      "entry": 216,
+      "issue": "En JSON pero no en PDF",
+      "json": "You manage to calm the man, assuring him that he h"
+    },
+    {
+      "entry": 217,
+      "issue": "En JSON pero no en PDF",
+      "json": "The door slams open, revealing a hideous green cre"
+    },
+    {
+      "entry": 218,
+      "issue": "En JSON pero no en PDF",
+      "json": "You turn the hardened clay cylinders over in your "
+    },
+    {
+      "entry": 219,
+      "issue": "En JSON pero no en PDF",
+      "json": "Your mind clouds over once more, as if dreaming ag"
+    },
+    {
+      "entry": 220,
+      "issue": "En JSON pero no en PDF",
+      "json": "Exhaustion overtakes you. You lean back, close you"
+    },
+    {
+      "entry": 221,
+      "issue": "En JSON pero no en PDF",
+      "json": "The car shoots forward, and you\u2019re caught in its h"
+    },
+    {
+      "entry": 222,
+      "issue": "En JSON pero no en PDF",
+      "json": "You get ready to leave the Harris household, as yo"
+    },
+    {
+      "entry": 223,
+      "issue": "En JSON pero no en PDF",
+      "json": "You rush inside the nearby hotel and slam the door"
+    },
+    {
+      "entry": 224,
+      "issue": "En JSON pero no en PDF",
+      "json": "Try as you might, you cannot find any way to start"
+    },
+    {
+      "entry": 225,
+      "issue": "En JSON pero no en PDF",
+      "json": "You arm yourself with whatever you find handy, whi"
+    },
+    {
+      "entry": 226,
+      "issue": "En JSON pero no en PDF",
+      "json": "You reach for your firearm and manage to draw it q"
+    },
+    {
+      "entry": 227,
+      "issue": "En JSON pero no en PDF",
+      "json": "You stare at Banyu as he completes his chant, and "
+    },
+    {
+      "entry": 228,
+      "issue": "En JSON pero no en PDF",
+      "json": "It swipes at you, but your reflexes are much too f"
+    },
+    {
+      "entry": 229,
+      "issue": "En JSON pero no en PDF",
+      "json": "Though you\u2019ve fallen, you realize that you\u2019re not "
+    },
+    {
+      "entry": 230,
+      "issue": "En JSON pero no en PDF",
+      "json": "You examine the extraordinary altar. The most read"
+    },
+    {
+      "entry": 231,
+      "issue": "En JSON pero no en PDF",
+      "json": "You find yourself woefully unprepared to deal with"
+    },
+    {
+      "entry": 232,
+      "issue": "En JSON pero no en PDF",
+      "json": "Your weight carries you forward, and you go tumbli"
+    },
+    {
+      "entry": 233,
+      "issue": "En JSON pero no en PDF",
+      "json": "You orient yourself along the path and begin movin"
+    },
+    {
+      "entry": 234,
+      "issue": "En JSON pero no en PDF",
+      "json": "A thought takes shape in your mind and clarity tak"
+    },
+    {
+      "entry": 235,
+      "issue": "En JSON pero no en PDF",
+      "json": "The words of the ritual chant force themselves int"
+    },
+    {
+      "entry": 236,
+      "issue": "En JSON pero no en PDF",
+      "json": "Banyu enters a state of hyper-focus as he conducts"
+    },
+    {
+      "entry": 237,
+      "issue": "En JSON pero no en PDF",
+      "json": "You rise quickly and scurry out of the horrible th"
+    },
+    {
+      "entry": 238,
+      "issue": "En JSON pero no en PDF",
+      "json": "You prowl the town, hoping desperately to find som"
+    },
+    {
+      "entry": 239,
+      "issue": "En JSON pero no en PDF",
+      "json": "You reach into your pocket and pull out the small "
+    },
+    {
+      "entry": 240,
+      "issue": "En JSON pero no en PDF",
+      "json": "Looking through the book, you become deeply engros"
+    },
+    {
+      "entry": 241,
+      "issue": "En JSON pero no en PDF",
+      "json": "You try to calm the man, who\u2019s in a deep state of "
+    },
+    {
+      "entry": 242,
+      "issue": "En JSON pero no en PDF",
+      "json": "You have died, burned alive as an offering to one "
+    },
+    {
+      "entry": 243,
+      "issue": "En JSON pero no en PDF",
+      "json": "You come to, only to find the hideous creature\u2019s l"
+    }
+  ]
+}

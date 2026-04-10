@@ -1,0 +1,1618 @@
+[
+  {
+    "number": 1,
+    "text": "El ferry se acerca lentamente al muelle de Esbury. La tarde cae sobre el lago, y la neblina comienza a cerrarse sobre el agua oscura. Un marinero robusto y sonriente te saluda al bajar del barco. \"Bienvenido a Esbury, amigo. Primera vez aquí?\" te pregunta con acento local. Notas que hay varios hombres de traje vigilando el muelle con miradas sospechosas. Algo raro está pasando en este pueblo.",
+    "choices": [
+      "Hablar con el marinero,",
+      "Ir directo a la venta de finca,",
+      "Buscar alojamiento,"
+    ],
+    "trace_numbers": [
+      2,
+      3,
+      4
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "adventure",
+    "rolls": [],
+    "metadata": {
+      "title": "Llegada a Esbury",
+      "tags": [
+        "investigation",
+        "start"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 2,
+    "text": "El marinero, que dice llamarse Lance Sanford, te invita a un café en el puerto. Mientras toman la bebida caliente, te habla sobre la muerte del Profesor Harris. \"Murió hace tres días. Fue raro... quedó atrapado en el campanario de la iglesia. Nadie sabe exactamente qué pasó allá arriba. Algunos dicen que se volvió loco por culpa de esos artefactos antiguos que traía de la Antártida.\" Lance te mira a los ojos. \"Tened cuidado, amigo. Este pueblo tiene secretos oscuros.\"",
+    "choices": [
+      "Preguntar sobre la venta de finca,",
+      "Preguntar más sobre el Profesor Harris,",
+      "Ir directo a investigar la iglesia,"
+    ],
+    "trace_numbers": [
+      3,
+      5,
+      6
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "encounter",
+    "rolls": [],
+    "metadata": {
+      "title": "Conversación con Lance Sanford",
+      "tags": [
+        "investigation",
+        "clue",
+        "npc"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 3,
+    "text": "Entras a la gran casa donde se lleva a cabo la subasta de los efectos del Profesor Harris. Hay una multitud de compradores extranjeros inspeccionando ídolos y artefactos antiguos en vitrinas. Algunos artefactos son claramente valiosos. Ves a un vendedor sospechoso que habla en voz baja con un cliente, señalando varios ídolos de piedra que emiten una sensación inquietante.",
+    "choices": [
+      "Descubres un vendedor de objetos robados,",
+      "Encuentras documentos ocultos del Profesor,",
+      "Regresar al puerto con Lance,"
+    ],
+    "trace_numbers": [
+      2,
+      7,
+      8
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "investigation",
+    "rolls": [
+      {
+        "type": "skill_check",
+        "skill": "library",
+        "difficulty": "normal"
+      }
+    ],
+    "metadata": {
+      "title": "La Venta de Finca",
+      "tags": [
+        "investigation",
+        "items",
+        "auction"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": "library/normal"
+    }
+  },
+  {
+    "number": 4,
+    "text": "Encuentras una pequeña posada llamada \"The Seafarer's Rest\". Una mujer de mediana edad te atiende con calidez. \"¿Necesita una habitación, señor? Tenemos una bonita con vista al lago. El desayuno incluye pan fresco y arenques ahumados.\" La habitación es limpia y confortable. Pasas la noche sin problemas, aunque tus sueños son inquietos y extraños. Por la mañana, desciendes a desayunar.",
+    "choices": [
+      "Hablar con la posadera sobre el pueblo,",
+      "Ir a investigar la iglesia,",
+      "Visitar la casa del Profesor,"
+    ],
+    "trace_numbers": [
+      6,
+      9,
+      10
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Alojamiento en el Pueblo",
+      "tags": [
+        "rest"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 5,
+    "text": "Lance se pone más serio aún. Baja la voz y mira alrededor para asegurarse de que nadie más lo escucha. \"El Profesor Harris... encontró algo en la Antártida. Algo que no debería haber encontrado. Traía libros antiguos, símbolos extraños. Los marineros decían que hablaba en idiomas que nadie reconocía.\" El marinero tiembla ligeramente. \"La noche que murió, yo estaba en el puerto. Escuché gritos horribles viniendo de la iglesia. Pero cuando llegué la policía, dijeron que fue un accidente. No me creyeron.\" La inquietud crece en tu mente.",
+    "choices": [
+      "Presionar a Lance para más detalles,",
+      "Ir a investigar la iglesia,",
+      "Visitar la casa del Profesor,"
+    ],
+    "trace_numbers": [
+      6,
+      10,
+      11
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "encounter",
+    "rolls": [],
+    "metadata": {
+      "title": "Revelaciones Oscuras",
+      "tags": [],
+      "sanity_mod": -3,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 6,
+    "text": "Entras en la pequeña iglesia de piedra. El interior es oscuro y frío. Polvo flota en los rayos de luz que entran por las ventanas altas. Subes lentamente al campanario. Los peldaños de madera crujen bajo tus pies. En lo alto encuentras arañas, telarañas espesas, y marcas extrañas en el piso de piedra. Parecen símbolos, pero no de ninguna religión que reconozcas. Hay manchas de sangre seca en una esquina, junto a un libro antiguo hecho trizas.",
+    "choices": [
+      "Identificas los símbolos como procedentes de la Antártida,",
+      "Encuentras una página del diario del Profesor,",
+      "Solo encuentras polvo y más preguntas,"
+    ],
+    "trace_numbers": [
+      9,
+      12,
+      13
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "investigation",
+    "rolls": [
+      {
+        "type": "skill_check",
+        "skill": "investigate",
+        "difficulty": "hard"
+      }
+    ],
+    "metadata": {
+      "title": "La Iglesia Abandonada",
+      "tags": [
+        "investigation",
+        "supernatural"
+      ],
+      "sanity_mod": -5,
+      "hp_mod": 0,
+      "roll": "investigate/hard"
+    }
+  },
+  {
+    "number": 7,
+    "text": "Te acercas al vendedor mientras examina un ídolo de piedra negra. Tiene características asiáticas, con ojos fríos e inexpresivos. Cuando te ve, algo cambia en su expresión. Sonríe, pero la sonrisa no es amable. \"¿Interesado en nuestros artículos?\" dice en inglés con acento indefinible. \"El Profesor Harris tenía excelente gusto. Lástima que ya no pueda disfrutarlos.\" Hay algo amenazante en su tono.",
+    "choices": [
+      "Hacerle preguntas directas sobre Harris,",
+      "Fingir que eres un comprador interesado,",
+      "Abandonar y buscar ayuda,"
+    ],
+    "trace_numbers": [
+      2,
+      14,
+      15
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "encounter",
+    "rolls": [],
+    "metadata": {
+      "title": "El Vendedor Sospechoso",
+      "tags": [
+        "confrontation",
+        "npc"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 8,
+    "text": "",
+    "choices": [
+      "Ir al puerto para investigar más,",
+      "Dirigirte a la casa del Profesor,",
+      "Confrontar al vendedor sospechoso,"
+    ],
+    "trace_numbers": [
+      2,
+      7,
+      10
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "discovery",
+    "rolls": [],
+    "metadata": {
+      "title": "Los Documentos del Profesor",
+      "tags": [
+        "clue",
+        "investigation"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 9,
+    "text": "La posadera, cuyo nombre es Martha, te sirve desayuno mientras conversan. Es una mujer de sesenta años, con el tipo de amabilidad que viene de servir a viajeros durante décadas. \"¿Qué trae a un visitante a nuestro pequeño pueblo?\" pregunta mientras vierte té. Cuando mencionas al Profesor Harris, su expresión se vuelve seria. \"El Profesor... era un hombre que buscaba cosas que es mejor dejar en paz. Decía que había encontrado evidencia de una civilización anterior a la conocida. Hablaba de expediciones a lugares fríos y remotos.\" Martha baja la voz. \"Sus últimas palabras antes de morir fueron dichas a la policía: 'Están viniendo'. Nadie sabe qué quiso decir.\"",
+    "choices": [
+      "Investigar la iglesia,",
+      "Ir a la casa del Profesor,",
+      "Regresar al puerto,"
+    ],
+    "trace_numbers": [
+      2,
+      6,
+      10
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "encounter",
+    "rolls": [],
+    "metadata": {
+      "title": "Charla con la Posadera",
+      "tags": [
+        "npc",
+        "investigation"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 10,
+    "text": "La casa del Profesor está en las afueras del pueblo, una mansión victoriana rodeada de árboles oscuros. Está cerrada, pero encuentras una ventana del sótano sin traba. Dentro, todo está cubierto de polvo. Hay pilas de libros, mapas en las paredes, y un escritorio desordenado.",
+    "choices": [
+      "Leer el diario completo en privado,",
+      "Llevar los documentos a la policía,",
+      "Salir y contarle a Lance,"
+    ],
+    "trace_numbers": [
+      2,
+      16,
+      17
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "investigation",
+    "rolls": [
+      {
+        "type": "skill_check",
+        "skill": "investigate",
+        "difficulty": "normal"
+      }
+    ],
+    "metadata": {
+      "title": "La Casa del Profesor Harris",
+      "tags": [
+        "investigation",
+        "supernatural"
+      ],
+      "sanity_mod": -2,
+      "hp_mod": 0,
+      "roll": "investigate/normal"
+    }
+  },
+  {
+    "number": 11,
+    "text": "Lance mira nerviosamente a su alrededor. Finalmente, con lágrimas en los ojos, te cuenta más. \"Hace cinco años, me embarqué como marinero en una expedición a la Antártida con el Profesor Harris. Fuimos a un lugar que él llamaba 'La Ciudad Sumergida'. Encontramos ruinas. Ruinas de piedra negra, mucho más antiguas que cualquier civilización conocida.\" Su voz tiembla. \"Pero cuando tocamos las ruinas, sentimos... algo. Una presencia. Una inteligencia malévola que observaba desde las sombras. Huyimos. El Profesor dijo que habíamos despertado algo que debería haber permanecido dormido para siempre.\" \"Y ahora... creo que ha venido aquí. Creo que está buscando al Profesor.\" Las palabras te dejan helado.",
+    "choices": [
+      "Tomar esto en serio y prepararse,",
+      "Pensar que Lance está loco,",
+      "Ir inmediatamente a investigar,"
+    ],
+    "trace_numbers": [
+      6,
+      18,
+      19
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "encounter",
+    "rolls": [],
+    "metadata": {
+      "title": "La Verdad que Lance Casi No Revela",
+      "tags": [
+        "revelation",
+        "npc"
+      ],
+      "sanity_mod": -7,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 12,
+    "text": "Los símbolos en el campanario son inconfundibles. Has visto formas similares en documentos históricos sobre civilizaciones olvidadas. Son símbolos de adoración. Símbolos de sumisión. Hay una marca en particular que aparece múltiples veces: un símbolo geométrico que representa un ojo abierto rodeado de tentáculos estilizados. Tu mente hace conexiones aterradoras. Esto va más allá del misterio de la muerte del Profesor. Esto habla de cultistas, de adoradores de cosas antiguas y malévolas. El Profesor no murió accidentalmente. Fue un sacrificio. Un sacrificio deliberado en este campanario consagrado a fuerzas innombrables.",
+    "choices": [
+      "Ir a la casa del Profesor,",
+      "Buscar culpables en el pueblo,",
+      "Ir con Lance para planificar,"
+    ],
+    "trace_numbers": [
+      2,
+      10,
+      20
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "discovery",
+    "rolls": [],
+    "metadata": {
+      "title": "Revelación de los Símbolos",
+      "tags": [],
+      "sanity_mod": -4,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 13,
+    "text": "Entre los fragmentos del libro destruido encuentras páginas del diario del Profesor Harris. Las últimas entradas son casi ilegibles, escritas en pánico.",
+    "choices": [
+      "Ir a la casa del Profesor inmediatamente,",
+      "Buscar al Custodio en el pueblo,",
+      "Contactar a las autoridades,"
+    ],
+    "trace_numbers": [
+      10,
+      17,
+      21
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "discovery",
+    "rolls": [],
+    "metadata": {
+      "title": "El Diario Roto del Profesor",
+      "tags": [
+        "clue"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 14,
+    "text": "\"¿Qué fue el Profesor Harris para ustedes?\" preguntas directamente. El vendedor deja de sonreír. Su expresión se vuelve pétrea. Se acerca lentamente, invadiendo tu espacio personal. \"El Profesor fue alguien que no comprendía lo que traía de las profundidades heladas. Fue alguien que necesitaba... reeducación.\" Ves que su mano se mueve hacia su chaqueta. Otros clientes en la subasta dejan de mirar los artefactos y los observan. Algunos tienen la misma mirada fría e inexpresiva. Realizas que toda la subasta es una trampa. Y tú acabas de caer en ella.",
+    "choices": [
+      "Correr hacia la salida,",
+      "Intentar razonar con el vendedor,",
+      "Buscar ayuda entre la multitud,"
+    ],
+    "trace_numbers": [
+      22,
+      23,
+      24
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "confrontation",
+    "rolls": [],
+    "metadata": {
+      "title": "Interrogatorio del Vendedor",
+      "tags": [
+        "confrontation",
+        "npc"
+      ],
+      "sanity_mod": -5,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 15,
+    "text": "\"Sí, estos artefactos son magníficos,\" dices, examinando el ídolo de piedra negra. \"He estado buscando especímenes de este calibre para mi colección privada. ¿Cuál era la procedencia del Profesor?\" El vendedor relaja su tensión levemente, pero sus ojos siguen siendo fríos. \"El Profesor fue... generoso con sus hallazgos. Aunque no siempre comprendía su valor verdadero.\"",
+    "choices": [
+      "Excusarte y salir,",
+      "Presionar para más información,"
+    ],
+    "trace_numbers": [
+      14,
+      25
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "deception",
+    "rolls": [],
+    "metadata": {
+      "title": "Fingir Ser un Comprador",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 16,
+    "text": "",
+    "choices": [
+      "Salir de la casa e informar a Lance,",
+      "Buscar dónde guardaron el cristal,",
+      "Destruir el diario para proteger la información,"
+    ],
+    "trace_numbers": [
+      2,
+      20,
+      26
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "discovery",
+    "rolls": [],
+    "metadata": {
+      "title": "El Diario Completo del Profesor",
+      "tags": [
+        "revelation",
+        "supernatural"
+      ],
+      "sanity_mod": -8,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 17,
+    "text": "Vas directamente a la comisaría de Esbury. El oficial a cargo, un hombre llamado Powell, te escucha con escepticismo. \"¿Símbolos extraños? ¿Una sociedad secreta? Amigo, el Profesor Harris era un excéntrico. Su muerte fue un accidente. Probablemente estaba borracho y se cayó.\" Powell se niega a investigar. De hecho, cuando mencionas los \"Custodios\", su expresión cambia. Hay algo en sus ojos que sugiere que sabe más de lo que dice. Realizas con horror que la policía local está implicada. Quizás incluso sea parte de los Custodios. No puedes confiar en las autoridades locales.",
+    "choices": [
+      "Ir al puerto con Lance,",
+      "Planificar tu próximo movimiento,",
+      "Escapar del pueblo,"
+    ],
+    "trace_numbers": [
+      2,
+      18,
+      27
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Contactar a las Autoridades",
+      "tags": [
+        "choice"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 18,
+    "text": "Reúnes a Lance y compartes todo lo que has descubierto. El marinero está aterrado pero resuelto. \"Si lo que dices es cierto, tenemos poco tiempo. Los Custodios no tolerarán a alguien que sabe sus secretos.\"",
+    "choices": [
+      "Ir a obtener armas,",
+      "Intentar evacuar al pueblo,",
+      "Preparar una trampa para los Custodios,"
+    ],
+    "trace_numbers": [
+      28,
+      29,
+      30
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Preparación para lo Inminente",
+      "tags": [
+        "planning"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 19,
+    "text": "Crees que Lance está loco. Las historias sobre civilizaciones antiguas, entidades cósmicas, son demasiado. Demasiado fantásticas. Además, necesitas hechos concretos, no supersticiones de marineros. Decides ignorar sus advertencias y continuar tu investigación de manera más \"racional\". Pero esa noche, mientras duermes, tienes una pesadilla vivida. Sueñas con el cristal negro. Sueñas con ojos que se abren en la oscuridad. Y cuando despiertas, tu cama está mojada de sudor frío. Algo dentro de ti sabe que Lance estaba diciendo la verdad.",
+    "choices": [
+      "Buscar al Profesor,",
+      "Regresar con Lance y creerle,",
+      "Continuar investigando por tu cuenta,"
+    ],
+    "trace_numbers": [
+      10,
+      11,
+      31
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Rechazar la Verdad",
+      "tags": [],
+      "sanity_mod": -3,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 20,
+    "text": "Buscas a través del pueblo, siguiendo pistas del diario del Profesor. El cristal debe estar guardado en algún lugar. Finalmente, tus investigaciones te llevan a la iglesia. Más específicamente, al campanario.",
+    "choices": [
+      "Tomar el cristal y huir,",
+      "Destruir el cristal,",
+      "Dejar el cristal y buscar ayuda,"
+    ],
+    "trace_numbers": [
+      18,
+      32,
+      33
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "investigation",
+    "rolls": [
+      {
+        "type": "skill_check",
+        "skill": "investigate",
+        "difficulty": "extreme"
+      }
+    ],
+    "metadata": {
+      "title": "Búsqueda del Cristal Escondido",
+      "tags": [],
+      "sanity_mod": -6,
+      "hp_mod": 0,
+      "roll": "investigate/extreme"
+    }
+  },
+  {
+    "number": 21,
+    "text": "Tu búsqueda del Custodio te lleva al ayuntamiento, una construcción de piedra gris que ha estado ahí durante cien años. Allí encuentras al Custodio. Es el alcalde del pueblo. Un hombre respetable de sesenta años que lleva este cargo durante quince años. \"Así que finally descubriste,\" dice con una sonrisa. \"El Profesor fue débil. No comprendía la necesidad del orden cósmico. Nosotros sí. Los Custodios hemos guardado los equilibrios antiguos durante generaciones.\" \"El cristal que trajo de la Antártida nos fue dado para custodia. Era una prueba. Una prueba de fe. Cuando se negó a devolver el cristal voluntariamente, tuvo que pagar el precio.\" El alcalde aplaude. En las sombras del ayuntamiento, decenas de personas emergen. Todos tienen la misma mirada fría. Todos son Custodios. \"¿Y ahora, investigador?\" pregunta el alcalde. \"¿Cuál será tu elección?\"",
+    "choices": [
+      "Intentar negociar,",
+      "Luchar,",
+      "Intentar escapar,"
+    ],
+    "trace_numbers": [
+      34,
+      35,
+      36
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "confrontation",
+    "rolls": [],
+    "metadata": {
+      "title": "El Custodio Revelado",
+      "tags": [
+        "confrontation",
+        "revelation"
+      ],
+      "sanity_mod": -10,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 22,
+    "text": "Corres hacia la salida. El vendedor intenta detenerte, pero lo empujas. La multitud se abalanza, pero tu ventaja de velocidad te ayuda. Logras salir de la casa, pero no sin daño. Uno de los Custodios logra golpearte antes de que escapes. Corres en dirección al puerto. Lance te está esperando, y sin hacer preguntas, te ayuda a subir a su bote. \"¿Qué pasó?\" pregunta mientras desata las cuerdas. \"Son culpables. Todos están conectados.\" Lance asiente y comienza a remar, alejándote de Esbury.",
+    "choices": [
+      "Planificar tu siguiente movimiento,",
+      "Dirigirse a la Antártida,",
+      "Volver y buscar venganza,"
+    ],
+    "trace_numbers": [
+      18,
+      35,
+      37
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Huida de la Subasta",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": -4,
+      "roll": null
+    }
+  },
+  {
+    "number": 23,
+    "text": "\"Espera,\" dices con las manos alzadas. \"No vengo aquí como enemigo. Quiero entender. Quiero ayudar.\" El vendedor se detiene. Una extraña sonrisa aparece en su rostro. \"¿Ayudar? ¿A qué?\" \"A proteger el cristal. A mantener el equilibrio que el Profesor alteró.\" Para tu sorpresa, el vendedor lowera su mano. \"Interesante. Quizás no todo está perdido. Pero tendrás que probar tu sinceridad. Tendrás que aceptar la marca de los Custodios.\" Levanta su manga. En su brazo hay un símbolo tatuado de tinta negra. El mismo símbolo que viste en el campanario.",
+    "choices": [
+      "Aceptar el tatuaje y unirte a los Custodios,",
+      "Rechazar y luchar,",
+      "Fingir aceptancia,"
+    ],
+    "trace_numbers": [
+      35,
+      38,
+      39
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Razones con el Vendedor",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 24,
+    "text": "\"¡Alguien! ¡Ayuda!\" gritas. Pero tu grito es ignorado. La multitud no reacciona. De hecho, se cierra alrededor tuyo. Es como si estuvieran esperando esto. Uno de los Custodios saca un cloroformo. Todo se vuelve oscuro. Despiertas en una habitación sin ventanas. Estás atado. Varias velas brillan con luz roja en las esquinas. Un hombre enmascarado se acerca. \"Bienvenido a la iniciación, hermano. Pronto entenderás la verdad.\" Realizas que estás en peligro real.",
+    "choices": [
+      "Intentar escapar,",
+      "Aceptar tu destino,",
+      "Confiar en que alguien te busque,"
+    ],
+    "trace_numbers": [
+      40,
+      41,
+      42
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Llamada de Ayuda en la Subasta",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 25,
+    "text": "Examinaste suficiente. Dejas el ídolo cuidadosamente en la vitrina. \"Muy interesante. Debería pensarlo. Permítame su tarjeta de contacto.\" El vendedor te entrega una tarjeta. No tiene nombre, solo un símbolo: el ojo rodeado de tentáculos. Caminas hacia la salida con compostura. El vendedor te observa, pero no intenta detenerte. No todavía. Una vez afuera, realizas que no estás solo. Dos hombres de traje te siguen a distancia. Necesitas perder a estos seguidores antes de que te llevan a un lugar donde no quieras estar.",
+    "choices": [
+      "Correr al puerto,",
+      "Entrar a un edificio y salir por la puerta trasera,",
+      "Ir a la casa del Profesor,"
+    ],
+    "trace_numbers": [
+      10,
+      22,
+      43
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Salida Estratégica",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 26,
+    "text": "Quemas las páginas del diario en la chimenea de la casa. El papel se convierte en ceniza. La tinta se desvanece. Sabes que esto es un acto de cobardía. El conocimiento que contenía podría haber ayudado. Pero también sabe que mientras menos sepas, más seguro estarás. Los Custodios no pueden extraer información que no tienes. Te vas de la casa del Profesor sintiéndote culpable pero vivo.",
+    "choices": [
+      "Regresar al puerto,",
+      "Ir a la iglesia,",
+      "Buscar refugio,"
+    ],
+    "trace_numbers": [
+      2,
+      6,
+      44
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Destruir el Diario",
+      "tags": [
+        "choice"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 27,
+    "text": "Reúnes lo poco que tienes y compras un boleto en el próximo tren que sale de Esbury. Mientras esperas en la estación, ves a los Custodios buscándote. Te escondes en un vagón de carga. El tren comienza a moverse. Mientras te alejas de Esbury, miras por la ventana grieta del vagón. Ves a policía (incluyendo a Powell) en la estación, observando el tren partir. Escapaste. Por ahora. Pero sabes que los Custodios tienen un largo alcance. Y que volverán a encontrarte.",
+    "choices": [
+      "Viajar a Nueva York para investigar más,",
+      "Ir a Miskatonic University,",
+      "Buscar protección,"
+    ],
+    "trace_numbers": [
+      45,
+      46,
+      47
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Fuga de Esbury",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 28,
+    "text": "Tú y Lance van a la tienda de equipos. El dueño, un hombre de mediana edad llamado Thomas, te vende rifles sin hacer preguntas. \"Creo que sé lo que está pasando aquí,\" dice mientras empaqueta los fusiles. \"Los extraños han estado en el pueblo durante semanas. Vigilan. Escuchan.\" \"Yo tenía un hijo que cuestionó sus símbolos. Lo encontraron muerto en el bosque tres meses después.\" Thomas te da un rifle gratis. \"Usted lucha por nosotros. Lo menos que puedo hacer.\" Armado con rifles y munición, tú y Lance se retiran a la casa abandonada para fortalecer.",
+    "choices": [
+      "Planificar una emboscada,",
+      "Advertir al pueblo,",
+      "Esperar el ataque,"
+    ],
+    "trace_numbers": [
+      29,
+      48,
+      49
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Obtención de Armas",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 29,
+    "text": "Intentas advertir a los civiles de Esbury. Golpeas las puertas, hablas en la plaza del pueblo. Pero la mayoría de las personas no te creen. Algunos incluso parecen hostiles. Muchos de los residentes aparentemente están bajo influencia de los Custodios. Martha, la posadera, sí te cree. Ella ayuda a reunir a unos treinta civiles inocentes - principalmente mujeres, niños y ancianos. Los llevas fuera del pueblo hacia el bosque, en dirección a la siguiente ciudad, que está a veinte kilómetros de distancia. Pero detrás de ti, escuchas gritos. Los Custodios se han dado cuenta de tu plan.",
+    "choices": [
+      "Defender a los civiles,",
+      "Dividir el grupo,",
+      "Enviar a los civiles adelante mientras tú luchas,"
+    ],
+    "trace_numbers": [
+      50,
+      51,
+      52
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Evacuación del Pueblo",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 30,
+    "text": "Tú y Lance diseñan una trampa ingenua. Esparcen rumores de que el cristal está en la casa abandonada en las afueras. Los Custodios, esperando, pican el anzuelo. Una noche, docenas de Custodios llegan a la casa. Lo que no esperaban era que ustedes hubieran colocado bariles de pólvora en el sótano. La explosión es catastrófica. El edificio se derrumba. Al menos veinte Custodios mueren. Pero el daño es temporal. Los Custodios en Esbury se pueden reorganizar. Y estarán furiosos.",
+    "choices": [
+      "Huir antes de la represalia,",
+      "Prepararse para la guerra final,",
+      "Intentar contactar a autoridades externas,"
+    ],
+    "trace_numbers": [
+      27,
+      53,
+      54
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "planning",
+    "rolls": [],
+    "metadata": {
+      "title": "Trampa para los Custodios",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 31,
+    "text": "Continúas tu investigación por tu cuenta, ignorando las advertencias de Lance. Entrevistas a la policía (que miente), visitas archivos locales (que han sido alterados), hablas con residentes (que dan información contradicatoria). Cada pista que sigues te lleva a un callejón sin salida. Es como si alguien hubiera borrado cuidadosamente todo registro de lo que realmente sucedió. Después de una semana, realizas que estás siendo vigilado. Los Custodios saben de tu existencia. Saben de tu investigación. Una noche, encuentra una nota bajo tu puerta: \"Detén tu investigación o serás como el Profesor.\" El miedo comienza a corroer tu determinación.",
+    "choices": [
+      "Confrontar a los Custodios directamente,",
+      "Huir del pueblo,",
+      "Buscar ayuda,"
+    ],
+    "trace_numbers": [
+      21,
+      27,
+      55
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "investigation",
+    "rolls": [],
+    "metadata": {
+      "title": "Investigación Racional Fallida",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 32,
+    "text": "Tomas el cristal. Pesa menos de lo que esperabas, pero su contacto quema tu piel. Visiones inundan tu mente. Ves rituales antiguos. Ves el cristal siendo tratado como un dios por civilizaciones desaparecidas. Ves el momento en que fue enterrado en la Antártida, hace miles de años. Y luego ves el futuro. Un futuro en el cual el cristal es desenterrado nuevamente. Un futuro donde la humanidad se arrodilla ante lo que contiene. Luchas contra la visión. Luchas por tu cordura. Cuando finalmente logras recuperarte, estás fuera de la iglesia, con el cristal en una bolsa. Los Custodios estarán buscándote ahora. El cristal emite una presencia que ellos pueden sentir.",
+    "choices": [
+      "Ir al puerto y huir por mar,",
+      "Ir a Miskatonic University con el cristal,",
+      "Destruir el cristal de una vez por todas,"
+    ],
+    "trace_numbers": [
+      33,
+      46,
+      56
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Robo del Cristal",
+      "tags": [],
+      "sanity_mod": -12,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 33,
+    "text": "Tomas el cristal y lo arrojas al fuego de la chimenea en la casa del Profesor. Lo que sucede a continuación desafía toda lógica. El cristal no se quiebra. No se derrite. En cambio, comienza a brillar. Brillar cada vez más. La casa se llena de una luz cegadora. Y luego, un grito. Un grito que parece venir de todas partes y en ninguna parte. Un grito de rabia, de dolor, de una inteligencia infinita siendo rechazada. La casa tiembla. Las paredes se agrietan. Logras escapar segundos antes de que el edificio colapse completamente. Cuando el polvo se asienta, el cristal ha desaparecido. No hay rastro de él. Los Custodios se disolvieron. Muchos simplemente desaparecieron. Otros fueron encontrados catatónicos, sus mentes destruidas por la ruptura de la conexión. Has ganado. Pero a un costo terrible.",
+    "choices": [
+      "Fin: El Héroe Traumatizado - Volviste a casa, pero nunca serás el mismo. La verdad sobre el universo y nuestro lugar en él te ha marcado para siempre. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Destrucción del Cristal",
+      "tags": [
+        "climax"
+      ],
+      "sanity_mod": -15,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 34,
+    "text": "\"Entiendo su posición,\" dices con cuidado. \"Pero matar es mal camino. Hay otras formas de mantener el equilibrio.\" El alcalde te observa con interés. \"Continúa.\" \"Devuelvo el cristal voluntariamente. Me uno a los Custodios. Juntos, guardamos el secreto y el equilibrio se mantiene.\" El alcalde sonríe lentamente. \"Interesante. Pragmático. Tal vez hay esperanza para ti.\" Aceptas la marca. Te conviertes en Custodio. Years after, trabajas en silencio, guardando secretos que no debería existir. Vives una vida doble. A veces te preguntas si hiciste la elección correcta. Pero al menos, estás vivo.",
+    "choices": [
+      "Fin: El Custodio Comprometido - Renunciaste a tu humanidad para permanecer vivo. El secreto ahora es tuyo. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Negociación con el Alcalde",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 35,
+    "text": "Luchas contra los Custodios. Tu rifle ruge. Caen varios antes de que tu munición se agote. Luego, es cuerpo a cuerpo. Es brutal. Es terrible. Logras herir al alcalde gravemente, pero hay demasiados. El número simplemente es abrumador. Finalmente, caes. El alcalde se acerca a tu cuerpo ensangrentado. \"Valentía. Admirable. Serás un buen sacrificio al Cristal.\"",
+    "choices": [
+      "Fin: El Mártir - Tu cuerpo fue encontrado en el ayuntamiento. Nunca se supo la verdad. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Último Combate",
+      "tags": [
+        "climax"
+      ],
+      "sanity_mod": -10,
+      "hp_mod": -15,
+      "roll": null
+    }
+  },
+  {
+    "number": 36,
+    "text": "Ves una ventana. Corres hacia ella. El cristal se quiebra bajo tu cuerpo cuando saltas. Sangre en tu espalda, pero sigues corriendo. Escuchas gritos detrás. Llegar al puerto. Lance está esperando, como siempre. Sin hacer preguntas, rema furiosamente. Los Custodios intentan perseguirte por agua, pero Lance es un marinero superior. Logras escapar.",
+    "choices": [
+      "Ir a Nueva York,",
+      "Ir a Miskatonic University,",
+      "Viajar a un país extranjero,"
+    ],
+    "trace_numbers": [
+      45,
+      46,
+      57
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Escape del Ayuntamiento",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 37,
+    "text": "Tú y Lance viajan a la Antártida. Encuentran las ruinas de la ciudad que el Profesor descubrió. Encuentran el lugar donde el cristal fue originalmente enterrado. Está vacío. El cristal ya ha sido removido una vez. Y en las ruinas, encuentran un libro. Un libro antiguo escrito en una lengua que solo Lance puede leer parcialmente. El libro habla de guardianes ancestrales. De vigías cósmicos que miraban la Tierra desde antes de que los humanos existieran. De una advertencia: \"Si despiertáis el Cristal, despertaréis también a Los Que Observan.\" Realizas que el problema es mucho más grande de lo que imaginaste.",
+    "choices": [
+      "Fin: El Buscador Condenado - Sabes la verdad ahora. Y no hay forma de desaprender lo que sabes. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Retorno a la Antártida",
+      "tags": [
+        "ending"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 38,
+    "text": "Aceptas el tatuaje. La tinta arde mientras se graba en tu piel, pero no dices nada. El vendedor sonríe. \"Bienvenido, hermano. Ahora eres parte de algo mucho más grande que cualquier vida individual.\" Te entrena en los rituales de los Custodios. Te enseña los secretos que han guardado durante generaciones. Aprendes que hay Custodios en toda la América del Norte. Que hay cristales en otros lugares. Que el movimiento es coordinado y antiguo. Pasas a formar parte de la maquinaria.",
+    "choices": [
+      "Fin: El Convertido - Ya no eres quien eras. Eres lo que los Custodios necesitaban que fueras. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Unión a los Custodios",
+      "tags": [],
+      "sanity_mod": -5,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 39,
+    "text": "Fingir aceptancia. El vendedor te tatúa. Pero mientras duele, planeas tu siguiente movimiento. Trabajas como Custodio durante meses. Ganador confianza. Aprendiendo secretos. Y luego, en el momento perfecto, tu identidad es revelada por alguien que estabas vigilando. Los Custodios descubren tu engaño. Tu final es rápido y vengativo.",
+    "choices": [
+      "Fin: El Espía Fallido - No fueron lo suficientemente inteligente para engañarlos. Nadie lo es. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "deception",
+    "rolls": [],
+    "metadata": {
+      "title": "Falsa Aceptancia",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 40,
+    "text": "Luchas contra las ataduras. Después de horas, logras liberarte. Sales de la habitación. Está en el sótano del ayuntamiento. Subes lentamente por las escaleras. Escuchas voces en el piso superior. Encuentras una ventana al exterior. Saltas y caes en los arbustos. Corres hacia el bosque sin mirar atrás.",
+    "choices": [
+      "Ir al puerto y huir,",
+      "Esconderse en el bosque,",
+      "Volver y planificar venganza,"
+    ],
+    "trace_numbers": [
+      35,
+      56,
+      58
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Escape del Cautiverio",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 41,
+    "text": "No luchas. No gritas. Solo aceptas. El enmascarado parece sorprendido por tu calma. \"¿No tienes miedo?\" pregunta. \"Mucho,\" respondes honestamente. \"Pero ya pasé el punto de poder hacer algo al respecto.\" El enmascarado se va. Te dejan solo en la habitación. Horas después, vuelven. No para matarte. Para ofrecerte una opción. \"Puedes unirte a nosotros. O puedes morir. Elige.\"",
+    "choices": [
+      "Aceptar,",
+      "Rechazar,",
+      "Pedir negociar,"
+    ],
+    "trace_numbers": [
+      34,
+      35,
+      38
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Aceptación del Destino",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 42,
+    "text": "Esperas a que alguien te busque. Esperas que Lance se dé cuenta de que desapareciste. Esperas durante días en la oscuridad. Nadie llega. Lance no sabe dónde estás. Finalmente, el hambre y la sed te rompen. Aceptas unirte a los Custodios o morir. Aceptas.",
+    "choices": [
+      "Fin: El Prisionero Quebrado - Tu esperanza fue lo que finalmente te destruyó. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Esperanza Falsa",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 43,
+    "text": "Entras a una tienda. Sales por la puerta trasera. Te cambias de ropa en un callejón. Los hombres que te seguían pierden tu rastro. Has logrado escapar, por ahora. Pero sabes que eventualmente te encontrarán. Los Custodios son pacientes.",
+    "choices": [
+      "Ir al puerto,",
+      "Ir a la casa del Profesor,",
+      "Esconderte en el pueblo,"
+    ],
+    "trace_numbers": [
+      10,
+      22,
+      59
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Evasión Urbana",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 44,
+    "text": "Buscas un lugar seguro en el pueblo. Pero cuanto más buscas, más realizas que no hay lugar seguro. Los Custodios están en todas partes. En la policía. En la alcaldía. En las iglesias. Finalmente, encuentras refugio temporal con Martha en la posada. Ella te protege, aunque sabe que es peligroso. \"Mi hijo fue como tú,\" dice. \"Investigó demasiado. Les reclamos responsabilidad.\" \"Ahora haré lo mismo.\"",
+    "choices": [
+      "Planificar con Martha,",
+      "Ir al puerto,",
+      "Dejar el pueblo por el bien de Martha,"
+    ],
+    "trace_numbers": [
+      22,
+      27,
+      60
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Búsqueda de Refugio",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 45,
+    "text": "Viajas a Nueva York. Buscas en archivos académicos, en periódicos antiguos, en cualquier rastro de la expedición antártica del Profesor Harris.",
+    "choices": [
+      "Contactar a otros investigadores,",
+      "Continuar por tu cuenta,",
+      "Ir a Miskatonic University,"
+    ],
+    "trace_numbers": [
+      46,
+      61,
+      62
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Nueva York - Búsqueda de Respuestas",
+      "tags": [
+        "investigation"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 46,
+    "text": "Viajas a Miskatonic University en Arkham. Buscas en la biblioteca especial. El bibliotecario, un anciano sabio llamado Dr. Henry Armitage, te recibe con cautela. \"Vienes buscando respuestas sobre Ia los Custodios, ¿verdad?\" pregunta sin preámbulos. \"La Universidad ha estado documentando estas organizaciones durante décadas. Tu Profesor Harris fue uno de los nuestros, secretamente. Trabajaba para nosotros.\" Armitage te muestra documentos clasificados. Historias completas de civilizaciones antiguas, de entidades cósmicas, de un vasto universo que los humanos apenas están comenzando a entender. \"El Profesor fue asesinado,\" continúa Armitage. \"Pero su muerte no fue en vano. Tú eres el nuevo investigador ahora.\"",
+    "choices": [
+      "Unirte a Miskatonic,",
+      "Rechazar y buscar tu propio camino,",
+      "Preguntar por la antártida,"
+    ],
+    "trace_numbers": [
+      62,
+      63,
+      64
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Miskatonic University - La Verdad Protegida",
+      "tags": [
+        "investigation"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 47,
+    "text": "Buscas protección. Vas a la policía federal. Cuentas todo. Sorprendentemente, te creen. Resulta que el FBI ha estado investigando a los Custodios durante años. Un agente llamado Sullivan toma tu caso. \"El Profesor Harris fue uno de nuestros informantes,\" explica Sullivan. \"Los Custodios son una amenaza a la seguridad nacional. Hemos estado esperando evidencia concreta.\" Sullivan te ofrece protección a cambio de convertirte en informante.",
+    "choices": [
+      "Aceptar y trabajar con el FBI,",
+      "Rechazar y continuar solo,",
+      "Proponer una alianza Miskatonic-FBI,"
+    ],
+    "trace_numbers": [
+      62,
+      65,
+      66
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Búsqueda de Protección",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 48,
+    "text": "Tú y Lance preparan la emboscada en la casa abandonada. Colocan trampas, establecen posiciones de disparo, crean fuga de emergencia. Los Custodios llegan, como esperabas. El primero en entrar pisa la trampa de pólvora. Hay caos. Lance dispara desde el tejado. Tú atrapas a los que intentan flanquear. Logras matar o herir a la mayoría de los atacantes. Pero los Custodios tienen más números. Tienes que huir.",
+    "choices": [
+      "Viajar a Nueva York,",
+      "Ir a Miskatonic,",
+      "Esconderse en el bosque,"
+    ],
+    "trace_numbers": [
+      45,
+      46,
+      58
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Emboscada Planeada",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 49,
+    "text": "Tú y Lance se fortaleceran en la casa abandonada. Esperas. Durante dos semanas, nada sucede. Es la espera más terrible. Luego, una noche, los Custodios atacan en masa. Tienen más armas. Tienen más números. Tienen determinación. Luchas valientemente, pero es inútil. Lance muere defendiendo la puerta. Tú resultados herida de gravedad. Los Custodios te capturan.",
+    "choices": [
+      "Fin: El Cautivo Vivo - Deseas haber muerto junto a Lance. Pero los Custodios tienen otros planes para ti. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Espera del Ataque",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 50,
+    "text": "Tú y un pequeño grupo de civiles armados te paran y luchas contra los Custodios. No es una batalla. Es una masacre. Pero logras que suficientes civiles escapen. Tú no lo haces. Tu última acción consciente es proteger a Martha mientras ella huye.",
+    "choices": [
+      "Fin: El Protector Caído - Tu nombre será olvidado. Pero los que sobrevivieron nunca olvidarán el coraje que mostraste. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Defensa de los Civiles",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 51,
+    "text": "Divides a los civiles. Algunos van hacia la ciudad. Otros se esconden en el bosque. Los Custodios no saben a quién perseguir. Se dividen también. Algunos civiles logran escapar. Otros no. Tú finalmente logras guiar un grupo a la seguridad relativa de la próxima ciudad. Desde allí, puedes planificar tu próximo movimiento.",
+    "choices": [
+      "Reportar a las autoridades externas,",
+      "Buscar venganza,",
+      "Huir del país,"
+    ],
+    "trace_numbers": [
+      35,
+      54,
+      57
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "División del Grupo",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 52,
+    "text": "Dices a los civiles que corran mientras tú te quedas atrás para enfrentar a los Custodios. Te partes con ellos, esperando que al menos algunos sobrevivan. Luchas con todo lo que tienes. Luchas sin esperanza de victoria. Pero tu sacrificio compra tiempo suficiente. Los civiles escapan.",
+    "choices": [
+      "Fin: El Héroe del Pueblo - Muriste para que otros vivieran. Tu acto no será olvidado. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Acto de Autosacrificio",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 53,
+    "text": "Preparas toda la ciudad para la guerra. Thomas y otros civiles se arman. Lance reúne marineros. Es una última batalla desesperada. Luchas calle por calle. Casa por casa. Los Custodios son numerosos, pero la población civil está motivada. Finalmente, después de semanas de combate, los Custodios son derrotados o huyen. Esbury es libre. Pero a un costo terrible. La mitad del pueblo está destruida.",
+    "choices": [
+      "Fin: El Liberador Amargado - Ganaste la guerra. Pero ¿a qué precio? Esbury nunca será la misma. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Guerra Final",
+      "tags": [],
+      "sanity_mod": -12,
+      "hp_mod": -20,
+      "roll": null
+    }
+  },
+  {
+    "number": 54,
+    "text": "Logras contactar a las autoridades federales. El FBI llega dentro de una semana. Investigan Esbury. Encuentran evidencia de crimen organizado. Pero la verdad sobre los Custodios y el Cristal es demasiado fantástica. Los autores colocan todo en un archivo secreto. Los Custodios en Esbury son arrestados por cargos menores. Algunos escapan. Esbury vuelve a la \"normalidad\", pero todos saben que algo oscuro lingers.",
+    "choices": [
+      "Fin: La Verdad Clasificada - Hiciste todo lo que podías. Pero el gobierno nunca revelará la verdad completa. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Contacto con Autoridades Externas",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 55,
+    "text": "Justo cuando los Custodios están a punto de capturarte, Lance irrumpe con un grupo de marineros armados. \"¿Creíste que te dejaría solo?\" grita mientras dispara. Hay una batalla violenta. Lance está gravemente herido, pero logran escapar juntos. Huyen a su barco y se van a la mar.",
+    "choices": [
+      "Viajar a Nueva York,",
+      "Ir a la Antártida,",
+      "Viajar a un país neutral,"
+    ],
+    "trace_numbers": [
+      37,
+      45,
+      57
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Lance al Rescate",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 56,
+    "text": "Tú y Lance huyen en su bote. Los Custodios intentan perseguirte en lanchas rápidas, pero eres demasiado rápido. En el océano, tienes ventaja. Lance conoce cada onda, cada corriente. Logras escapar hacia aguas internacionales. Ahora estás a salvo, pero sin hogar. Sin futuro conocido.",
+    "choices": [
+      "Viajar a Nueva York,",
+      "Ir a la Antártida,",
+      "Viajar a un país neutral,"
+    ],
+    "trace_numbers": [
+      37,
+      45,
+      57
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Fuga por Mar",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 57,
+    "text": "Huyes a México. Luego a Brasil. Luego a Argentina. Viajas de país en país, evadiendo a los Custodios que parecen tener un alcance global. Finalmente, encuentras paz relativa en un pequeño pueblo en los Andes. Nadie te busca allá. Vives una vida tranquila, pero traumatizada.",
+    "choices": [
+      "Fin: El Exiliado Permanente - Escapaste de los Custodios. Pero nunca escaparás de lo que sabes. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Exilio",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 58,
+    "text": "Te escondes en el bosque durante meses. Vives de la tierra. Otros civiles huidos eventualmente te encuentran. Forman una pequeña comunidad. Juntos, planean un contrataque. Juntos, se preparan para la confrontación final.",
+    "choices": [
+      "Planificar venganza,",
+      "Abandonar el bosque y construir una vida nueva,",
+      "Contactar a Miskatonic,"
+    ],
+    "trace_numbers": [
+      46,
+      57,
+      60
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Vida en el Bosque",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 59,
+    "text": "Te conviertes en fantasma en tu propio pueblo. Vives en las sombras. Trabajas en trabajos bajo el radar. Observas a los Custodios. Aprendes sus patrones. Recopila inteligencia. Años después, cuando tienes suficiente información, contactas al FBI. Tu inteligencia es crucial en la caída de la célula de Esbury.",
+    "choices": [
+      "Fin: El Observador Silencioso - Paciencia y vigilancia fueron tus armas. El mal fue derrotado no por violencia, sino por paciencia. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Vida Oculta en Esbury",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 60,
+    "text": "Martha y tú planean un contraataque muy cuidado. Martha tiene conecta en toda la región. Otros pueblos enfrentaron a los Custodios. Otros investigadores están buscándolos. Se coordinan. Crean una red. Eventualmente, el movimiento se convierte en regional. Luego nacional. Los Custodios, sorprendidos, se ven forzados a retroceder.",
+    "choices": [
+      "Fin: El Organizador Humilde - No eres un guerrero. Eres un coordinador. Y eso fue más poderoso. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "planning",
+    "rolls": [],
+    "metadata": {
+      "title": "Planificación con Martha",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 61,
+    "text": "Encuentras a otros investigadores en Nueva York. Arqueólogos, historiadores, detective privados, personas que han perdido familiares a manos de los Custodios. Forman un grupo informal. Comparten información. Investigación juntos. Descubren patrones. Los Custodios tienen células en al menos 15 ciudades. Cada una protege un artefacto. No solo en la Antártida, sino en todo el mundo.",
+    "choices": [
+      "Contactar a Miskatonic,",
+      "Contactar al FBI,",
+      "Continuar investigación en secreto,"
+    ],
+    "trace_numbers": [
+      46,
+      62,
+      65
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Red de Investigadores",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 62,
+    "text": "Continúas investigando por tu cuenta. Es lento. Es peligroso. Pero es independiente. Durante años, acumulas información. Descubres la historia completa de los Custodios. Finalmente, lo sabes todo: quiénes son, dónde están, qué guardan, por qué. Pero tienes un problema: ¿qué haces con esta información? ¿A quién se la das? ¿En quién confías? Mientras vacila, los Custodios descubren tu investigación.",
+    "choices": [
+      "Huir,",
+      "Contactar a Miskatonic antes de que sea demasiado tarde,",
+      "Destruir todos tus registros,"
+    ],
+    "trace_numbers": [
+      46,
+      57,
+      63
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Investigación Solitaria",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 63,
+    "text": "Aceptas trabajar para Miskatonic University. Oficialmente, eres investigador académico. Secretamente, trabajas contra los Custodios. Durante los próximos años, contribuyes a la caída de varias células de Custodios. Ayudas a recuperar artefactos peligrosos. Es trabajo peligroso. Es trabajo que nunca será publicitado. Pero es trabajo que importa.",
+    "choices": [
+      "Fin: El Guardián Académico - Protegiste el mundo sin que el mundo lo sepa. Quizás eso es lo mejor. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Unirse a Miskatonic",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 64,
+    "text": "Dr. Armitage te envía a la Antártida con un equipo de investigadores de Miskatonic. Encuentran ruinas. Encuentran más cristales. Encuentran evidencia de civilizaciones antiguas. Encuentran un registro de piedra que describe la venida de Los Que Observan y su advertencia a los antiguos guardianes humanos. La Antártida es más peligrosa de lo que imaginaste. La temperaturas son letales. La ambiente está completamente alienígena. Sobrevives, pero apenas.",
+    "choices": [
+      "Fin: El Explorador Condenado - Viste lo que pocos han visto. Y desearías no haberlo hecho. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Viaje a la Antártida con Miskatonic",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 65,
+    "text": "Trabajas con el Agente Sullivan durante los próximos años. El FBI construye lentamente un caso contra los Custodios. Es meticuloso. Es lento. Pero es legal. Finalmente, el gobierno obtiene suficiente evidencia para acusaciones federales. Aunque muchos Custodios escapan (la red es internacional), la célula de Esbury es destruida. La verdad es parcialmente revelada en los periódicos como un \"esquema de crimen organizado\".",
+    "choices": [
+      "Fin: El Informante Anónimo - Hiciste una diferencia. Pero el público nunca sabrá cuán profundo fue el peligro. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Trabajo con el FBI",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 66,
+    "text": "Propones una alianza entre Miskatonic University y el FBI. Sorprendentemente, aceptan. La colaboración es extraña: académicos y agentes federales trabajando juntos. Pero es efectiva. Durante los próximos cinco años, desmantelan múltiples células de Custodios. La mayoría de los artefactos son recuperados y asegurados.",
+    "choices": [
+      "Fin: El Puente entre Mundos - Reuniste a dos poderes muy diferentes contra un enemigo común. La amenaza no está muerta, pero está contenida. (ENDING)"
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Alianza Miskatonic-FBI",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  }
+]

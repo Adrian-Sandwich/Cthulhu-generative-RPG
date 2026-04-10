@@ -1,0 +1,131 @@
+{
+  "atmosphere": {
+    "1": "The wind howls. The sea churns. Something ancient stirs beneath.",
+    "2": "Dust hangs in the stale air. Time itself seems to move differently here.",
+    "3": "Salt spray. Stone. The sound of waves crashing far below.",
+    "4": "The phone line crackles. Static between worlds.",
+    "5": "Reality bends around you. Colors that shouldn't exist. Sounds from beyond.",
+    "6": "The scent of old paper and deteriorating sanity fills your nostrils.",
+    "7": "The air tastes of copper and ozone. Something ancient breathes here.",
+    "8": "The highway stretches endlessly. In your mirror, the lighthouse blinks its warning.",
+    "9": "The line crackles with implications you cannot ignore.",
+    "10": "The world becomes liquid. Physics breaks. You understand too much.",
+    "11": "Your breath comes in gasps. Flight. Pure, animal flight.",
+    "12": "Your mind is a fortress. But something vast tests its walls.",
+    "13": "The boundaries between water and air dissolve. You cross a threshold.",
+    "14": "Fire and fury. The destruction of ancient machinery.",
+    "15": "Knowledge floods your consciousness. Horrible, incomprehensible knowledge.",
+    "16": "The thread connects. The pattern emerges. Eight faros in a circle.",
+    "17": "The halls of academia hold secrets. Some secrets should remain hidden.",
+    "18": "Authority and firepower meet the infinite. They are found wanting.",
+    "19": "The end times unfold before your eyes.",
+    "20": "Each faro is a pillar holding back the void.",
+    "21": "The doctor speaks of cycles and gods. Of imprisonment and return.",
+    "22": "Your sacrifice echoes through decades.",
+    "23": "The city drowns in impossible water.",
+    "24": "You are hunter and hunted, both.",
+    "25": "Magic and science converge. The barrier holds.",
+    "26": "You are now a watcher. Forever."
+  },
+  "objects": {
+    "1": {
+      "lighthouse": "A structure of stone and iron, built 80 years ago. Its light has guided ships. And other things.",
+      "car": "Your rental. Practical American engineering. It suddenly feels very fragile.",
+      "notepad": "Blank paper. For recording observations. Or last words."
+    },
+    "2": {
+      "desk": "Weathered oak, covered in dust and something darker.",
+      "logbook": "The farero's official record. Entries begin coherent. They end in madness.",
+      "bloodstain": "Very dark. Very old. Or very recent. Hard to tell.",
+      "keys": "Large iron keys. One unlocks the chamber above."
+    },
+    "3": {
+      "symbols": "Geometric patterns carved into stone. They hurt to look at directly.",
+      "moss": "Blue-green, iridescent, wrong.",
+      "stone": "Cool and ancient and full of purpose."
+    },
+    "5": {
+      "glass_tubes": "Filled with luminescent liquid that moves of its own volition.",
+      "circle": "Drawn on the floor in a substance you don't want to identify.",
+      "what_was_human": "No. Don't look. You already have. Too late."
+    },
+    "6": {
+      "letters": "Desperate. Becoming less coherent. Written in failing light.",
+      "sketches": "Things that were men. Things that are becoming more.",
+      "journal": "A record of transformation. Stage by stage. Pain by pain."
+    },
+    "7": {
+      "water": "It shouldn't flow like that. Gravity has no meaning here.",
+      "presence": "Something massive watches. Hungry. Patient.",
+      "rocks": "Smooth from non-traditional erosion."
+    }
+  },
+  "images": {
+    "1": {
+      "path": "images/lighthouse_exterior.png",
+      "caption": "The Lighthouse of Point Black. A guide for the lost. Or a beacon for the hungry."
+    },
+    "2": {
+      "path": "images/lighthouse_interior_lower.png",
+      "caption": "The logbook waits. Its pages hold answers that come at a terrible price."
+    },
+    "5": {
+      "path": "images/distillation_chamber.png",
+      "caption": "In the chamber above, the farero's ascension continues. Forever incomplete."
+    },
+    "7": {
+      "path": "images/the_fissure.png",
+      "caption": "The Fissure. Where geometry surrenders to hunger."
+    },
+    "17": {
+      "path": "images/miskatonic_archive.png",
+      "caption": "Miskatonic University. Where dangerous knowledge is preserved and studied."
+    }
+  },
+  "inventory_starts": {
+    "all": [
+      "Wallet (cash, ID)",
+      "Phone (battery: 60%)",
+      "Notebook",
+      "Pen"
+    ],
+    "if_special": {
+      "scientist": [
+        "Equipment kit",
+        "Documentation camera"
+      ],
+      "military": [
+        "Sidearm (9mm, 15 rounds)",
+        "Flashlight (military-grade)"
+      ]
+    }
+  },
+  "sound_effects": {
+    "entry_5": ["mechanical_whirring.wav", "liquid_bubbling.wav", "something_breathing.wav"],
+    "entry_7": ["ocean_impossibly.wav", "whisper_in_mind.wav"],
+    "entry_23": ["city_drowning.wav", "reality_tearing.wav"]
+  },
+  "visual_effects": {
+    "entry_5": {
+      "effect": "screen_distortion",
+      "intensity": "high",
+      "duration": 5
+    },
+    "entry_7": {
+      "effect": "color_inversion",
+      "intensity": "medium"
+    },
+    "entry_23": {
+      "effect": "screen_glitch",
+      "intensity": "extreme",
+      "duration": 10
+    }
+  },
+  "music": {
+    "default": "ambient_dread_01.ogg",
+    "entry_5": "cosmic_horror_high.ogg",
+    "entry_7": "the_fissure_calls.ogg",
+    "entry_17": "ancient_knowledge.ogg",
+    "entry_23": "apocalypse.ogg"
+  }
+}

@@ -1,0 +1,302 @@
+#!/usr/bin/env python3
+"""
+ALONE AGAINST THE DARK - Improved Interactive Game
+Better handling of conditional choices and navigation
+"""
+
+import os
+import sys
+import json
+import re
+from core.game_enhanced import EnhancedGameEngine
+from core.game_universal import Investigator
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
+def clear():
+    os.system('clear' if os.name == 'posix' else 'cls')
+
+# ═══════════════════════════════════════════════════════════════════════════
+
+def setup_game():
+    """Setup game: choose adventure and investigator"""
+    clear()
+    print("""
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                                                                           ║
+║          ALONE AGAINST THE DARK - Call of Cthulhu                        ║
+║                    Defying the Triumph of the Ice                         ║
+║                                                                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+    """)
+
+    print("CHOOSE YOUR ADVENTURE:\n")
+    print("  1) Alone Against the TIDE (243 entries - coastal investigation)")
+    print("  2) Alone Against the DARK (594 entries - Antarctic expedition)\n")
+
+    while True:
+        choice = input("  Enter 1 or 2: ").strip()
+        if choice in ['1', '2']:
+            break
+        print("  Invalid choice. Try again.")
+
+    if choice == '1':
+        entries_file = 'entries_with_rolls.json'
+        adventure_name = 'TIDE'
+    else:
+        entries_file = 'entries_dark_594_final.json'
+        adventure_name = 'DARK'
+
+    clear()
+    print(f"Alone Against the {adventure_name}\n")
+    print("SELECT YOUR INVESTIGATOR:\n")
+
+    with open('investigators.json', 'r') as f:
+        invs = json.load(f)
+
+    for i, inv in enumerate(invs, 1):
+        print(f"  {i}) {inv['name']:20} - {inv['occupation']}")
+
+    print()
+    while True:
+        choice = input("  Enter 1-4: ").strip()
+        if choice in ['1', '2', '3', '4']:
+            inv_data = invs[int(choice) - 1]
+            break
+        print("  Invalid choice. Try again.")
+
+    return entries_file, adventure_name, inv_data
+
+# ═══════════════════════════════════════════════════════════════════════════
+
+def format_entry(engine, entry_num):
+    """Format entry for display"""
+    entry = engine.base_engine.get_entry(entry_num)
+    if not entry:
+        return None
+
+    # Status bar
+    inv = engine.game.investigator
+    chars = inv.characteristics
+    san = chars['SAN']
+    san_bar = "█" * int(san / 4) + "░" * (25 - int(san / 4))
+    status = f"{inv.name} | HP:{chars['HP']:2} | SAN:[{san_bar}]{san:3} | Luck:{chars['Luck']:2}"
+
+    # Entry content
+    text = entry.get('text', '')
+
+    # Format output
+    output = f"{status}\n"
+    output += "─" * 80 + "\n"
+    output += f"[{entry_num:03d}] "
+    output += text[:750]
+    if len(text) > 750:
+        output += "\n... [more text] ..."
+    output += "\n"
+
+    return output
+
+def show_available_destinations(engine, entry_num):
+    """Show available destinations clearly"""
+    entry = engine.base_engine.get_entry(entry_num)
+    if not entry:
+        return
+
+    trace = entry.get('trace_numbers', [])
+
+    if not trace:
+        print("\n  ⚠️  No destinations from this entry. (Possible dead end)")
+        return
+
+    print("\nAVAILABLE ENTRIES:")
+    for i, dest in enumerate(trace, 1):
+        dest_entry = engine.base_engine.get_entry(dest)
+        dest_title = ""
+        if dest_entry:
+            # Try to extract title from entry metadata or first 50 chars
+            if 'metadata' in dest_entry and dest_entry['metadata'].get('title'):
+                dest_title = f" - {dest_entry['metadata']['title']}"
+            else:
+                dest_title = f" - {dest_entry.get('text', '')[:40]}..."
+
+        print(f"  {i:2d}. → Entry {dest:03d}{dest_title}")
+
+    print("\n  Type a number (1-9) or entry number directly (e.g., '42')")
+
+def show_help():
+    """Show command help"""
+    return """
+COMMANDS:
+  [NUMBER]    Go to entry (e.g., type "42" or "1" for first option)
+  [j]ournal   View recent events
+  [s]tatus    View full status
+  [h]elp      Show this help
+  [q]uit      Save and quit
+
+Just type the command and press ENTER.
+"""
+
+def format_status(engine, inv_data):
+    """Show full status"""
+    output = "\n" + "─" * 80 + "\n"
+    output += f"STATUS: {engine.game.investigator.name}\n"
+    output += "─" * 80 + "\n\n"
+
+    chars = inv_data['characteristics']
+    inv = engine.game.investigator
+
+    output += f"CHARACTERISTICS:\n"
+    output += f"  STR:{chars['STR']:2} CON:{chars['CON']:2} SIZ:{chars['SIZ']:2} DEX:{chars['DEX']:2}\n"
+    output += f"  INT:{chars['INT']:2} APP:{chars['APP']:2} POW:{chars['POW']:2} EDU:{chars['EDU']:2}\n"
+    output += f"  HP:{chars['HP']:2} SAN:{chars['SAN']:2} Luck:{chars['Luck']:2} MP:{chars['Magic_Points']:2}\n\n"
+
+    output += f"PROGRESS:\n"
+    output += f"  Entry: {engine.game.current_entry}\n"
+    output += f"  Visited: {len(engine.game.visited_entries)} locations\n"
+    output += f"  Rolls: {len(engine.game.roll_history)}\n\n"
+
+    output += f"RESOURCES:\n"
+    output += f"  Cash: ${inv_data['available_cash']:,}\n"
+
+    return output
+
+def format_journal(engine):
+    """Show recent journal entries"""
+    output = "\n" + "─" * 80 + "\n"
+    output += f"JOURNAL\n"
+    output += "─" * 80 + "\n\n"
+
+    if not engine.journal.entries:
+        output += "  [No events recorded yet]\n"
+    else:
+        for entry in engine.journal.entries[-10:]:
+            ts = entry['timestamp'].split('T')[1][:5]
+            output += f"  [{ts}] Entry {entry['entry']}: {entry['action']}\n"
+
+    return output
+
+def play_game(entries_file, adventure_name, inv_data):
+    """Main game loop"""
+
+    # Initialize engine
+    engine = EnhancedGameEngine(entries_file)
+
+    # Create investigator
+    inv = Investigator(
+        name=inv_data['name'],
+        skills=inv_data['skills'],
+        characteristics=inv_data['characteristics']
+    )
+
+    # Start game
+    engine.create_game(inv, inv_data['starting_entry'])
+
+    clear()
+    print(f"\n✓ You are {inv.name}")
+    print(f"✓ Beginning Alone Against the {adventure_name}")
+    print(f"✓ Entry {engine.game.current_entry}\n")
+    input("Press ENTER to begin...\n")
+
+    # Main loop
+    while True:
+        clear()
+
+        # Show current entry
+        entry_display = format_entry(engine, engine.game.current_entry)
+        if not entry_display:
+            print("ERROR: Entry not found!")
+            break
+
+        print(entry_display)
+
+        # Show available destinations
+        show_available_destinations(engine, engine.game.current_entry)
+
+        # Get command
+        cmd = input("\n➜ ").strip().lower()
+
+        # Parse command
+        if cmd == 'q':
+            # Quit
+            if input("\nSave game? (y/n): ").lower() == 'y':
+                save_file = engine.save_game()
+                print(f"✓ Saved: {save_file}")
+            print("\n👋 Thank you for playing!\n")
+            break
+
+        elif cmd == 'j':
+            # Journal
+            clear()
+            print(format_journal(engine))
+            input("Press ENTER to continue...")
+
+        elif cmd == 's':
+            # Status
+            clear()
+            print(format_status(engine, inv_data))
+            input("Press ENTER to continue...")
+
+        elif cmd == 'h':
+            # Help
+            clear()
+            print(show_help())
+            input("Press ENTER to continue...")
+
+        elif cmd.isdigit():
+            # Could be option number (1-9) or entry number
+            num = int(cmd)
+            entry = engine.base_engine.get_entry(engine.game.current_entry)
+            trace = entry.get('trace_numbers', [])
+
+            # Try option number first (if 1-9 and within range)
+            if 1 <= num <= len(trace):
+                # User typed option number
+                destination = trace[num - 1]
+                try:
+                    engine.move_to_entry(destination)
+                except Exception as e:
+                    print(f"\n⚠ Error: {e}")
+                    input("Press ENTER to continue...")
+            elif num in trace:
+                # User typed entry number directly
+                try:
+                    engine.move_to_entry(num)
+                except Exception as e:
+                    print(f"\n⚠ Error: {e}")
+                    input("Press ENTER to continue...")
+            else:
+                # Invalid destination
+                print(f"\n⚠ Entry {num} is not available from here")
+                print(f"   Valid entries: {', '.join(str(t) for t in trace)}")
+                input("Press ENTER to continue...")
+
+        else:
+            if cmd:  # Only show error if user typed something
+                print(f"\n⚠ Unknown command: '{cmd}'")
+                print("Type 'h' for help")
+                input("Press ENTER to continue...")
+
+
+def main():
+    """Main entry point"""
+    try:
+        # Setup
+        entries_file, adventure_name, inv_data = setup_game()
+
+        # Play
+        play_game(entries_file, adventure_name, inv_data)
+
+    except KeyboardInterrupt:
+        print("\n\n👋 Interrupted.\n")
+        sys.exit(0)
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()

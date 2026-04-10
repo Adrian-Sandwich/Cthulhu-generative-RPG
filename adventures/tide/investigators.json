@@ -1,0 +1,196 @@
+[
+  {
+    "name": "Louis Grunewald",
+    "order": 1,
+    "age": 53,
+    "occupation": "Professor",
+    "residence": "Arkham",
+    "description": "Prominent nose, moustache, usually messy and unkempt hair.",
+    "characteristics": {
+      "STR": 70,
+      "CON": 50,
+      "SIZ": 45,
+      "DEX": 60,
+      "INT": 70,
+      "APP": 55,
+      "POW": 55,
+      "EDU": 93,
+      "SAN": 55,
+      "HP": 9,
+      "Luck": 50,
+      "Magic_Points": 11
+    },
+    "combat_bonuses": {
+      "DB": "None",
+      "Build": 0,
+      "Move": 7
+    },
+    "combat_skills": {
+      "Brawl": 25,
+      "Dodge": 30
+    },
+    "skills": {
+      "Credit Rating": 35,
+      "History": 45,
+      "Language (German)": 90,
+      "Language (English)": 60,
+      "Language (Latin)": 45,
+      "Language (Nordic)": 40,
+      "Language (Hieroglyphics)": 50,
+      "Library Use": 60,
+      "Persuade": 40,
+      "Psychology": 30,
+      "Science (Cryptography)": 40
+    },
+    "starting_entry": 13,
+    "available_cash": 2200,
+    "significant_people": "Friends with Ernest Holt. Taught Lydia Lau and Devon Wilson."
+  },
+  {
+    "name": "Ernest Holt",
+    "order": 2,
+    "age": 62,
+    "occupation": "Industrialist",
+    "residence": "New York City",
+    "description": "Clean-shaven, receding hairline, prominent eyebrows.",
+    "characteristics": {
+      "STR": 45,
+      "CON": 35,
+      "SIZ": 80,
+      "DEX": 55,
+      "INT": 80,
+      "APP": 60,
+      "POW": 50,
+      "EDU": 65,
+      "SAN": 50,
+      "HP": 11,
+      "Luck": 55,
+      "Magic_Points": 10
+    },
+    "combat_bonuses": {
+      "DB": "+1D4",
+      "Build": 1,
+      "Move": 4
+    },
+    "combat_skills": {
+      "Brawl": 25,
+      "Dodge": 30,
+      "Revolver": 40,
+      "12-gauge Shotgun": 25
+    },
+    "skills": {
+      "Accounting": 25,
+      "Credit Rating": 50,
+      "Firearms (Handgun)": 40,
+      "Intimidate": 50,
+      "Language (English)": 65,
+      "Language (German)": 25,
+      "Law": 20,
+      "Listen": 30,
+      "Persuade": 40,
+      "Psychology": 30,
+      "Spot Hidden": 50,
+      "Throw": 30
+    },
+    "starting_entry": 36,
+    "available_cash": 35000,
+    "significant_people": "Friends with Louis Grunewald and Lydia Lau. Before retiring from the Navy, was Devon Wilson's commander."
+  },
+  {
+    "name": "Lydia Lau",
+    "order": 3,
+    "age": 23,
+    "occupation": "Reporter, New York Sun",
+    "residence": "New York City",
+    "description": "Dark hair, piercing eyes, slight build.",
+    "characteristics": {
+      "STR": 55,
+      "CON": 60,
+      "SIZ": 45,
+      "DEX": 65,
+      "INT": 70,
+      "APP": 65,
+      "POW": 60,
+      "EDU": 70,
+      "SAN": 60,
+      "HP": 10,
+      "Luck": 60,
+      "Magic_Points": 12
+    },
+    "combat_bonuses": {
+      "DB": "None",
+      "Build": 0,
+      "Move": 9
+    },
+    "combat_skills": {
+      "Brawl": 25,
+      "Dodge": 30,
+      "Revolver": 20
+    },
+    "skills": {
+      "Art/Craft (Copy Writing)": 65,
+      "Credit Rating": 20,
+      "Fast Talk": 45,
+      "History": 40,
+      "Language (English)": 70,
+      "Language (Hieroglyphics)": 20,
+      "Listen": 35,
+      "Psychology": 40,
+      "Science (Cryptography)": 20,
+      "Spot Hidden": 60,
+      "Stealth": 50
+    },
+    "starting_entry": 37,
+    "available_cash": 700,
+    "significant_people": "Girlfriend to Devon Wilson. Was taught by Louis Grunewald. Professional association with Ernest Holt has grown into a friendship."
+  },
+  {
+    "name": "Devon Wilson",
+    "order": 4,
+    "age": 28,
+    "occupation": "Sailor, US Navy",
+    "residence": "Norfolk, VA",
+    "description": "Short hair, clean-shaven, smart and tidy.",
+    "characteristics": {
+      "STR": 70,
+      "CON": 60,
+      "SIZ": 70,
+      "DEX": 60,
+      "INT": 65,
+      "APP": 50,
+      "POW": 80,
+      "EDU": 85,
+      "SAN": 80,
+      "HP": 13,
+      "Luck": 55,
+      "Magic_Points": 16
+    },
+    "combat_bonuses": {
+      "DB": "+1D4",
+      "Build": 1,
+      "Move": 8
+    },
+    "combat_skills": {
+      "Brawl": 25,
+      "Dodge": 30,
+      "Revolver": 20,
+      "30-06 Rifle": 25
+    },
+    "skills": {
+      "Credit Rating": 30,
+      "First Aid": 40,
+      "Language (English)": 85,
+      "Language (German)": 20,
+      "Mechanical Repair": 35,
+      "Navigate": 60,
+      "Pilot (Boat)": 60,
+      "Science (Cryptography)": 10,
+      "Survival (Sea)": 40,
+      "Survival (Desert)": 30,
+      "Swim": 45
+    },
+    "starting_entry": 554,
+    "available_cash": 2500,
+    "significant_people": "Boyfriend to Lydia Lau. Was taught by Louis Grunewald. Ernest Holt was former commanding officer."
+  }
+]

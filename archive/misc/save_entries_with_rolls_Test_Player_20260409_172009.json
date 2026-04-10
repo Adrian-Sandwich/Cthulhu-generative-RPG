@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "timestamp": "2026-04-09T17:20:09.772072",
+    "adventure": "entries_with_rolls",
+    "investigator": "Test Player",
+    "current_entry": 20,
+    "visited_entries_count": 2,
+    "rolls_executed": 0
+  },
+  "game_state": {
+    "current_entry": 20,
+    "visited_entries": [
+      15,
+      20
+    ],
+    "investigator": {
+      "name": "Test Player",
+      "skills": {
+        "Psychology": 50,
+        "Dodge": 40
+      },
+      "characteristics": {
+        "SAN": 60,
+        "Luck": 50
+      }
+    },
+    "roll_history": []
+  },
+  "journal": {
+    "entries": [
+      {
+        "timestamp": "2026-04-09T17:20:09.772022",
+        "entry": 13,
+        "action": "GAME_START",
+        "details": "Iniciado como Test Player"
+      },
+      {
+        "timestamp": "2026-04-09T17:20:09.772033",
+        "entry": 15,
+        "action": "VISIT",
+        "details": "While the estate sale seems interesting, you would feel more secure with a roof over your head for t"
+      },
+      {
+        "timestamp": "2026-04-09T17:20:09.772049",
+        "entry": 15,
+        "action": "ROLL: Psychology (Normal)",
+        "details": "\u2717 FAILED"
+      },
+      {
+        "timestamp": "2026-04-09T17:20:09.772053",
+        "entry": 20,
+        "action": "VISIT",
+        "details": "48 It would seem one of the other collectors here wants this particular item more than you. The robe"
+      }
+    ]
+  }
+}

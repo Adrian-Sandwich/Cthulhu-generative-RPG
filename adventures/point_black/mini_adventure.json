@@ -1,0 +1,724 @@
+[
+  {
+    "number": 1,
+    "text": "Te bajás del auto rentado en el estacionamiento de grava del Faro de Punto Negro. La estructura de piedra se alza contra el cielo gris de la tarde, su luz roja parpadea ritmicamente. El oleaje del Océano Atlántico es furioso hoy. El Teniente Warner te había dicho por teléfono: \"El farero desapareció hace una semana. Dejó la puerta abierta. Los registros... no tienen sentido.\"",
+    "choices": [
+      "Entrar directamente al faro,",
+      "Examinar primero el exterior,",
+      "Volver y llamar al Teniente Warner,"
+    ],
+    "trace_numbers": [
+      2,
+      3,
+      4
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "adventure",
+    "rolls": [],
+    "metadata": {
+      "title": "Llegada al Faro de Punto Negro",
+      "tags": [
+        "investigation",
+        "coastal",
+        "start"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 2,
+    "text": "Cruzás la puerta oxidada hacia la planta baja del faro. La luz natural apenas penetra aquí, las ventanas están cubiertas de una costra marrón oscuro. \"27 de marzo - Vi algo en el agua. No debería estar allá. No debería EXISTIR. Si estás leyendo esto, no toques la cámara de destilación de arriba.\" El diario tiene manchas de algo rojo oscuro.",
+    "choices": [
+      "Subir a la cámara de destilación (contra la advertencia),",
+      "Buscar más pistas en la planta baja,",
+      "Llamar al Teniente ahora mismo,"
+    ],
+    "trace_numbers": [
+      4,
+      5,
+      6
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "adventure",
+    "rolls": [],
+    "metadata": {
+      "title": "Interior del Faro - Planta Baja",
+      "tags": [
+        "investigation",
+        "interior"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 3,
+    "text": "Das una vuelta alrededor del faro examinando cuidadosamente las grietas y marcas en la piedra. Símbolos que no reconocés, pero que emanan una sensación de... wrongness. También ves que hay una escalera de hierro oxidado que baja hacia las rocas del acantilado.",
+    "choices": [
+      "Bajar a las rocas,",
+      "Entrar al faro por la puerta principal,",
+      "Volver al auto y huir,"
+    ],
+    "trace_numbers": [
+      2,
+      7,
+      8
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "investigation",
+    "rolls": [
+      {
+        "type": "skill_check",
+        "skill": "investigate",
+        "difficulty": "normal"
+      }
+    ],
+    "metadata": {
+      "title": "Examinando el Exterior",
+      "tags": [
+        "investigation",
+        "outdoor"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": "investigate/normal"
+    }
+  },
+  {
+    "number": 4,
+    "text": "Sacás tu teléfono. La recepción es mala aquí arriba en el acantilado, pero lográs conectar con el Teniente Warner. \"¿Llamás desde el faro? Bien. Escuchá, descubrimos algo. El farero no tenía familia. Nadie ha reclamado su cuerpo. Y la autopsia reveló que había estado MUERTO hace al menos dos semanas cuando lo encontramos.\" \"Pero el Diario de Logros tiene entradas de tres días atrás. Alguien ha estado escribiendo en ese diario después de su muerte.\" Te congelas. ¿Quién entonces ha estado en el faro?",
+    "choices": [
+      "Preguntar más por teléfono,",
+      "Entrar al faro ahora mismo,",
+      "Abandonar el lugar,"
+    ],
+    "trace_numbers": [
+      2,
+      8,
+      9
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [
+      {
+        "type": "skill_check",
+        "skill": "pow",
+        "difficulty": "normal"
+      }
+    ],
+    "metadata": {
+      "title": "Llamada al Teniente Warner",
+      "tags": [],
+      "sanity_mod": -2,
+      "hp_mod": 0,
+      "roll": "pow/normal"
+    }
+  },
+  {
+    "number": 5,
+    "text": "Subís por la escalera de hierro espiral hacia la cámara de destilación en lo alto del faro. Lo que ves desafía descripción. El dispositivo de destilación está activo. Hirviendo. Dentro de los tubos de vidrio hay... Se mueve por su propia voluntad. Los tubos están conectados a un círculo extraño grabado en el piso. En el centro del círculo hay una forma. Fue humanoide una vez. Ahora es... Algo en lo que el farero se transformó. Incompleto. Sufriendo eternamente. La criatura gira su cabeza imposible hacia ti.",
+    "choices": [
+      "Destruir todo (derribar los tubos),",
+      "Huir corriendo,",
+      "Hacer una tirada de POW para resistir su llamada mental,"
+    ],
+    "trace_numbers": [
+      10,
+      11,
+      12
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "investigation",
+    "rolls": [
+      {
+        "type": "skill_check",
+        "skill": "pow",
+        "difficulty": "normal"
+      }
+    ],
+    "metadata": {
+      "title": "La Cámara de Destilación",
+      "tags": [
+        "horror",
+        "supernatural"
+      ],
+      "sanity_mod": -8,
+      "hp_mod": -4,
+      "roll": "pow/normal"
+    }
+  },
+  {
+    "number": 6,
+    "text": "Pasás horas examinando los registros en la planta baja. Encontrás cartas sin enviar, dibujos, anotaciones delirantes. No con violencia. Con promesas. Dijeron que podría ser perfeccionado. Que ascendería a algo mayor.\" En un dibujo esbozo, ves la criatura del piso de arriba. Pero también ves otras. Otras formas. Un ejército de transformaciones esperando en el fondo del océano. Otras notas hablan de \"La Fisura\" - un lugar en las rocas donde el agua fluye de manera imposible. Donde el océano entra en lugares que no existen.",
+    "choices": [
+      "Investigar La Fisura en las rocas,",
+      "Subir a la cámara de destilación,",
+      "Llamar refuerzos,"
+    ],
+    "trace_numbers": [
+      4,
+      5,
+      7
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "investigation",
+    "rolls": [],
+    "metadata": {
+      "title": "Registros del Farero",
+      "tags": [
+        "investigation",
+        "clue"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 7,
+    "text": "Bajás por la escalera oxidada hacia las rocas del acantilado. El océano ruge debajo, salpicándote con agua helada. Entre las grietas de las rocas, ves La Fisura. No es una abertura normal. Es un lugar donde la geometría del espacio se comporta de manera imposible. El agua fluye HACIA adentro, en espirales que desafían la gravedad. observando, esperando, hambriente. Una voz - no auditiva, sino directamente en tu mente - te susurra promesas. \"Ven. Únete. Ascenderás como el farero ascendió.\"",
+    "choices": [
+      "Entrar en La Fisura (cierto destino no natural),",
+      "Huir de las rocas,",
+      "Lanzar granadas de dinamita (si las tenés),"
+    ],
+    "trace_numbers": [
+      11,
+      13,
+      14
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [
+      {
+        "type": "skill_check",
+        "skill": "pow",
+        "difficulty": "normal"
+      }
+    ],
+    "metadata": {
+      "title": "Las Rocas del Acantilado",
+      "tags": [
+        "horror",
+        "coastal"
+      ],
+      "sanity_mod": -5,
+      "hp_mod": 0,
+      "roll": "pow/normal"
+    }
+  },
+  {
+    "number": 8,
+    "text": "Corrés hacia tu auto. Arrancás sin mirar atrás. En el espejo retrovisor, ves la luz del faro parpadear en patrones imposibles. Patrones que significan algo. Una invitación que aún resuena en tu mente. Durante años, recibís cartas sin remitente. Cada una contiene dibujos de La Fisura. Y tus datos personales. Y ubicaciones. Sabés que te están buscando. Y que eventualmente, te encontrarán. ---",
+    "choices": [],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "ending",
+    "rolls": [],
+    "metadata": {
+      "title": "Huida - Final Cobardia",
+      "tags": [
+        "ending"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 9,
+    "text": "\"¿Algo más?\" preguntás. El Teniente hace una pausa larga. \"Sí. Analizamos la sustancia azul de las grietas de las piedras. Es... imposible. No coincide con nada en la tabla periódica. Es como si fuera materia de un OTRO lugar. De otra química. De otra realidad.\" \"Y algo más. Encontramos registros de otros faros. Ocho en total, en la costa este. Todos con desapariciones similares. En el mismo período de tiempo. Todos con sustancias azules.\" \"Investigador, creo que estamos ante algo que va más allá de crímenes comunes.\"",
+    "choices": [
+      "Confesar tus sospechas sobre lo sobrenatural,",
+      "Pedir información sobre los otros faros,",
+      "Decir que investigarás más y cortar,"
+    ],
+    "trace_numbers": [
+      2,
+      15,
+      16
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "encounter",
+    "rolls": [
+      {
+        "type": "skill_check",
+        "skill": "pow",
+        "difficulty": "normal"
+      }
+    ],
+    "metadata": {
+      "title": "Revelaciones Oscuras por Teléfono",
+      "tags": [],
+      "sanity_mod": -4,
+      "hp_mod": 0,
+      "roll": "pow/normal"
+    }
+  },
+  {
+    "number": 10,
+    "text": "Agarrás una herramienta de hierro y destrozás los tubos de vidrio. El líquido azul se derrama. La criatura grita. Un grito que hace añicos las ventanas del faro y te perfora los tímpanos. Todo a tu alrededor comienza a cambiar. La realidad se retuerce. Las paredes se vuelven flexibles. El piso se convierte en agua. Caés hacia... algo. No es caída. Es transformación.",
+    "choices": [
+      "Fin: PERDIDO EN LAS PROFUNDIDADES - Te convertiste en algo más. Ya no eres completamente humano."
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "ending",
+    "rolls": [
+      {
+        "type": "skill_check",
+        "skill": "pow",
+        "difficulty": "normal"
+      }
+    ],
+    "metadata": {
+      "title": "Destrucción de la Cámara",
+      "tags": [],
+      "sanity_mod": -10,
+      "hp_mod": -8,
+      "roll": "pow/normal"
+    }
+  },
+  {
+    "number": 11,
+    "text": "Corrés escaleras abajo, tropezando, cayendo. Detrás de ti, escuchas pasos imposibles. Pasos que no suenan como pasos humanos. Lográs llegar a la puerta principal y salís corriendo hacia tu auto. Arrancás con la adrenalina al máximo. En el espejo retrovisor, ves a la COSA en la puerta del faro. Está casi... sonriendo. Manejás toda la noche sin parar.",
+    "choices": [
+      "Ir a Nueva York para investigar los otros faros,",
+      "Ir a una universidad para investigar símbolos,",
+      "Fin: EL TESTIGO TRAUMATIZADO - Sobreviviste. Pero llevarás esto contigo para siempre."
+    ],
+    "trace_numbers": [
+      16,
+      17
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Huida del Faro",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": -6,
+      "roll": null
+    }
+  },
+  {
+    "number": 12,
+    "text": "Cierras los ojos. Te enfocás en tu mente, en tu identidad, en lo que sos. La voz en tu cabeza grita. Intenta posesionarse. Intenta asimilarte. Pero algo en ti es lo suficientemente fuerte. Lo suficientemente terco. La voz se retira, frustrada. Pero no desaparece. \"No hoy,\" sussuras. \"Pero volveremos.\" Subís al faro, determinado a entender qué está pasando.",
+    "choices": [
+      "Investigar la cámara de destilación,",
+      "Documentar todo y escapar,",
+      "Llamar refuerzos especiales,"
+    ],
+    "trace_numbers": [
+      5,
+      11,
+      18
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [
+      {
+        "type": "skill_check",
+        "skill": "pow",
+        "difficulty": "hard"
+      }
+    ],
+    "metadata": {
+      "title": "Resistencia Mental",
+      "tags": [],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": "pow/hard"
+    }
+  },
+  {
+    "number": 13,
+    "text": "Entras a La Fisura. El agua no es agua. Es algo vivo. Te envuelve. Ves colores que no tienen nombre. Escuchas sonidos que existen fuera del espectro auditivo. Entendés, en ese último momento de claridad, que has sido elegido. Que serás el siguiente en ascender. Que tu transformación ya ha comenzado.",
+    "choices": [
+      "Fin: EL ASCENDIDO - Ya no eres humano. Sos algo más. Y parte de ti... casi está satisfecho."
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "ending",
+    "rolls": [
+      {
+        "type": "skill_check",
+        "skill": "pow",
+        "difficulty": "normal"
+      }
+    ],
+    "metadata": {
+      "title": "Entrada a La Fisura",
+      "tags": [
+        "horror",
+        "ending"
+      ],
+      "sanity_mod": -15,
+      "hp_mod": 0,
+      "roll": "pow/normal"
+    }
+  },
+  {
+    "number": 14,
+    "text": "Sacás las granadas que traías. Las arrojás hacia La Fisura. La explosión es catastrófica. Las rocas explotan en un millón de fragmentos. Pero La Fisura... no cierra. Se expande. La onda expansiva te lanza contra el acantilado. Duele. Todo duele. Y peor que el dolor físico es la sensación de que acabas de despertar algo. Algo muy, muy furioso. El faro comienza a colapsar.",
+    "choices": [
+      "Escapar antes de que todo se derrumbe,",
+      "Quedarte para ver el final,"
+    ],
+    "trace_numbers": [
+      11,
+      19
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [
+      {
+        "type": "skill_check",
+        "skill": "pow",
+        "difficulty": "normal"
+      }
+    ],
+    "metadata": {
+      "title": "Dinamita en La Fisura",
+      "tags": [],
+      "sanity_mod": -12,
+      "hp_mod": -12,
+      "roll": "pow/normal"
+    }
+  },
+  {
+    "number": 15,
+    "text": "\"Teniente, creo que esto es sobrenatural. Creo que algo está transformando a la gente. Algo que viene desde abajo. Del océano.\" Silencio al otro lado de la línea. \"Investigador, hace tres años tuvimos un caso similar. En Miskatonic University. Un profesor llamado Armitage nos recomendó contactar con ustedes... pero le dijeron que no estaba interesado en investigaciones de fuera.\" \"Espera. ¿Vos decís que Miskatonic podría estar involucrado?\"",
+    "choices": [
+      "Ir directamente a Miskatonic,",
+      "Continuar investigando el faro,",
+      "Pedir que envíe backup,"
+    ],
+    "trace_numbers": [
+      5,
+      17,
+      18
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [
+      {
+        "type": "skill_check",
+        "skill": "pow",
+        "difficulty": "normal"
+      }
+    ],
+    "metadata": {
+      "title": "Verdad Cósmica Revelada",
+      "tags": [],
+      "sanity_mod": -6,
+      "hp_mod": 0,
+      "roll": "pow/normal"
+    }
+  },
+  {
+    "number": 16,
+    "text": "\"Decime sobre los otros faros,\" pedís. El Teniente te da una lista. Ocho faros en total. Todos en la costa este. Todos con desapariciones en los últimos tres meses. Pero hay un patrón. Un patrón geométrico. Los faros están posicionados en lo que parece ser... un círculo. Un círculo masivo que abarca miles de kilómetros. o algo - está usando estos faros para algo?\" \"Para qué,\" pregunta él. \"Para abrir algo. Para crear una puerta. Para invocar algo desde abajo.\" Otro silencio largo. \"Necesitamos ayuda de Miskatonic. Necesitamos expertos. Necesitamos entender qué estamos enfrentando.\"",
+    "choices": [
+      "Viajar a Miskatonic,",
+      "Continuar solo investigando los faros,",
+      "Retirarse ahora,"
+    ],
+    "trace_numbers": [
+      8,
+      17,
+      20
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "investigation",
+    "rolls": [],
+    "metadata": {
+      "title": "Red de Faros",
+      "tags": [
+        "investigation",
+        "revelation"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 17,
+    "text": "Llegás a Miskatonic. El Teniente te conectó con el Dr. Armitage, Jefe del Archivo Especial. El Dr. Armitage es un anciano de más de 80 años, con ojos que sugieren que ha visto cosas que la mente racional no debería haber visto. \"Así que descubriste La Fisura,\" dice sin preámbulos. \"¿Cómo sabés...?\" \"Porque esto ha ocurrido antes. Hace 40 años. En los mismos faros. El patrón es cíclico. Cada 40 años, algo intenta despertar. Algo que está debajo. Algo que fue enterrado hace miles de años.\" Abre una carpeta antigua. Dentro hay mapas. Diagramas. Y una fotografía de La Fisura, exactamente como la viste. \"Esto se llama el Ciclo de Dagon. Y creo que ya comenzó nuevamente.\"",
+    "choices": [
+      "Conocer el Ciclo de Dagon completamente,",
+      "Pedir armas y ayuda,",
+      "Retirarse de la investigación,"
+    ],
+    "trace_numbers": [
+      8,
+      18,
+      21
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Miskatonic University - El Archivo Prohibido",
+      "tags": [
+        "investigation",
+        "revelation"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 18,
+    "text": "Trabajas con el Teniente para reunir un equipo especializado. Se contactan con agencias federales. El FBI se involucra. Pero hay un problema: nadie sabe contra qué están luchando. No es terrorismo. No es crimen. Es algo sin precedentes. El equipo llega al faro con equipamiento pesado. Explosivos. Armas especializadas. Pero cuando suben al faro, La Fisura se ha expandido. Ya no es una abertura en las rocas. Es una herida en la realidad misma.",
+    "choices": [
+      "Intentar sellar La Fisura,",
+      "Evacuar e intentar desde La Miskatonic,",
+      "Sacrificarse para cerrar la puerta,"
+    ],
+    "trace_numbers": [
+      17,
+      19,
+      22
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "action",
+    "rolls": [],
+    "metadata": {
+      "title": "Backup del Gobierno",
+      "tags": [
+        "action"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 19,
+    "text": "El faro se desmorona. Las piedras se disuelven como si fueran arena mojada. La Fisura crece. Y de ella emergen COSAS. Cosas antediluvianas. Cosas que existían antes de que los dinosaurios caminaran la tierra. No puedes combatirlas. No puedes razonar con ellas. Todo lo que puedes hacer es observar y aceptar tu insignificancia en el universo.",
+    "choices": [
+      "Fin: EL TESTIGO DEL FIN - Viste el futuro de la humanidad. Y no hay esperanza."
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "ending",
+    "rolls": [
+      {
+        "type": "skill_check",
+        "skill": "pow",
+        "difficulty": "normal"
+      }
+    ],
+    "metadata": {
+      "title": "El Colapso del Faro",
+      "tags": [
+        "climax"
+      ],
+      "sanity_mod": -14,
+      "hp_mod": -15,
+      "roll": "pow/normal"
+    }
+  },
+  {
+    "number": 20,
+    "text": "Decides investigar los otros siete faros por tu cuenta. Durante las próximas semanas, viajas de costa a costa. Cada faro cuenta la misma historia. Sustancia azul. Símbolos imposibles. Transformaciones incompletas. Pero también encuentras documentos. Evidencia de que esto ha ocurrido antes. En 1926. En 1886. En 1846. Siempre cada 40 años. Y encuentras un último documento: un mapa que muestra qué sucede cuando todos los faros están simultáneamente activos. El mapa muestra un círculo rojo. En el centro: Nueva York.",
+    "choices": [
+      "Correr a Nueva York antes de que sea demasiado tarde,",
+      "Volver a Miskatonic con la evidencia,",
+      "Intentar sabotear los faros uno por uno,"
+    ],
+    "trace_numbers": [
+      17,
+      23,
+      24
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "choice",
+    "rolls": [],
+    "metadata": {
+      "title": "Investigación Solitaria - Los Ocho Faros",
+      "tags": [
+        "investigation"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 21,
+    "text": "El Dr. Armitage te muestra documentos clasificados. Historias de siglos atrás. \"Dagon es una entidad cósmica. Un dios del océano antiguo. Fue derrotado hace milenios, pero no fue destruido. Fue aprisionado. Debajo del océano.\" \"Cada 40 años, durante un alineamiento celestial específico, intenta escapar. Envía sus sirvientes a transformar a la gente. A convertirlos en guardianes híbridos.\" \"Los faros son puntos de anclaje. Cuando todos están activos simultáneamente, abren un portal permanente.\" \"Y los faros se activarán en...\" Armitage verifica un calendario. \"...cuatro días.\" Te das cuenta de que estás en una carrera contra el tiempo.",
+    "choices": [
+      "Viajar a todos los faros para sabotearlos,",
+      "Preparar Miskatonic para una defensa mágica,",
+      "Contactar a autoridades mundiales,"
+    ],
+    "trace_numbers": [
+      24,
+      25,
+      26
+    ],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "discovery",
+    "rolls": [
+      {
+        "type": "skill_check",
+        "skill": "pow",
+        "difficulty": "normal"
+      }
+    ],
+    "metadata": {
+      "title": "El Ciclo de Dagon",
+      "tags": [],
+      "sanity_mod": -10,
+      "hp_mod": 0,
+      "roll": "pow/normal"
+    }
+  },
+  {
+    "number": 22,
+    "text": "Tomas la decisión. Mientras el equipo se retira, tú te quedas atrás. Armás todo el explosivo que tienen. Tú mismo. Tu cuerpo como detonador. La explosión es suficiente para cerrar La Fisura. Por ahora. Pero sabes que solo compraste tiempo. Que en 40 años, esto volverá a ocurrir. Que alguien más tendrá que estar de pie donde hoy estás vos.",
+    "choices": [
+      "Fin: EL MÁRTIR - Tu nombre será olvidado. Pero el mundo sigue existiendo."
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "ending",
+    "rolls": [],
+    "metadata": {
+      "title": "El Sacrificio Final",
+      "tags": [
+        "ending",
+        "sacrifice"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 23,
+    "text": "Llegás a Nueva York para descubrir que ya es demasiado tarde. Los edificios se derriten. La realidad se retuerce. El océano... el océano está invadiendo la ciudad de una manera que no es física, sino dimensional. Y en el cielo, ves la forma de Dagon. No completamente. Solo un fragmento. Pero suficiente para entender que vas a presenciar el fin de la civilización humana.",
+    "choices": [
+      "Fin: EL APOCALIPSIS - La humanidad había tenido una buena carrera."
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "ending",
+    "rolls": [
+      {
+        "type": "skill_check",
+        "skill": "pow",
+        "difficulty": "normal"
+      }
+    ],
+    "metadata": {
+      "title": "Nueva York en Pánico",
+      "tags": [
+        "climax"
+      ],
+      "sanity_mod": -16,
+      "hp_mod": 0,
+      "roll": "pow/normal"
+    }
+  },
+  {
+    "number": 24,
+    "text": "Viajas de faro a faro. En algunos logras destruir la maquinaria antes de que los guardianes híbridos te detengan. En otros, fallas. Las transformaciones ya están muy avanzadas. Pero logras destruir cinco de los ocho faros antes de que te atrapen. Sin cinco de los ocho faros, el portal no puede abrirse completamente. Dagon permanece aprisionado. Por ahora. Pero los guardianes híbridos restantes te persiguen.",
+    "choices": [
+      "Fin: EL CAZADOR CAZADO - Salvaste el mundo. Pero ahora sos una presa eterna."
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "ending",
+    "rolls": [
+      {
+        "type": "skill_check",
+        "skill": "pow",
+        "difficulty": "normal"
+      }
+    ],
+    "metadata": {
+      "title": "Sabotaje de los Faros",
+      "tags": [],
+      "sanity_mod": -12,
+      "hp_mod": -20,
+      "roll": "pow/normal"
+    }
+  },
+  {
+    "number": 25,
+    "text": "Trabajan furiosamente durante cuatro días. El Dr. Armitage enseña a estudiantes los rituales de protección. Se preparan amulets. Se graban símbolos en las paredes. Cuando llega el momento del alineamiento, todos los faros se activan simultáneamente. Pero el portal que intenta formarse no puede atravesar las defensas de Miskatonic. Se abre... pero se cierra. Dagon grita (puedes escucharlo en tu mente, gritando de frustración cósmica) y se retira. \"Lo logramos,\" dice Armitage. \"Pero volverá.\" Sabes que ahora sos parte de un orden secreto. Un guardián. Protegiendo a la humanidad de cosas que la humanidad no debería saber que existen.",
+    "choices": [
+      "Fin: EL GUARDIÁN - Tu vida ya no es tuya. Ahora le pertenece a fuerzas mayores."
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "ending",
+    "rolls": [],
+    "metadata": {
+      "title": "Defensa Mágica de Miskatonic",
+      "tags": [
+        "investigation",
+        "supernatural"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  },
+  {
+    "number": 26,
+    "text": "Contactás a gobiernos en todo el mundo. Les cuentas la verdad (o una versión de ella). Sorprendentemente, algunos creen. Otros ya sabían. Se coordinan ataques simultáneos en todos los ocho faros. Operaciones militares secretas. La noche del alineamiento, los ocho faros son destruidos simultáneamente. La puerta nunca llega a abrirse. Dagon permanece aprisionado. Para las próximas cuatro décadas. Pero tú sabes que en 40 años, volverá. Y que alguien más tendrá que estar listo.",
+    "choices": [
+      "Fin: EL VIGILANTE EN LAS SOMBRAS - El mundo nunca sabrá lo que impediste."
+    ],
+    "trace_numbers": [],
+    "character_name": null,
+    "is_adventure_entry": true,
+    "entry_type": "ending",
+    "rolls": [],
+    "metadata": {
+      "title": "Contacto Mundial - Respuesta Coordinada",
+      "tags": [
+        "action",
+        "ending"
+      ],
+      "sanity_mod": 0,
+      "hp_mod": 0,
+      "roll": null
+    }
+  }
+]

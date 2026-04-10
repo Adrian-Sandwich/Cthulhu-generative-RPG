@@ -35,6 +35,9 @@ class GameState:
     game_phase: str  # "exploring", "investigation", "combat", "climax", "ending"
     victory_condition: Optional[str]  # How player could win
     ending_reached: Optional[str]  # "escape", "madness", "victory", "death"
+    ending_narrative: Optional[str]  # Rich ending text
+    active_combat: Optional[Dict] = None  # Current enemy stats
+    npcs_talked_to: Dict[str, List[str]] = None  # NPC key -> topics discussed
 
 
 class CoC7eRulesEngine:
@@ -207,6 +210,43 @@ class GenerativeGameEngine:
         }
     }
 
+    # Item definitions
+    ITEMS = {
+        "flashlight": {"name": "Flashlight", "description": "Casts light in darkness"},
+        "notebook": {"name": "Notebook", "description": "For recording findings"},
+        "revolver": {"name": "Revolver (.38)", "description": "6-shot pistol", "ammo": 6},
+        "dynamite": {"name": "Dynamite (3 sticks)", "description": "Explosive charges"},
+        "holy_water": {"name": "Holy Water (vial)", "description": "Blessed by a priest"},
+        "rope": {"name": "Rope (30ft)", "description": "Hemp rope"},
+        "logbook": {"name": "Keeper's Logbook", "description": "Contains disturbing final entries"},
+        "ancient_text": {"name": "Ancient Text", "description": "Pre-human symbols and script"},
+    }
+
+    # Enemy definitions
+    ENEMIES = {
+        "deep_one_hybrid": {"name": "Deep One Hybrid", "hp": 12, "skill": 45, "damage": 6},
+        "animated_corpse": {"name": "Animated Corpse", "hp": 8, "skill": 30, "damage": 4},
+        "shadow_thing": {"name": "Shadow Entity", "hp": 20, "skill": 60, "damage": 8}
+    }
+
+    # NPC definitions
+    NPC_DEFINITIONS = {
+        "warner": {
+            "name": "Lt. William Warner",
+            "role": "Coast Guard Officer",
+            "knows": ["keeper vanished", "lighthouse abandoned 2 weeks", "strange sounds at night"],
+            "personality": "professional but visibly shaken, trying to maintain composure",
+            "available_turns": range(1, 10)
+        },
+        "armitage": {
+            "name": "Dr. Henry Armitage",
+            "role": "Miskatonic University Professor",
+            "knows": ["symbols are pre-human", "fissure predates lighthouse", "ritual to seal it"],
+            "personality": "academic, grave, speaks in measured tones",
+            "available_turns": range(3, 10)
+        }
+    }
+
     def __init__(self, ollama_endpoint: str = "http://localhost:11434"):
         self.ollama_endpoint = ollama_endpoint
         self.model = "mistral"
@@ -223,7 +263,10 @@ class GenerativeGameEngine:
             recent_actions=[],
             game_phase="exploring",
             victory_condition="Survive and uncover the truth",
-            ending_reached=None
+            ending_reached=None,
+            ending_narrative=None,
+            active_combat=None,
+            npcs_talked_to={}
         )
         return self.state
 
@@ -307,11 +350,26 @@ Name: {inv.name}
 Occupation: {inv.occupation}
 HP: {inv.characteristics['HP']}, SAN: {inv.characteristics['SAN']}, POW: {inv.characteristics['POW']}
 Key Skills: {json.dumps({k: v for k, v in inv.skills.items() if v >= 40})}
+Inventory: {', '.join(inv.inventory) if inv.inventory else 'Empty'}
+
+=== ITEMS (when player finds something) ===
+Emit: [ITEM_FOUND: item_key]
+Available: flashlight, notebook, revolver, dynamite, holy_water, rope, logbook, ancient_text
+
+=== COMBAT (when player fights creature) ===
+Emit: [COMBAT_START: enemy_key]
+Available enemies: deep_one_hybrid, animated_corpse, shadow_thing
+For environmental damage: [HP_DAMAGE: N]
+
+=== NPC DIALOGUE (when player talks to characters) ===
+Emit: [NPC_DIALOGUE: npc_key]
+Available: warner, armitage
 
 === CURRENT SITUATION ===
 Location: {self.state.location}
 Turn: {self.state.turn}
 Phase: {self.state.game_phase}
+Combat: {'In combat with ' + self.state.active_combat['name'] if self.state.active_combat else 'None'}
 
 Recent story:
 {narrative_context}
@@ -324,7 +382,11 @@ Recent story:
 2. If action requires a roll, REQUEST IT: [ROLL: skill_name/difficulty]
    - ONLY if the action has real risk/uncertainty AND matches skill matrix above
 3. If witnessing cosmic horror, suggest: [SANITY_CHECK: damage]
-4. Keep tone atmospheric, dark, foreboding
+4. If player finds item, emit: [ITEM_FOUND: item_key]
+5. If combat begins, emit: [COMBAT_START: enemy_key]
+6. If environmental damage, emit: [HP_DAMAGE: N]
+7. If player talks to NPC, emit: [NPC_DIALOGUE: npc_key]
+8. Keep tone atmospheric, dark, foreboding
 
 === EXAMPLES - ESSENTIAL ===
 
@@ -362,7 +424,7 @@ Remember: Point Black Lighthouse holds ancient secrets. Something non-human wait
     def process_player_action(self, player_input: str) -> Dict:
         """
         Process player action and get DM response.
-        Returns DM narrative + any requested rolls/sanity checks.
+        Returns DM narrative + any requested rolls/sanity checks/items/combat.
         """
         if not self.state:
             return {"error": "No active game"}
@@ -371,13 +433,21 @@ Remember: Point Black Lighthouse holds ancient secrets. Something non-human wait
         dm_prompt = self._build_dm_prompt(player_input)
         dm_response = self._call_ollama(dm_prompt)
 
-        # Parse roll/sanity requests
+        # Parse all tag types
         rolls_requested = re.findall(r'\[ROLL: (\w+)/(\w+)\]', dm_response)
         sanity_checks = re.findall(r'\[SANITY_CHECK: (\d+)\]', dm_response)
+        items_found = re.findall(r'\[ITEM_FOUND: (\w+)\]', dm_response)
+        hp_damage = re.findall(r'\[HP_DAMAGE: (\d+)\]', dm_response)
+        combat_start = re.findall(r'\[COMBAT_START: (\w+)\]', dm_response)
+        npc_dialogue = re.findall(r'\[NPC_DIALOGUE: (\w+)\]', dm_response)
 
-        # Clean response (remove tags)
+        # Clean response (remove all tags)
         clean_response = re.sub(r'\[ROLL: .*?\]', '', dm_response)
         clean_response = re.sub(r'\[SANITY_CHECK: .*?\]', '', clean_response)
+        clean_response = re.sub(r'\[ITEM_FOUND: .*?\]', '', clean_response)
+        clean_response = re.sub(r'\[HP_DAMAGE: .*?\]', '', clean_response)
+        clean_response = re.sub(r'\[COMBAT_START: .*?\]', '', clean_response)
+        clean_response = re.sub(r'\[NPC_DIALOGUE: .*?\]', '', clean_response)
 
         # Update narrative
         self.state.narrative.append(f"Player: {player_input}")
@@ -390,8 +460,12 @@ Remember: Point Black Lighthouse holds ancient secrets. Something non-human wait
 
         return {
             "narrative": clean_response,
-            "rolls_requested": rolls_requested,  # List of (skill, difficulty) tuples
-            "sanity_checks": sanity_checks,  # List of damage values
+            "rolls_requested": rolls_requested,
+            "sanity_checks": sanity_checks,
+            "items_found": items_found,
+            "hp_damage": hp_damage,
+            "combat_start": combat_start,
+            "npc_dialogue": npc_dialogue,
             "state": asdict(self.state)
         }
 
@@ -440,6 +514,186 @@ Remember: Point Black Lighthouse holds ancient secrets. Something non-human wait
             self.state.ending_reached = "madness"
 
         return result
+
+    def apply_hp_damage(self, damage: int) -> Dict:
+        """Apply HP damage from physical harm"""
+        if not self.state:
+            return {"error": "No active game"}
+
+        new_hp = max(0, self.state.investigator.characteristics['HP'] - damage)
+        self.state.investigator.characteristics['HP'] = new_hp
+
+        if new_hp == 0:
+            self.state.ending_reached = "death"
+            return {
+                "hp": new_hp,
+                "state": "DEAD",
+                "message": f"You take {damage} damage and collapse. Everything fades to black."
+            }
+        else:
+            return {
+                "hp": new_hp,
+                "state": "WOUNDED",
+                "message": f"You take {damage} damage. HP: {new_hp}"
+            }
+
+    def pick_up_item(self, item_key: str) -> str:
+        """Add item to inventory"""
+        if item_key not in self.ITEMS:
+            return f"Item '{item_key}' not found."
+
+        item = self.ITEMS[item_key]
+        item_name = item["name"]
+
+        # Check if already have it
+        if item_name in self.state.investigator.inventory:
+            return f"You already have {item_name}."
+
+        self.state.investigator.inventory.append(item_name)
+        return f"You pick up: {item_name}"
+
+    def drop_item(self, item_name: str) -> str:
+        """Remove item from inventory"""
+        if item_name in self.state.investigator.inventory:
+            self.state.investigator.inventory.remove(item_name)
+            return f"You drop: {item_name}"
+        return f"You don't have {item_name}."
+
+    def use_item(self, item_name: str) -> str:
+        """Use an item from inventory"""
+        if item_name not in self.state.investigator.inventory:
+            return f"You don't have {item_name}."
+
+        # Match item by name to find key
+        item_key = None
+        for key, item_def in self.ITEMS.items():
+            if item_def["name"] == item_name:
+                item_key = key
+                break
+
+        if not item_key:
+            return f"Can't use {item_name}."
+
+        # Apply item effect
+        if item_key == "flashlight":
+            return "You turn on the flashlight. The beam cuts through the darkness, revealing... shadows within shadows."
+        elif item_key == "revolver":
+            return "You ready your revolver. The cold metal feels both reassuring and futile against what awaits."
+        elif item_key == "rope":
+            return "You secure the rope. It should help with climbing, but the danger remains."
+        elif item_key == "holy_water":
+            return "You splash the holy water. It hisses against the darkness, but the effect is unclear."
+        elif item_key == "dynamite":
+            return "You prime the dynamite. The fuse hisses. You have seconds to move."
+        elif item_key == "notebook":
+            return "You write down your observations. Perhaps they'll help someone understand what happened here."
+        elif item_key == "logbook":
+            return "You read the keeper's final entries. Madness. Transformation. A ritual of awakening."
+        elif item_key == "ancient_text":
+            return "You study the text. The symbols seem to rearrange themselves, whispering truths your mind cannot fully comprehend."
+        else:
+            return f"You use {item_name}."
+
+    def start_combat(self, enemy_key: str) -> Dict:
+        """Start combat with an enemy"""
+        if enemy_key not in self.ENEMIES:
+            return {"error": f"Enemy '{enemy_key}' not found"}
+
+        enemy = self.ENEMIES[enemy_key].copy()
+        self.state.active_combat = enemy
+        self.state.game_phase = "combat"
+
+        return {
+            "enemy": enemy["name"],
+            "message": f"Combat started: {enemy['name']} (HP: {enemy['hp']})"
+        }
+
+    def resolve_combat_round(self, player_roll_success: bool) -> Dict:
+        """Resolve one round of combat"""
+        if not self.state.active_combat:
+            return {"error": "Not in combat"}
+
+        enemy = self.state.active_combat
+        result = {"player_hit": False, "enemy_hit": False}
+
+        # Player attacks
+        if player_roll_success:
+            damage = random.randint(2, 6)
+            enemy["hp"] -= damage
+            result["player_hit"] = True
+            result["player_damage"] = damage
+            result["player_message"] = f"You hit! The creature takes {damage} damage."
+
+            if enemy["hp"] <= 0:
+                self.state.active_combat = None
+                self.state.game_phase = "exploring"
+                return {
+                    **result,
+                    "combat_over": True,
+                    "message": f"{enemy['name']} falls. Combat over."
+                }
+        else:
+            result["player_message"] = "You miss!"
+
+        # Enemy counter-attacks
+        enemy_roll = self.rules.roll_d100()
+        if enemy_roll <= enemy["skill"]:
+            damage = random.randint(1, enemy.get("damage", 4))
+            self.apply_hp_damage(damage)
+            result["enemy_hit"] = True
+            result["enemy_damage"] = damage
+            result["enemy_message"] = f"{enemy['name']} strikes! You take {damage} damage."
+        else:
+            result["enemy_message"] = f"{enemy['name']} attacks but misses!"
+
+        return result
+
+    def talk_to_npc(self, npc_key: str, player_question: str) -> str:
+        """Have NPC respond to player"""
+        if npc_key not in self.NPC_DEFINITIONS:
+            return f"That person isn't here."
+
+        npc = self.NPC_DEFINITIONS[npc_key]
+
+        # Track conversation
+        if npc_key not in self.state.npcs_talked_to:
+            self.state.npcs_talked_to[npc_key] = []
+        self.state.npcs_talked_to[npc_key].append(player_question)
+
+        # Build NPC prompt
+        prompt = f"""You are {npc['name']}, a {npc['role']}.
+
+Personality: {npc['personality']}
+
+You know about: {', '.join(npc['knows'])}
+
+The player asks: "{player_question}"
+
+Respond in character, in 2-3 sentences. Be dramatic, mysterious, and atmospheric. Reference what you know if relevant."""
+
+        # Get NPC response
+        response = self._call_ollama(prompt, max_tokens=100)
+        return f"{npc['name']}: {response}"
+
+    def _generate_ending_narrative(self, ending_type: str) -> str:
+        """Generate rich narrative for ending"""
+        inv = self.state.investigator
+        sanity_history = "\n".join(inv.sanity_breaks[-5:]) if inv.sanity_breaks else "None"
+
+        prompt = f"""Write a dramatic 3-paragraph ending for a Call of Cthulhu story.
+
+Character: {inv.name}, a {inv.occupation}
+Final Stats: HP {inv.characteristics['HP']}, SAN {inv.characteristics['SAN']}
+Ending Type: {ending_type.upper()}
+
+What they witnessed:
+{sanity_history}
+
+Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs max."""
+
+        ending_text = self._call_ollama(prompt, max_tokens=400)
+        self.state.ending_narrative = ending_text
+        return ending_text
 
     def check_ending_condition(self) -> Optional[str]:
         """Check if game should end"""

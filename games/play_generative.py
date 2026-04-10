@@ -158,6 +158,13 @@ def display_game_state(engine: GenerativeGameEngine):
     print(f"{inv.name} ({inv.occupation})")
     print(f"  HP: [{hp_bar}] {inv.characteristics['HP']:2d}  │  SAN: [{san_bar}] {inv.characteristics['SAN']:3d}  │  Luck: {inv.characteristics['Luck']:2d}")
     print(f"  Location: {engine.state.location}")
+
+    # Show enemy HP if in combat
+    if engine.state.active_combat:
+        enemy = engine.state.active_combat
+        enemy_hp_bar = "█" * enemy['hp'] + "░" * (12 - min(enemy['hp'], 12))
+        print(f"  Enemy: {enemy['name']} [{enemy_hp_bar}] {enemy['hp']} HP")
+
     print("-" * 80 + "\n")
 
 
@@ -167,11 +174,14 @@ def show_help():
 COMMANDS:
   [action]          Describe what you do (e.g., "examine the door", "run away")
   [i]nventory       Check your inventory
+  [u]se [item]      Use an item (e.g., "use flashlight", "use revolver")
+  [d]rop [item]     Drop an item (e.g., "drop notebook")
   [s]tatus          Full character status
   [h]elp            Show this help
   [q]uit            Quit game
 
 Type your action in natural language. The DM will respond.
+Talk to NPCs by saying: "talk to warner", "ask armitage about...", etc.
 """
 
 
@@ -227,8 +237,16 @@ def main():
         # Check for ending
         ending = engine.check_ending_condition()
         if ending:
+            # Generate rich ending narrative if not already done
+            if not engine.state.ending_narrative:
+                print_header("GENERATING ENDING")
+                print("The DM is writing your fate...")
+                engine._generate_ending_narrative(ending)
+
+            # Display ending
             print_header(f"GAME OVER - {ending.upper()}")
-            print(engine.get_ending_text())
+            print(engine.state.ending_narrative if engine.state.ending_narrative else engine.get_ending_text())
+            print("\n" + "=" * 80)
             break
 
         # Display state
@@ -263,8 +281,17 @@ def main():
         elif action.lower() == 'i':
             clear()
             print_header("INVENTORY")
-            for item in engine.state.investigator.inventory:
-                print(f"  • {item}")
+            if not engine.state.investigator.inventory:
+                print("  Empty")
+            else:
+                for item in engine.state.investigator.inventory:
+                    # Find description
+                    desc = item
+                    for key, item_def in engine.ITEMS.items():
+                        if item_def["name"] == item:
+                            desc = f"{item} — {item_def['description']}"
+                            break
+                    print(f"  • {desc}")
             print()
             input("Press ENTER to continue...")
 
@@ -286,6 +313,48 @@ def main():
             print()
             input("Press ENTER to continue...")
 
+        elif action.lower().startswith('u ') or action.lower().startswith('use '):
+            # Use item command
+            item_name = action[2:].strip() if action.lower().startswith('u ') else action[4:].strip()
+            clear()
+            print_header("USING ITEM")
+            result = engine.use_item(item_name)
+            print(result)
+            input("\nPress ENTER to continue...")
+
+        elif action.lower().startswith('d ') or action.lower().startswith('drop '):
+            # Drop item command
+            item_name = action[2:].strip() if action.lower().startswith('d ') else action[5:].strip()
+            clear()
+            print_header("DROPPING ITEM")
+            result = engine.drop_item(item_name)
+            print(result)
+            input("\nPress ENTER to continue...")
+
+        elif action.lower().startswith('talk to ') or action.lower().startswith('ask '):
+            # NPC dialogue
+            if action.lower().startswith('talk to '):
+                npc_text = action[8:].strip()
+            else:
+                npc_text = action[4:].strip()
+
+            # Try to identify NPC
+            npc_key = None
+            for key, npc_def in engine.NPC_DEFINITIONS.items():
+                if key in npc_text.lower():
+                    npc_key = key
+                    break
+
+            if npc_key:
+                clear()
+                print_header("NPC DIALOGUE")
+                dialogue = engine.talk_to_npc(npc_key, npc_text)
+                print(dialogue)
+                input("\nPress ENTER to continue...")
+            else:
+                print("That person isn't here.")
+                input("Press ENTER to continue...")
+
         else:
             # Regular action
             print("\n")
@@ -298,10 +367,54 @@ def main():
             print_header("DUNGEON MASTER")
             print(result['narrative'])
 
+            # Handle items found
+            for item_key in result['items_found']:
+                item_msg = engine.pick_up_item(item_key)
+                print(f"\n✓ {item_msg}")
+
+            # Handle HP damage
+            for damage_str in result['hp_damage']:
+                input("\nPress ENTER to resolve damage...")
+                hp_result = engine.apply_hp_damage(int(damage_str))
+                clear()
+                print_header("TAKING DAMAGE")
+                print(hp_result['message'])
+                input("\nPress ENTER to continue...")
+                clear()
+                print_header("DUNGEON MASTER")
+                print(result['narrative'])
+
+            # Handle combat start
+            for enemy_key in result['combat_start']:
+                combat_result = engine.start_combat(enemy_key)
+                print(f"\n⚔️  {combat_result['message']}")
+
+            # Handle NPC dialogue from DM
+            for npc_key in result['npc_dialogue']:
+                if npc_key in engine.NPC_DEFINITIONS:
+                    npc = engine.NPC_DEFINITIONS[npc_key]
+                    print(f"\n  {npc['name']}: [appears and speaks]")
+
             # Handle roll requests
             for skill, difficulty in result['rolls_requested']:
                 input("\nPress ENTER to make the skill check...")
                 handle_roll_request(engine, skill, difficulty)
+
+                # If in combat, resolve that round
+                if engine.state.active_combat:
+                    # Find the last roll result
+                    roll_msg = engine.state.narrative[-1] if engine.state.narrative else ""
+                    player_hit = "SUCCESS" in roll_msg or "HIT" in roll_msg.upper()
+
+                    combat_round = engine.resolve_combat_round(player_hit)
+                    if "error" not in combat_round:
+                        clear()
+                        print_header("COMBAT ROUND")
+                        print(combat_round.get('player_message', ''))
+                        print(combat_round.get('enemy_message', ''))
+                        if combat_round.get('combat_over'):
+                            print("\n🎭 Combat has ended!")
+                        input("\nPress ENTER to continue...")
 
             # Handle sanity checks
             for damage in result['sanity_checks']:

@@ -65,6 +65,35 @@ def json_to_investigator(json_data: dict) -> InvestigatorState:
     )
 
 
+def select_model() -> str:
+    """Let user choose LLM model"""
+    clear()
+    print_header("SELECT LLM MODEL")
+
+    print("""OPTIONS:
+
+  1) Mistral 7B (Default)
+     • Best quality narration
+     • More detailed descriptions
+     • 5-7 seconds per turn
+     • Recommended for story quality
+
+  2) Mistral 3B (Fast)
+     • Faster responses
+     • Good quality, slightly shorter
+     • 2-3 seconds per turn
+     • Recommended for quick gameplay
+""")
+
+    while True:
+        choice = input("Enter choice (1-2): ").strip()
+        if choice == "1":
+            return "mistral"
+        elif choice == "2":
+            return "mistral:3b"
+        print("Invalid choice. Enter 1 or 2.")
+
+
 def select_investigator() -> InvestigatorState:
     """Let user choose: prebuilt or create new"""
     clear()
@@ -216,14 +245,23 @@ def main():
 ╚═══════════════════════════════════════════════════════════════════════════╝
     """, width=82)
 
+    input("Press ENTER to select your model...")
+
+    # Model selection
+    model = select_model()
+
     input("Press ENTER to select your investigator...")
 
     # Character selection/creation
     investigator = select_investigator()
 
-    # Initialize engine
-    engine = GenerativeGameEngine()
+    # Initialize engine with selected model
+    engine = GenerativeGameEngine(model=model)
     engine.create_game(investigator)
+
+    # Show selected model
+    model_name = "Mistral 7B (Best Quality)" if model == "mistral" else "Mistral 3B (Fast)"
+    print(f"\n🤖 Using: {model_name}")
 
     clear()
     print_box(engine.state.narrative[0], width=82)

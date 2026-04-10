@@ -247,9 +247,19 @@ class GenerativeGameEngine:
         }
     }
 
-    def __init__(self, ollama_endpoint: str = "http://localhost:11434"):
+    def __init__(self, ollama_endpoint: str = "http://localhost:11434", model: str = "mistral"):
+        """
+        Initialize game engine.
+
+        Args:
+            ollama_endpoint: URL to Ollama service
+            model: LLM model to use
+                - "mistral" (7B) - Better quality, ~5-7 seconds per turn
+                - "mistral:3b" (3B) - Faster, ~2-3 seconds per turn
+                - "neural-chat" - Specialized for dialogue
+        """
         self.ollama_endpoint = ollama_endpoint
-        self.model = "mistral"
+        self.model = model
         self.state: Optional[GameState] = None
         self.rules = CoC7eRulesEngine()
 
@@ -270,7 +280,7 @@ class GenerativeGameEngine:
         )
         return self.state
 
-    def _call_ollama(self, prompt: str, max_tokens: int = 300) -> str:
+    def _call_ollama(self, prompt: str, max_tokens: int = 200) -> str:
         """Call local Mistral model"""
         try:
             response = requests.post(
@@ -672,7 +682,7 @@ The player asks: "{player_question}"
 Respond in character, in 2-3 sentences. Be dramatic, mysterious, and atmospheric. Reference what you know if relevant."""
 
         # Get NPC response
-        response = self._call_ollama(prompt, max_tokens=100)
+        response = self._call_ollama(prompt, max_tokens=80)
         return f"{npc['name']}: {response}"
 
     def _generate_ending_narrative(self, ending_type: str) -> str:

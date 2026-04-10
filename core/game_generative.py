@@ -388,46 +388,22 @@ Recent story:
 {player_action}
 
 === YOUR RESPONSE ===
-1. Describe what happens (2-3 sentences, narrative-focused)
-2. If action requires a roll, REQUEST IT: [ROLL: skill_name/difficulty]
-   - ONLY if the action has real risk/uncertainty AND matches skill matrix above
-3. If witnessing cosmic horror, suggest: [SANITY_CHECK: damage]
-4. If player finds item, emit: [ITEM_FOUND: item_key]
-5. If combat begins, emit: [COMBAT_START: enemy_key]
-6. If environmental damage, emit: [HP_DAMAGE: N]
-7. If player talks to NPC, emit: [NPC_DIALOGUE: npc_key]
-8. Keep tone atmospheric, dark, foreboding
 
-=== EXAMPLES - ESSENTIAL ===
+Respond naturally as a Dungeon Master. Describe what happens in 2-3 sentences.
 
-NO ROLL - routine actions (just narrate):
-Player: "I walk into the lighthouse."
-DM: You push open the heavy iron door. It creaks on rusted hinges, and you step into the dim interior. ✓ CORRECT
-BAD: [ROLL: navigate/normal] ← Wrong! No danger here.
+USE TAGS WHEN NEEDED:
+- [ROLL: skill/difficulty] — if action has real risk/danger
+- [SANITY_CHECK: N] — if player witnesses cosmic horror
+- [ITEM_FOUND: key] — if player finds an item
+- [COMBAT_START: enemy] — if combat begins
+- [HP_DAMAGE: N] — if environmental damage occurs
+- [NPC_DIALOGUE: npc] — if NPC speaks
 
-NO ROLL - casual observation:
-Player: "I look around the keeper's quarters."
-DM: You see a sparse room with a cot, a desk, and a shelf with a few books. ✓ CORRECT
-BAD: [ROLL: investigate/normal] ← Wrong! Looking around is free.
-
-ROLL ONLY - active searching:
-Player: "I carefully search the desk for hidden compartments."
-DM: You run your hands across the weathered wood, probing for secret spaces. [ROLL: investigate/hard] ✓ CORRECT
-
-ROLL ONLY - dangerous action:
-Player: "I climb down to the fissure."
-DM: The rocks are treacherous, slick with spray. [ROLL: climb/hard] ✓ CORRECT
-
-ROLL ONLY - magic/occult understanding:
-Player: "I try to decipher what the symbols mean."
-DM: The symbols seem to writhe before your eyes, their meaning elusive. [ROLL: occult/extreme] ✓ CORRECT
-
-NO ROLL - talking/social:
-Player: "I ask the officer what he knows."
-DM: "The keeper hasn't been seen for weeks," he says, troubled. ✓ CORRECT
-BAD: [ROLL: persuade/normal] ← Wrong! They're answering a question.
-
-Remember: Point Black Lighthouse holds ancient secrets. Something non-human waits below.
+REMEMBER:
+- DON'T request rolls for routine actions (walking, looking, talking)
+- DO request rolls only for risky/uncertain actions
+- Keep tone dark, atmospheric, Lovecraftian
+- Point Black Lighthouse holds ancient secrets beneath the sea
 """
         return prompt
 

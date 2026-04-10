@@ -230,17 +230,33 @@ Talk to NPCs by saying: "talk to warner", "ask armitage about...", etc.
 
 
 def handle_roll_request(engine: GenerativeGameEngine, skill: str, difficulty: str):
-    """Handle a skill check request from DM"""
+    """Handle a skill check request from DM - player controls the roll"""
     clear()
-    print_header(f"SKILL CHECK: {skill.upper()} ({difficulty.upper()})")
+    print_header(f"SKILL CHECK")
+    print(f"Skill: {skill.upper()}")
+    print(f"Difficulty: {difficulty.upper()}")
+    print()
+    print("Roll the dice... Press ENTER to test your fate")
+    input()
 
+    # Player presses ENTER to roll
     result = engine.execute_skill_check(skill, difficulty)
 
-    print(result['message'])
-    if result['critical']:
-        print(f"  → {result['critical']}")
+    # Display roll result dramatically
+    print()
+    if result['success']:
+        print("💚 " + "=" * 76)
+        print(f"✓ SUCCESS! {result['message']}")
+        print("=" * 78)
+    else:
+        print("💔 " + "=" * 76)
+        print(f"✗ FAILURE! {result['message']}")
+        print("=" * 78)
 
-    print("\n")
+    if result['critical']:
+        print(f"\n⚡ {result['critical']} ⚡")
+
+    print()
     input("Press ENTER to continue...")
 
 
@@ -452,6 +468,24 @@ def main():
             for skill, difficulty in result['rolls_requested']:
                 input("\nPress ENTER to make the skill check...")
                 handle_roll_request(engine, skill, difficulty)
+
+                # Automatically resolve the consequences of the roll
+                clear()
+                print_header("RESOLVING OUTCOME")
+                print("🌊 ", end="", flush=True)
+                consequence_result = engine.resolve_roll_consequences(on_chunk=stream_callback)
+                print("\n")
+
+                # Display consequence damage if any
+                for damage in consequence_result['hp_damage']:
+                    hp_res = engine.apply_hp_damage(int(damage))
+                    print(f"\n💔 DAMAGE: {hp_res['message']}")
+                    input("Press ENTER to continue...")
+
+                for damage in consequence_result['sanity_checks']:
+                    san_res = engine.apply_sanity_check(int(damage))
+                    print(f"\n😰 SANITY: {san_res['message']}")
+                    input("Press ENTER to continue...")
 
                 # If in combat, resolve that round
                 if engine.state.active_combat:

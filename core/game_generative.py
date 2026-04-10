@@ -38,6 +38,7 @@ class GameState:
     ending_narrative: Optional[str]  # Rich ending text
     active_combat: Optional[Dict] = None  # Current enemy stats
     npcs_talked_to: Dict[str, List[str]] = None  # NPC key -> topics discussed
+    last_roll: Optional[Dict] = None  # Track last roll result (skill, difficulty, success)
 
 
 class CoC7eRulesEngine:
@@ -276,7 +277,8 @@ class GenerativeGameEngine:
             ending_reached=None,
             ending_narrative=None,
             active_combat=None,
-            npcs_talked_to={}
+            npcs_talked_to={},
+            last_roll=None
         )
         return self.state
 
@@ -292,7 +294,7 @@ class GenerativeGameEngine:
                     "temperature": 0.7,
                     "num_predict": max_tokens
                 },
-                timeout=30,
+                timeout=120,
                 stream=True
             )
             response.raise_for_status()
@@ -315,6 +317,17 @@ class GenerativeGameEngine:
 
         except Exception as e:
             return f"[DM ERROR: {str(e)}]"
+
+    def _format_last_roll_info(self) -> str:
+        """Format last roll information for DM prompt"""
+        if not self.state.last_roll:
+            return "None yet"
+
+        roll = self.state.last_roll
+        if roll['success']:
+            return f"✓ SUCCESS - {roll['skill']} {roll['difficulty']}: Rolled {roll['roll']} vs {roll['target']}"
+        else:
+            return f"✗ FAILURE - {roll['skill']} {roll['difficulty']}: Rolled {roll['roll']} vs {roll['target']} (APPLY CONSEQUENCES)"
 
     def _build_dm_prompt(self, player_action: str) -> str:
         """Build comprehensive DM prompt with rules hardcoded"""
@@ -398,27 +411,86 @@ Turn: {self.state.turn}
 Phase: {self.state.game_phase}
 Combat: {'In combat with ' + self.state.active_combat['name'] if self.state.active_combat else 'None'}
 
+Last Roll Status:
+{self._format_last_roll_info()}
+
 Recent story:
 {narrative_context}
 
 === PLAYER ACTION ===
 {player_action}
 
+=== CONSEQUENCE MATRIX ===
+
+WHEN A ROLL FAILS (roll > target), apply proportional consequences:
+
+CLIMB/SWIM FAILURE:
+  - Moderate fail (just missed): slip, no damage, restart attempt
+  - Bad fail (far missed): fall! [HP_DAMAGE: 1d4] (~2-4 damage)
+  - Critical fail (96+): serious fall [HP_DAMAGE: 1d6] (~3-6 damage)
+
+DODGE FAILURE:
+  - In combat: enemy connects with attack [HP_DAMAGE: enemy_damage]
+  - Hazard: take environmental damage [HP_DAMAGE: varies]
+
+FIGHT/FIREARMS FAILURE:
+  - Miss the target
+  - Enemy counter-attacks next round
+
+INVESTIGATION/OCCULT FAILURE:
+  - Miss important clue
+  - Misinterpret evidence (follow false lead)
+  - If examining cursed object: [SANITY_CHECK: 1-3]
+
+PERSUADE FAILURE:
+  - NPC refuses or becomes hostile
+  - May lead to combat
+
 === YOUR RESPONSE ===
 
-Respond ONLY as the Dungeon Master. Tell what happens (2-3 sentences).
+**RESPOND ACCORDING TO LAST ROLL STATUS** (shown above):
 
-IF player does something DANGEROUS → ADD TAG: [ROLL: skill/difficulty]
-IF player sees COSMIC HORROR → ADD TAG: [SANITY_CHECK: damage_value]
-IF player FINDS ITEM → ADD TAG: [ITEM_FOUND: item_key]
-IF COMBAT STARTS → ADD TAG: [COMBAT_START: enemy_key]
-IF player takes ENVIRONMENTAL DAMAGE → ADD TAG: [HP_DAMAGE: damage_value]
+🚨 CRITICAL RULES (MUST FOLLOW):
+1. ONE ROLL TAG MAXIMUM - If you output [ROLL:], do it ONCE only. Never [ROLL: climb/normal] AND [ROLL: climb/hard]. Pick ONE.
+2. ONE RESPONSE = ONE ACTION - Never mix multiple actions or decisions
+3. NO TEMPLATE TEXT - Do NOT output: headers, "IF/ELSE", conditionals, section breaks (---), numbered lists
+4. SHORT AND FOCUSED - Keep narrative to 2-4 sentences max
+5. NO VISIBLE DECISION MAKING - Just tell the story, don't show your reasoning
 
-IMPORTANT RULES:
-- Don't request rolls for simple actions (walking, talking, looking)
-- Only roll if action is risky or has uncertain outcome
-- Keep narration atmospheric and dark
-- Never explain what you're doing (no "Consider this...", no suggestions, no lists)
+YOUR JOB DEPENDS ON LAST ROLL STATUS:
+
+🎯 STATUS: "None yet" (no pending roll)
+  - Respond to the player's action naturally (1-2 sentences)
+  - If the action is dangerous/risky/requires a skill check:
+    → END with exactly: [ROLL: skill/difficulty]
+    → STOP. Do not describe what happens next.
+  - If action is routine (walking, talking, looking casually):
+    → Continue the story (1-2 more sentences)
+    → Only END with a tag if player finds something: [ITEM_FOUND: key]
+    → Or if they trigger combat: [COMBAT_START: enemy_key]
+    → Or if they witness horror: [SANITY_CHECK: damage]
+    → Or if they take environmental damage: [HP_DAMAGE: damage]
+
+🎯 STATUS: "✓ SUCCESS" (player succeeded a roll)
+  - Describe ONLY the positive outcome of their success
+  - Show what they accomplish (1-2 vivid sentences)
+  - Example: "You grip the ledge and haul yourself through. Inside, the keeper's quarters stretch before you in darkness."
+  - Then you MAY describe the next challenge/discovery (1-2 more sentences)
+  - NO new roll requests in this response
+  - NO repeating the setup
+
+🎯 STATUS: "✗ FAILURE" (player failed a roll)
+  - Describe ONLY the negative outcome of their failure
+  - Show what goes wrong (1-2 vivid sentences)
+  - Apply consequences with tags if appropriate:
+    → Physical failures (climb, dodge, fight): add [HP_DAMAGE: 2-4]
+    → Mental failures (occult, investigation): add [SANITY_CHECK: 1-2]
+  - Example: "Your foot slips on the wet stone. You tumble down, crashing hard."
+  - Then you MAY describe what comes next (1-2 more sentences)
+  - NO new roll requests in this response
+  - NO repeating the setup
+
+DO NOT output template text. Do not show IF/ELSE logic. Just tell the story.
 """
         return prompt
 
@@ -463,6 +535,11 @@ IMPORTANT RULES:
 
         self.state.turn += 1
 
+        # If a new roll is requested, clear the previous roll record
+        # (DM has now responded to the consequences)
+        if rolls_requested:
+            self.state.last_roll = None
+
         return {
             "narrative": clean_response,
             "rolls_requested": rolls_requested,
@@ -495,6 +572,16 @@ IMPORTANT RULES:
 
         # Resolve check
         result = self.rules.resolve_skill_check(skill, skill_value, char_value, difficulty)
+
+        # Track this roll for next DM turn (so it can apply consequences)
+        self.state.last_roll = {
+            "skill": skill,
+            "difficulty": difficulty,
+            "success": result['success'],
+            "roll": result['roll'],
+            "target": result['target'],
+            "message": result['message']
+        }
 
         # Log in narrative
         self.state.narrative.append(f"[ROLL: {result['message']}]")
@@ -652,6 +739,66 @@ IMPORTANT RULES:
             result["enemy_message"] = f"{enemy['name']} attacks but misses!"
 
         return result
+
+    def resolve_roll_consequences(self, on_chunk=None) -> Dict:
+        """
+        After a roll is made, automatically generate DM narrative
+        describing the consequences (success or failure).
+        Called after execute_skill_check().
+        """
+        if not self.state or not self.state.last_roll:
+            return {"error": "No pending roll"}
+
+        roll = self.state.last_roll
+
+        # Build a simple, direct prompt
+        if roll['success']:
+            consequence_prompt = f"""You are the Dungeon Master.
+
+The player SUCCEEDED at: {roll['skill']} (rolled {roll['roll']} vs {roll['target']})
+
+Describe in 2-3 sentences what the player accomplished. What does success look like?
+Be vivid and advance the story.
+NO NEW ROLLS. NO TAGS. Just the outcome."""
+        else:
+            consequence_prompt = f"""You are the Dungeon Master.
+
+The player FAILED at: {roll['skill']} (rolled {roll['roll']} vs {roll['target']})
+
+Describe in 2-3 sentences what went wrong. Add consequences if appropriate.
+For physical failure (climb, dodge, fight), add: [HP_DAMAGE: 2-4]
+For mental failure (occult, investigation), add: [SANITY_CHECK: 1-2]
+NO NEW ROLLS. Just the outcome."""
+
+        # Get DM response for the consequence
+        consequence_response = self._call_ollama(consequence_prompt, max_tokens=100, on_chunk=on_chunk)
+
+        # Parse any tags that might be in the consequence
+        hp_damage = re.findall(r'\[HP_DAMAGE: (\d+)\]', consequence_response)
+        sanity_checks = re.findall(r'\[SANITY_CHECK: (\d+)\]', consequence_response)
+
+        # Clean the response
+        clean_response = re.sub(r'\[HP_DAMAGE: .*?\]', '', consequence_response)
+        clean_response = re.sub(r'\[SANITY_CHECK: .*?\]', '', clean_response)
+
+        # Update narrative
+        self.state.narrative.append(f"DM: {clean_response}")
+
+        # Apply any damage/sanity from the consequence
+        for damage in hp_damage:
+            self.apply_hp_damage(int(damage))
+        for damage in sanity_checks:
+            self.apply_sanity_check(int(damage))
+
+        # Clear the roll from pending
+        self.state.last_roll = None
+
+        return {
+            "narrative": clean_response,
+            "hp_damage": hp_damage,
+            "sanity_checks": sanity_checks,
+            "success": roll['success']
+        }
 
     def talk_to_npc(self, npc_key: str, player_question: str) -> str:
         """Have NPC respond to player"""

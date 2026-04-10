@@ -72,26 +72,34 @@ def select_model() -> str:
 
     print("""OPTIONS:
 
-  1) Mistral 7B (Default)
+  1) Mistral 7B (Best Quality)
      • Best quality narration
-     • More detailed descriptions
+     • Rich descriptions & atmosphere
      • 5-7 seconds per turn
-     • Recommended for story quality
+     • Recommended: Story immersion
 
-  2) Mistral 3B (Fast)
-     • Faster responses
-     • Good quality, slightly shorter
-     • 2-3 seconds per turn
-     • Recommended for quick gameplay
+  2) Neural Chat (Balanced)
+     • Good quality & balance
+     • Fast & engaging responses
+     • 3-4 seconds per turn
+     • Recommended: Smooth gameplay
+
+  3) Orca Mini (Speed)
+     • Very fast responses
+     • Good coherence, more concise
+     • 1-2 seconds per turn
+     • Recommended: Quick playthroughs
 """)
 
     while True:
-        choice = input("Enter choice (1-2): ").strip()
+        choice = input("Enter choice (1-3): ").strip()
         if choice == "1":
             return "mistral"
         elif choice == "2":
-            return "mistral:3b"
-        print("Invalid choice. Enter 1 or 2.")
+            return "neural-chat"
+        elif choice == "3":
+            return "orca-mini"
+        print("Invalid choice. Enter 1, 2, or 3.")
 
 
 def select_investigator() -> InvestigatorState:

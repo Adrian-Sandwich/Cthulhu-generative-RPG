@@ -8,15 +8,15 @@
 
 ## Quick Comparison
 
-| Aspect | Mistral 7B | Mistral 3B |
-|--------|-----------|-----------|
-| **Speed** | 5-7 sec/turn | 2-3 sec/turn |
-| **Quality** | Excellent | Very Good |
-| **VRAM** | ~8GB | ~4GB |
-| **Narration** | Rich, detailed | Clear, concise |
-| **Endings** | Literary | Engaging |
-| **NPCs** | Natural dialogue | Direct dialogue |
-| **Recommendation** | Story quality | Fast gameplay |
+| Aspect | Mistral 7B | Neural Chat | Orca Mini |
+|--------|-----------|-----------|-----------|
+| **Speed** | 5-7 sec/turn | 3-4 sec/turn | 1-2 sec/turn |
+| **Quality** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **VRAM** | ~8GB | ~4GB | ~3GB |
+| **Narration** | Rich, literary | Clear, engaging | Concise, direct |
+| **Endings** | Excellent | Good | Functional |
+| **NPCs** | Natural | Natural | Direct |
+| **Best For** | Story quality | Balanced | Speed |
 
 ---
 
@@ -52,32 +52,62 @@ a mercy. This place isn't merely abandoned. It's hungry.
 
 ---
 
-### Mistral 3B (Fast)
+### Neural Chat (Balanced)
 
-**Download**: `ollama pull mistral:3b`  
-**Size**: ~2.0GB  
-**VRAM Required**: ~4GB
+**Download**: `ollama pull neural-chat`  
+**Size**: ~4.7GB  
+**VRAM Required**: ~5GB
 
 **Characteristics**:
-- ✅ Fast responses (2-3 seconds)
-- ✅ Lower resource usage
-- ✅ Still coherent and engaging
-- ✅ Good for quick sessions
-- ❌ Slightly less detailed
-- ❌ Fewer flourishes
+- ✅ Good balance of speed & quality (3-4 seconds)
+- ✅ Specialized for dialogue
+- ✅ Engaging narration
+- ✅ Natural NPC conversations
+- ✅ Moderate resource usage
+- ❌ Slightly less literary than 7B
+- ⚠️ Some responses may be brief
+
+**Best For**:
+- Smooth gameplay experience
+- Machines with 12GB RAM
+- Balanced speed & quality
+- Good for dialogue-heavy games
+
+**Example Output**:
+```
+The lighthouse looms before you, its red light pulsing through the fog. The air
+feels oppressive, and you notice the keeper's final log entries are disturbing.
+Something is very wrong here.
+```
+
+---
+
+### Orca Mini (Speed)
+
+**Download**: `ollama pull orca-mini`  
+**Size**: ~1.8GB  
+**VRAM Required**: ~3GB
+
+**Characteristics**:
+- ✅ Very fast responses (1-2 seconds)
+- ✅ Minimal resource usage
+- ✅ Still coherent & engaging
+- ✅ Good for rapid playthroughs
+- ❌ Less detailed narration
+- ❌ Fewer atmospheric flourishes
 - ⚠️ Occasional brevity
 
 **Best For**:
 - Quick playthroughs
 - Machines with 8GB RAM
-- Testing/prototyping
-- Fast-paced gameplay
+- Testing & prototyping
+- Multiple games in one session
+- When speed is critical
 
 **Example Output**:
 ```
-The lighthouse stands before you, its red light flickering in the fog. The air
-feels heavy, and you notice the keeper's log mentions strange sounds at night.
-Something about this place unsettles you deeply.
+The lighthouse stands in the fog, its red light flickering. The keeper's logs
+mention strange sounds. Something feels wrong about this place.
 ```
 
 ---
@@ -175,18 +205,25 @@ Average:            ~3 seconds/turn
 ## When to Choose Each
 
 ### Choose Mistral 7B if:
-- ✅ You prioritize story quality
-- ✅ You're playing for immersion
-- ✅ You have 16GB+ RAM
-- ✅ You don't mind waiting 5-7 seconds per turn
+- ✅ You prioritize story quality & immersion
 - ✅ You want literary horror prose
+- ✅ You have 16GB+ RAM
+- ✅ You're okay with 5-7 seconds per turn
+- ✅ You want atmospheric endings
 
-### Choose Mistral 3B if:
-- ✅ You want quick playthroughs
-- ✅ You have limited RAM (8-12GB)
-- ✅ You value responsiveness over flourish
-- ✅ You want to play multiple games in a session
-- ✅ You're testing or prototyping
+### Choose Neural Chat if:
+- ✅ You want balanced speed & quality
+- ✅ You have 12GB RAM
+- ✅ You prefer dialogue-heavy gameplay
+- ✅ You want smooth responsiveness
+- ✅ You value both atmosphere & speed
+
+### Choose Orca Mini if:
+- ✅ You want very fast responses (1-2s)
+- ✅ You have 8GB RAM
+- ✅ You're testing features
+- ✅ You want to play multiple games quickly
+- ✅ Speed is more important than detail
 
 ---
 
@@ -200,7 +237,8 @@ python3 games/play_generative.py
 
 # At startup, choose:
 # 1) Mistral 7B (5-7 sec/turn, best quality)
-# 2) Mistral 3B (2-3 sec/turn, fast)
+# 2) Neural Chat (3-4 sec/turn, balanced)
+# 3) Orca Mini (1-2 sec/turn, fastest)
 
 # For next game, you'll be asked again
 ```
@@ -209,7 +247,7 @@ python3 games/play_generative.py
 
 ## Optimal Configuration
 
-### For Story Quality
+### For Story Quality (Mistral 7B)
 ```
 Model: Mistral 7B
 Scenario: Single-player, ~30 min session
@@ -217,19 +255,28 @@ Typical Session: 10-12 turns = 60-80 seconds waiting total
 Best for: Late night horror immersion
 ```
 
-### For Fast Gameplay
+### For Balanced Experience (Neural Chat)
 ```
-Model: Mistral 3B
-Scenario: Quick test or multiple playthroughs
-Typical Session: 10-12 turns = 30-40 seconds waiting total
-Best for: Testing features, quick adventures
+Model: Neural Chat
+Scenario: Smooth gameplay with decent quality
+Typical Session: 10-12 turns = 35-50 seconds waiting total
+Best for: Standard playthrough, good pacing
 ```
 
-### For Hybrid
+### For Speed Runs (Orca Mini)
 ```
-Play with 7B for main story beats (key moments)
-Switch to 3B for secondary actions (examination, walking)
-Result: Best of both worlds with custom pacing
+Model: Orca Mini
+Scenario: Quick test or multiple games in a row
+Typical Session: 10-12 turns = 15-25 seconds waiting total
+Best for: Testing features, rapid playthroughs
+```
+
+### For Hybrid Approach
+```
+First game: Mistral 7B (establish mood & atmosphere)
+Second game: Neural Chat (test different playstyle)
+Third game: Orca Mini (quick speedrun)
+Result: Full evaluation of all options
 ```
 
 ---
@@ -259,26 +306,32 @@ Result: Best of both worlds with custom pacing
 
 ## Recommendations by Hardware
 
-| System | Recommendation |
-|--------|---|
-| 8GB RAM | Mistral 3B (2-3B might struggle) |
-| 12GB RAM | Mistral 3B (can handle 7B with caution) |
-| 16GB RAM | Mistral 7B (excellent experience) |
-| 16GB+ RAM | Mistral 7B (primary) + 3B for fast testing |
-| GPU (CUDA) | Mistral 7B (very fast, ~2-3 sec) |
+| System | Recommendation | Rationale |
+|--------|---|---|
+| 8GB RAM | Orca Mini | Only option without swapping |
+| 12GB RAM | Neural Chat (primary) | Good balance, manageable |
+| 12GB RAM alt | Orca Mini + Mistral 7B | One at a time |
+| 16GB RAM | Mistral 7B (primary) | Excellent experience |
+| 16GB RAM alt | Any model | Try all three |
+| GPU (CUDA) | Mistral 7B | Very fast, ~2-3 sec per turn |
 
 ---
 
-## Future Model Options
+## Future Model Options (Optional)
 
-Potential additions (when needed):
+Potential additions if needed:
 
 | Model | Speed | Quality | Size |
 |-------|-------|---------|------|
-| Neural Chat | ~3s | ⭐⭐⭐⭐ | 4.7GB |
 | Llama 2 7B | ~4s | ⭐⭐⭐⭐⭐ | 3.8GB |
 | Llama 2 13B | ~8s | ⭐⭐⭐⭐⭐⭐ | 7.3GB |
-| Orca Mini 3B | ~2s | ⭐⭐⭐ | 1.8GB |
+| Dolphin Mixtral | ~5s | ⭐⭐⭐⭐⭐ | 26GB |
+| Starling | ~4s | ⭐⭐⭐⭐ | 4.5GB |
+
+**Currently Available** (v1.1):
+✅ Mistral 7B - Best quality  
+✅ Neural Chat - Balanced  
+✅ Orca Mini - Fastest
 
 ---
 
@@ -286,15 +339,17 @@ Potential additions (when needed):
 
 **Current Setup** (v1.1):
 - ✅ Mistral 7B: Excellent quality (5-7 sec/turn)
-- ✅ Mistral 3B: Fast & good (2-3 sec/turn)
-- ✅ User can choose at game start
+- ✅ Neural Chat: Balanced speed & quality (3-4 sec/turn)
+- ✅ Orca Mini: Very fast (1-2 sec/turn)
+- ✅ User chooses at game start
 - ✅ No mid-game switching
 - ✅ Token limits optimized (200 default)
 
-**Recommendation for First Time**:
-1. Try **Mistral 7B** first (better introduction to the horror)
-2. If too slow, play **Mistral 3B** next session
-3. Decide based on your preference and system
+**Recommendation for Evaluation**:
+1. **Game 1**: Mistral 7B (best quality, establish atmosphere)
+2. **Game 2**: Neural Chat (balanced experience, smooth pacing)
+3. **Game 3**: Orca Mini (speed test, rapid gameplay)
+4. **Conclusion**: Decide based on your RAM, preference, and playstyle
 
 ---
 

@@ -254,9 +254,9 @@ class GenerativeGameEngine:
         Args:
             ollama_endpoint: URL to Ollama service
             model: LLM model to use
-                - "mistral" (7B) - Better quality, ~5-7 seconds per turn
-                - "mistral:3b" (3B) - Faster, ~2-3 seconds per turn
-                - "neural-chat" - Specialized for dialogue
+                - "mistral" - 7B, best quality (5-7 sec/turn)
+                - "neural-chat" - Balanced speed & quality (3-4 sec/turn)
+                - "orca-mini" - Very fast (1-2 sec/turn)
         """
         self.ollama_endpoint = ollama_endpoint
         self.model = model

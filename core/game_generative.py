@@ -7,7 +7,6 @@ Combines fixed story seeds with open-ended LLM narration + CoC mechanics
 import json
 import random
 import re
-import hashlib
 from dataclasses import dataclass, asdict
 from typing import Optional, Dict, List
 import requests
@@ -248,39 +247,11 @@ class GenerativeGameEngine:
         }
     }
 
-    def __init__(self, ollama_endpoint: str = "http://localhost:11434", enable_cache: bool = True, enable_streaming: bool = True):
+    def __init__(self, ollama_endpoint: str = "http://localhost:11434"):
         self.ollama_endpoint = ollama_endpoint
         self.model = "mistral"
         self.state: Optional[GameState] = None
         self.rules = CoC7eRulesEngine()
-        self.response_cache: Dict[str, str] = {}  # Simple LRU cache
-        self.enable_cache = enable_cache
-        self.enable_streaming = enable_streaming
-        self.max_cache_size = 50  # Keep last 50 responses
-
-    def _get_cache_key(self, prompt: str) -> str:
-        """Generate cache key from prompt hash"""
-        return hashlib.md5(prompt.encode()).hexdigest()
-
-    def _check_cache(self, prompt: str) -> Optional[str]:
-        """Check if response is cached"""
-        if not self.enable_cache:
-            return None
-        key = self._get_cache_key(prompt)
-        return self.response_cache.get(key)
-
-    def _update_cache(self, prompt: str, response: str):
-        """Store response in cache with LRU eviction"""
-        if not self.enable_cache:
-            return
-        key = self._get_cache_key(prompt)
-        self.response_cache[key] = response
-
-        # Simple LRU: if cache too big, remove oldest (random for simplicity)
-        if len(self.response_cache) > self.max_cache_size:
-            # Remove a random key to stay under limit
-            import random as rand_module
-            del self.response_cache[rand_module.choice(list(self.response_cache.keys()))]
 
     def create_game(self, investigator: InvestigatorState) -> GameState:
         """Initialize a new game"""
@@ -299,60 +270,22 @@ class GenerativeGameEngine:
         )
         return self.state
 
-    def _call_ollama(self, prompt: str, max_tokens: int = 250, use_streaming: bool = True) -> str:
-        """Call local Mistral model with optional streaming and caching"""
-        # Check cache first
-        cached = self._check_cache(prompt)
-        if cached:
-            return cached
-
+    def _call_ollama(self, prompt: str, max_tokens: int = 300) -> str:
+        """Call local Mistral model"""
         try:
-            response_text = ""
-
-            if use_streaming and self.enable_streaming:
-                # Streaming mode: returns text as it generates
-                response = requests.post(
-                    f"{self.ollama_endpoint}/api/generate",
-                    json={
-                        "model": self.model,
-                        "prompt": prompt,
-                        "stream": True,
-                        "temperature": 0.7,
-                        "num_predict": max_tokens
-                    },
-                    timeout=30,
-                    stream=True
-                )
-                response.raise_for_status()
-
-                # Collect response from streaming
-                for line in response.iter_lines():
-                    if line:
-                        try:
-                            chunk = json.loads(line)
-                            response_text += chunk.get("response", "")
-                        except json.JSONDecodeError:
-                            continue
-            else:
-                # Non-streaming mode: faster fallback
-                response = requests.post(
-                    f"{self.ollama_endpoint}/api/generate",
-                    json={
-                        "model": self.model,
-                        "prompt": prompt,
-                        "stream": False,
-                        "temperature": 0.7,
-                        "num_predict": max_tokens
-                    },
-                    timeout=30
-                )
-                response.raise_for_status()
-                response_text = response.json()["response"]
-
-            result = response_text.strip()
-            self._update_cache(prompt, result)
-            return result
-
+            response = requests.post(
+                f"{self.ollama_endpoint}/api/generate",
+                json={
+                    "model": self.model,
+                    "prompt": prompt,
+                    "stream": False,
+                    "temperature": 0.7,
+                    "num_predict": max_tokens
+                },
+                timeout=30
+            )
+            response.raise_for_status()
+            return response.json()["response"].strip()
         except Exception as e:
             return f"[DM ERROR: {str(e)}]"
 
@@ -739,7 +672,7 @@ The player asks: "{player_question}"
 Respond in character, in 2-3 sentences. Be dramatic, mysterious, and atmospheric. Reference what you know if relevant."""
 
         # Get NPC response
-        response = self._call_ollama(prompt, max_tokens=80)
+        response = self._call_ollama(prompt, max_tokens=100)
         return f"{npc['name']}: {response}"
 
     def _generate_ending_narrative(self, ending_type: str) -> str:
@@ -758,7 +691,7 @@ What they witnessed:
 
 Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs max."""
 
-        ending_text = self._call_ollama(prompt, max_tokens=350)
+        ending_text = self._call_ollama(prompt, max_tokens=400)
         self.state.ending_narrative = ending_text
         return ending_text
 

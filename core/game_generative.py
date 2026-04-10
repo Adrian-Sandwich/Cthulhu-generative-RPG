@@ -280,22 +280,39 @@ class GenerativeGameEngine:
         )
         return self.state
 
-    def _call_ollama(self, prompt: str, max_tokens: int = 200) -> str:
-        """Call local Mistral model"""
+    def _call_ollama(self, prompt: str, max_tokens: int = 200, on_chunk=None) -> str:
+        """Call local Mistral model with optional streaming callback"""
         try:
             response = requests.post(
                 f"{self.ollama_endpoint}/api/generate",
                 json={
                     "model": self.model,
                     "prompt": prompt,
-                    "stream": False,
+                    "stream": True,  # Always use streaming
                     "temperature": 0.7,
                     "num_predict": max_tokens
                 },
-                timeout=30
+                timeout=30,
+                stream=True
             )
             response.raise_for_status()
-            return response.json()["response"].strip()
+
+            full_response = ""
+            for line in response.iter_lines():
+                if line:
+                    try:
+                        chunk = json.loads(line)
+                        text = chunk.get("response", "")
+                        full_response += text
+
+                        # Call callback to stream text to UI
+                        if on_chunk and text:
+                            on_chunk(text)
+                    except json.JSONDecodeError:
+                        continue
+
+            return full_response.strip()
+
         except Exception as e:
             return f"[DM ERROR: {str(e)}]"
 
@@ -405,17 +422,21 @@ IMPORTANT RULES:
 """
         return prompt
 
-    def process_player_action(self, player_input: str) -> Dict:
+    def process_player_action(self, player_input: str, on_chunk=None) -> Dict:
         """
         Process player action and get DM response.
         Returns DM narrative + any requested rolls/sanity checks/items/combat.
+
+        Args:
+            player_input: What the player does
+            on_chunk: Optional callback function for streaming text chunks
         """
         if not self.state:
             return {"error": "No active game"}
 
-        # Get DM response
+        # Get DM response with optional streaming
         dm_prompt = self._build_dm_prompt(player_input)
-        dm_response = self._call_ollama(dm_prompt)
+        dm_response = self._call_ollama(dm_prompt, on_chunk=on_chunk)
 
         # Parse all tag types
         rolls_requested = re.findall(r'\[ROLL: (\w+)/(\w+)\]', dm_response)

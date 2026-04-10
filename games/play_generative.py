@@ -26,6 +26,13 @@ def print_header(text):
     print("=" * 80 + "\n")
 
 
+def stream_callback(chunk):
+    """Print LLM response as it streams in real-time"""
+    import sys
+    sys.stdout.write(chunk)
+    sys.stdout.flush()
+
+
 def print_box(text, width=80):
     """Print text in a box"""
     lines = text.split('\n')
@@ -403,15 +410,14 @@ def main():
 
         else:
             # Regular action
-            print("\n")
-            print_box("Generating DM response... please wait", width=82)
-
-            result = engine.process_player_action(action)
-
-            # Display DM response
             clear()
             print_header("DUNGEON MASTER")
-            print(result['narrative'])
+            print("🌊 ", end="", flush=True)  # Streaming indicator
+
+            # Process action with streaming callback - response displays in real-time
+            result = engine.process_player_action(action, on_chunk=stream_callback)
+
+            print("\n")  # Newline after streamed response
 
             # Handle items found
             for item_key in result['items_found']:

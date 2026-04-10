@@ -389,21 +389,19 @@ Recent story:
 
 === YOUR RESPONSE ===
 
-Respond naturally as a Dungeon Master. Describe what happens in 2-3 sentences.
+Respond ONLY as the Dungeon Master. Tell what happens (2-3 sentences).
 
-USE TAGS WHEN NEEDED:
-- [ROLL: skill/difficulty] — if action has real risk/danger
-- [SANITY_CHECK: N] — if player witnesses cosmic horror
-- [ITEM_FOUND: key] — if player finds an item
-- [COMBAT_START: enemy] — if combat begins
-- [HP_DAMAGE: N] — if environmental damage occurs
-- [NPC_DIALOGUE: npc] — if NPC speaks
+IF player does something DANGEROUS → ADD TAG: [ROLL: skill/difficulty]
+IF player sees COSMIC HORROR → ADD TAG: [SANITY_CHECK: damage_value]
+IF player FINDS ITEM → ADD TAG: [ITEM_FOUND: item_key]
+IF COMBAT STARTS → ADD TAG: [COMBAT_START: enemy_key]
+IF player takes ENVIRONMENTAL DAMAGE → ADD TAG: [HP_DAMAGE: damage_value]
 
-REMEMBER:
-- DON'T request rolls for routine actions (walking, looking, talking)
-- DO request rolls only for risky/uncertain actions
-- Keep tone dark, atmospheric, Lovecraftian
-- Point Black Lighthouse holds ancient secrets beneath the sea
+IMPORTANT RULES:
+- Don't request rolls for simple actions (walking, talking, looking)
+- Only roll if action is risky or has uncertain outcome
+- Keep narration atmospheric and dark
+- Never explain what you're doing (no "Consider this...", no suggestions, no lists)
 """
         return prompt
 

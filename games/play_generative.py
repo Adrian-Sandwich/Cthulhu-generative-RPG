@@ -433,7 +433,8 @@ def main():
             # Handle combat start
             for enemy_key in result['combat_start']:
                 combat_result = engine.start_combat(enemy_key)
-                print(f"\n⚔️  {combat_result['message']}")
+                if 'error' not in combat_result:
+                    print(f"\n⚔️  {combat_result['message']}")
 
             # Handle NPC dialogue from DM
             for npc_key in result['npc_dialogue']:
@@ -448,9 +449,15 @@ def main():
 
                 # If in combat, resolve that round
                 if engine.state.active_combat:
-                    # Find the last roll result
-                    roll_msg = engine.state.narrative[-1] if engine.state.narrative else ""
-                    player_hit = "SUCCESS" in roll_msg or "HIT" in roll_msg.upper()
+                    # Find the last roll result in narrative
+                    player_hit = False
+                    for msg in reversed(engine.state.narrative[-3:]):
+                        if "SUCCESS" in msg or "✓" in msg:
+                            player_hit = True
+                            break
+                        if "FAILURE" in msg or "✗" in msg:
+                            player_hit = False
+                            break
 
                     combat_round = engine.resolve_combat_round(player_hit)
                     if "error" not in combat_round:

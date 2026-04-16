@@ -176,11 +176,11 @@ class TerminalColors:
 
     def hide_cursor(self) -> str:
         """Hide terminal cursor"""
-        return "\033[?25h"
+        return "\033[?25l"
 
     def show_cursor(self) -> str:
         """Show terminal cursor"""
-        return "\033[?25l"
+        return "\033[?25h"
 
     # Convenience methods
     def orange(self, text: str, bold: bool = False) -> str:

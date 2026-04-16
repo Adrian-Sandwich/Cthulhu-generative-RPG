@@ -9,8 +9,35 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from typing import List, Dict, Optional
+import re
+import tty
+import termios
 from ui.color_system import orange, green, cyan, red, yellow, gray
 from ui.retro_display import RetroDisplay
+
+# ANSI escape code regex for measuring visual length
+_ANSI_RE = re.compile(r'\x1b\[[0-9;]*m')
+
+
+def _visual_len(s: str) -> int:
+    """Measure printable length of string, ignoring ANSI escape codes."""
+    return len(_ANSI_RE.sub('', s))
+
+
+def _getch() -> str:
+    """Read one keypress in raw mode (no echo). Returns char or arrow escape sequence."""
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    try:
+        tty.setraw(fd)
+        ch = sys.stdin.read(1)
+        if ch == '\x1b':
+            ch2 = sys.stdin.read(1)   # '['
+            ch3 = sys.stdin.read(1)   # A/B/C/D for arrows
+            return '\x1b' + ch2 + ch3
+        return ch
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
 
 class HistoryViewer(RetroDisplay):
@@ -281,6 +308,209 @@ class HistoryViewer(RetroDisplay):
             print(f"  Location: {cyan(location)}")
             print(f"  Found: {green(description, bold=True)}")
             print()
+
+    def _build_history_lines(
+        self, narrative_turns: List[str], investigator_name: str, location: str, turn: int,
+        discoveries: List[str] = None, stats: Dict = None
+    ) -> List[str]:
+        """Build list of pre-rendered (colored) lines for the interactive pager."""
+        lines = []
+
+        # Header
+        lines.append(orange("═" * self.width, bold=True))
+        lines.append(orange(f"GAME HISTORY: {investigator_name}".center(self.width), bold=True))
+        lines.append(orange(f"Turn {turn} | Location: {location}".center(self.width)))
+        lines.append(orange("═" * self.width, bold=True))
+        lines.append("")
+
+        # Stats
+        if stats:
+            lines.append(cyan("CURRENT STATE:", bold=True))
+            for key, value in stats.items():
+                if isinstance(value, tuple):
+                    lines.append(f"  {key}: {value[0]}/{value[1]}")
+                else:
+                    lines.append(f"  {key}: {value}")
+            lines.append("")
+
+        # Discoveries
+        if discoveries:
+            lines.append(green("DISCOVERIES:", bold=True))
+            for i, d in enumerate(discoveries, 1):
+                lines.append(f"  {i}. {d}")
+            lines.append("")
+
+        # Narrative
+        lines.append(cyan("COMPLETE NARRATIVE:", bold=True))
+        lines.append(gray("─" * self.width))
+        lines.append("")
+
+        for i, turn_text in enumerate(narrative_turns, 1):
+            if turn_text.startswith("Player:"):
+                action = turn_text.replace("Player: ", "")
+                prefix = yellow(f"[Turn {i}] ")
+                content_lines = self._wrap_text(action, self.width - 4)
+                if content_lines:
+                    lines.append(f"  {prefix}{green(content_lines[0], bold=True)}")
+                    for cont in content_lines[1:]:
+                        lines.append(f"          {green(cont, bold=True)}")
+            elif turn_text.startswith("DM:"):
+                narration = turn_text.replace("DM: ", "")
+                prefix = yellow(f"[Turn {i}] ")
+                content_lines = self._wrap_text(narration, self.width - 4)
+                if content_lines:
+                    lines.append(f"  {prefix}{cyan(content_lines[0])}")
+                    for cont in content_lines[1:]:
+                        lines.append(f"          {cyan(cont)}")
+            else:
+                content_lines = self._wrap_text(turn_text, self.width - 4)
+                if content_lines:
+                    lines.append(f"  {yellow(f'[Turn {i}] ')}{content_lines[0]}")
+                    for cont in content_lines[1:]:
+                        lines.append(f"          {cont}")
+            lines.append("")
+
+        lines.append(gray("─" * self.width))
+        return lines
+
+    def _run_pager(self, lines: List[str]) -> None:
+        """Interactive pager: arrow keys scroll, / searches, q quits."""
+        try:
+            term_h, term_w = os.get_terminal_size()
+        except OSError:
+            term_h, term_w = 24, 80
+
+        view_h = term_h - 2  # reserve 2 rows for status bar
+        max_top = max(0, len(lines) - view_h)
+        top = 0
+        search_term = ''
+        search_mode = False
+        search_results: List[int] = []
+        result_idx = 0
+
+        def render():
+            sys.stdout.write('\033[H')  # cursor home
+
+            # Draw visible lines
+            for i in range(view_h):
+                row = i + 1
+                li = top + i
+                sys.stdout.write(f'\033[{row};1H\033[2K')  # move and erase line
+
+                if li < len(lines):
+                    line = lines[li]
+                    # Truncate to terminal width
+                    visual = _ANSI_RE.sub('', line)
+                    if len(visual) > term_w:
+                        # Find byte position that matches term_w visible chars
+                        chars = 0
+                        byte_pos = 0
+                        i_c = 0
+                        while i_c < len(line) and chars < term_w:
+                            if line[i_c:].startswith('\x1b'):
+                                end = line.find('m', i_c)
+                                byte_pos = end + 1
+                                i_c = byte_pos
+                            else:
+                                chars += 1
+                                i_c += 1
+                                byte_pos = i_c
+                        line = line[:byte_pos]
+
+                    # Highlight search matches
+                    if search_term:
+                        plain = _ANSI_RE.sub('', line)
+                        if search_term.lower() in plain.lower():
+                            idx = plain.lower().find(search_term.lower())
+                            line = (plain[:idx]
+                                    + f'\033[7m{plain[idx:idx+len(search_term)]}\033[0m'
+                                    + plain[idx+len(search_term):])
+
+                    sys.stdout.write(line)
+
+            # Status bar
+            pct = int(min(100, (top / max(1, max_top)) * 100)) if max_top else 100
+            match_info = f'  [{result_idx+1}/{len(search_results)}]' if search_results else ''
+
+            if search_mode:
+                status = f'  SEARCH: {search_term}_   ESC=cancel  ENTER=jump'
+            else:
+                status = (f'  ↑↓/jk scroll  SPACE/b page  /=search  '
+                          f'n/N match{match_info}  g=top  G=end  q=quit  '
+                          f'[{top+1}-{min(top+view_h, len(lines))}/{len(lines)}] {pct}%')
+
+            sys.stdout.write(f'\033[{term_h-1};1H\033[2K\033[7m{status[:term_w].ljust(term_w)}\033[0m')
+            sys.stdout.flush()
+
+        sys.stdout.write('\033[?25l\033[2J\033[H')  # hide cursor, clear screen
+
+        try:
+            while True:
+                render()
+                key = _getch()
+
+                if search_mode:
+                    if key in ('\r', '\n'):
+                        search_mode = False
+                        if search_results:
+                            top = min(search_results[result_idx], max_top)
+                    elif key == '\x1b':
+                        search_mode = False
+                        search_term = ''
+                        search_results = []
+                    elif key == '\x7f':  # backspace
+                        search_term = search_term[:-1]
+                        search_results = [i for i, ln in enumerate(lines)
+                                          if search_term and search_term.lower() in _ANSI_RE.sub('', ln).lower()]
+                        result_idx = 0
+                        if search_results:
+                            top = min(search_results[0], max_top)
+                    else:
+                        search_term += key
+                        search_results = [i for i, ln in enumerate(lines)
+                                          if search_term.lower() in _ANSI_RE.sub('', ln).lower()]
+                        result_idx = 0
+                        if search_results:
+                            top = min(search_results[0], max_top)
+                    continue
+
+                # Normal mode navigation
+                if key in ('q', 'Q', '\x03', '\x04'):  # q or Ctrl-C/D
+                    break
+                elif key in ('\x1b[A', 'k', 'K'):  # UP arrow or k
+                    top = max(0, top - 1)
+                elif key in ('\x1b[B', 'j', 'J'):  # DOWN arrow or j
+                    top = min(max_top, top + 1)
+                elif key in (' ', '\x1b[6~'):  # SPACE or Page Down
+                    top = min(max_top, top + view_h)
+                elif key in ('b', 'B', '\x1b[5~'):  # b or Page Up
+                    top = max(0, top - view_h)
+                elif key == 'g':  # go to top
+                    top = 0
+                elif key == 'G':  # go to bottom
+                    top = max_top
+                elif key == '/':  # enter search
+                    search_mode = True
+                    search_term = ''
+                    search_results = []
+                elif key == 'n' and search_results:  # next match
+                    result_idx = (result_idx + 1) % len(search_results)
+                    top = min(search_results[result_idx], max_top)
+                elif key == 'N' and search_results:  # prev match
+                    result_idx = (result_idx - 1) % len(search_results)
+                    top = min(search_results[result_idx], max_top)
+
+        finally:
+            sys.stdout.write('\033[?25h\033[2J\033[H')  # show cursor, clear
+            sys.stdout.flush()
+
+    def display_scrollable(
+        self, narrative_turns: List[str], investigator_name: str, location: str, turn: int,
+        discoveries: List[str] = None, stats: Dict = None
+    ) -> None:
+        """Display full game history in an interactive scrollable pager."""
+        lines = self._build_history_lines(narrative_turns, investigator_name, location, turn, discoveries, stats)
+        self._run_pager(lines)
 
     def _wrap_text(self, text: str, width: int) -> List[str]:
         """Wrap text to fit width"""

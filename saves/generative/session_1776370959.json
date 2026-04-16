@@ -1,0 +1,121 @@
+{
+  "metadata": {
+    "session_id": "session_1776370959",
+    "model": "qwen2.5:7b",
+    "timestamp": "2026-04-16T16:50:37.233507",
+    "turn": 3,
+    "investigator": "Detective Morgan",
+    "location": "Lighthouse Stairs",
+    "sanity": 70,
+    "phase": "exploring",
+    "play_duration": 5
+  },
+  "game_state": {
+    "turn": 3,
+    "location": "Lighthouse Stairs",
+    "narrative": [
+      "\n    ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.\n    ",
+      "Player: y kick the door to open it",
+      "DM: Detective Morgan stands at the edge of the lighthouse exterior, the salt air tangibly sharp against your skin. You kick a nearby rock and watch as it skitters away into the fog, leaving only ripples on the waves that crash against the dark rocks below.\n\nThe sound of the waves is almost deafening in the encroaching silence, broken by the occasional caw of seabirds. The lighthouse tower stands starkly above you, its light flickering intermittently as if protesting your intrusion. You notice a small door at the base of the tower, partially hidden behind a tangle of seaweed and rope.\n\nThe door is slightly ajar, inviting but not welcoming. As you approach to kick it open, the wind picks up, carrying with it an eerie whisper. The air grows colder, almost as if the very atmosphere is reacting to your presence.\n\nWith a final nudge from your boot, the small door swings inward, revealing a narrow passage leading into the lighthouse. The transition is abrupt and cold, the sudden change in temperature and light jarring.\n\nInside the opening, you can just make out a dimly lit interior that beckons further exploration, but for now, the exterior remains shrouded in mystery and the relentless sound of the crashing waves.",
+      "Player: cry",
+      "DM: Detective Morgan steps into the dimly lit interior of the lighthouse, the cold stone walls pressing in from all sides. The spiral iron stairs leading upwards loom in the darkness, their metal creaking slightly as if they are alive with age.\n\nThe faint glow of strange luminescent fungus illuminates a few patches on the damp stone floor and walls, casting an eerie green light that flickers softly. The air is heavy with the salt smell of the ocean and the musty scent of old wood and paper.\n\nYou take a deep breath, trying to steady yourself as you glance around the narrow passage. The sound of waves continues to batter against the lighthouse exterior, mingling with the distant cawing of seabirds and the faint, almost imperceptible whisper of the wind.\n\nFeeling a sudden surge of unease, you can't help but cry softly, the tears mixing with the salty air as they fall from your eyes. You close your eyes for a moment, letting the darkness envelop you before slowly opening them again.\n\nThe passage ahead remains just barely visible, beckoning you forward despite your emotions. The dim light guides your steps as you begin to walk cautiously into the heart of the lighthouse, your flashlight at the ready in case anything threatens to emerge from the shadows."
+    ],
+    "investigator": {
+      "name": "Detective Morgan",
+      "occupation": "Private Investigator",
+      "characteristics": {
+        "STR": 65,
+        "CON": 65,
+        "SIZ": 60,
+        "DEX": 65,
+        "INT": 80,
+        "APP": 60,
+        "POW": 70,
+        "EDU": 85,
+        "HP": 13,
+        "SAN": 70,
+        "Luck": 50,
+        "Magic_Points": 14
+      },
+      "skills": {
+        "investigate": 60,
+        "library": 50,
+        "persuade": 40,
+        "spot_hidden": 55,
+        "psychology": 45
+      },
+      "inventory": [
+        "Flashlight",
+        "Notebook"
+      ],
+      "visited_locations": [],
+      "sanity_breaks": []
+    },
+    "recent_actions": [
+      "y kick the door to open it",
+      "cry"
+    ],
+    "game_phase": "exploring",
+    "victory_condition": "Survive and uncover the truth",
+    "ending_reached": null,
+    "ending_narrative": null,
+    "active_combat": null,
+    "npcs_talked_to": {},
+    "last_roll": null,
+    "npc_reputation": {}
+  },
+  "location_state": {
+    "locations": {
+      "lighthouse_exterior": {
+        "key": "lighthouse_exterior",
+        "name": "Point Black Lighthouse - Exterior",
+        "base_description": "A weathered lighthouse stands on rocky black stone, its paint peeling from decades of exposure to salt spray and Atlantic winds. The structure is perhaps thirty feet tall, surrounded by a low stone wall. The keeper's cottage sits nearby, its windows dark and empty.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_quarters": {
+        "key": "keeper_quarters",
+        "name": "Keeper's Quarters",
+        "base_description": "The keeper's sparse living space: a cot, a table with a single chair, shelves of maritime equipment. Everything is covered in dust. Through the single window, you can see the lighthouse. There's a faint smell of decay and something else—something chemical.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "lighthouse_interior": {
+        "key": "lighthouse_interior",
+        "name": "Lighthouse Interior",
+        "base_description": "The interior of the lighthouse is a spiral of iron stairs ascending into darkness. The air is thick and stale. Each step groans under your weight. The walls are covered in moisture and a strange luminescent fungus that glows faintly green in the darkness.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_room_top": {
+        "key": "keeper_room_top",
+        "name": "Keeper's Room - Lighthouse Top",
+        "base_description": "At the top of the lighthouse, a small room contains a cot, desk, and the great lamp mechanism. Papers are scattered everywhere—logbooks, journals, sketches of impossible symbols. The light mechanism hasn't been lit in weeks. Through the windows, you can see the entire rocky coast and far out to sea.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      }
+    },
+    "unlocked": [
+      "keeper_quarters",
+      "lighthouse_exterior",
+      "keeper_room_top",
+      "lighthouse_interior"
+    ]
+  }
+}

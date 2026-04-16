@@ -405,10 +405,10 @@ def _run_game_loop(engine: GenerativeGameEngine, model: str):
             input("Press ENTER to continue...")
 
         elif action.lower() in ('v', 'hist', 'history'):
-            # View game history
+            # View game history (interactive scrollable pager)
             viewer = HistoryViewer(width=80)
             inv = engine.state.investigator
-            viewer.display_full_history(
+            viewer.display_scrollable(
                 narrative_turns=engine.state.narrative,
                 investigator_name=inv.name,
                 location=engine.state.location,
@@ -420,7 +420,6 @@ def _run_game_loop(engine: GenerativeGameEngine, model: str):
                     "Luck": inv.characteristics['Luck'],
                 }
             )
-            input("Press ENTER to continue...")
 
         elif action.lower().startswith('u ') or action.lower().startswith('use '):
             # Use item command

@@ -1,0 +1,133 @@
+{
+  "metadata": {
+    "session_id": "session_1776316745",
+    "model": "qwen2.5:7b",
+    "timestamp": "2026-04-15T23:25:15.991352",
+    "turn": 5,
+    "investigator": "Dr. Elizabeth Chen",
+    "location": "Lighthouse Interior",
+    "sanity": 75,
+    "phase": "exploring",
+    "play_duration": 15
+  },
+  "game_state": {
+    "turn": 5,
+    "location": "Lighthouse Interior",
+    "narrative": [
+      "\n    ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.\n    ",
+      "Player: Investigate",
+      "DM: The wind howls around you, and the salt air makes your eyes water as you examine the lighthouse's exterior. The rain-soaked wood creaks under your footsteps. \n\n",
+      "[ROLL: Roll 63 vs investigate(90) - ✓ SUCCESS]",
+      "DM: The player successfully peeked through a crack in the dungeon wall, catching a glimpse of a spectral figure moving behind barred doors deep within the chamber. The ghostly visage flickered and vanished as quickly as it appeared, leaving the air thick with an unspoken warning and a sense that they've stumbled upon something far more dangerous than they bargained for.",
+      "Player: Try to open the crack in the wall if possible",
+      "DM: The crack is narrow and well-sealed, resisting your attempts despite the dampness aiding your grip. ",
+      "Player: find an entrance to go through the wall",
+      "DM: You press against the crack, using your flashlight to peer inside. The opening is barely wide enough for a hand, and it seems to lead into some kind of concealed passage behind the lighthouse's exterior walls.\n\n",
+      "[ROLL: Roll 83 vs investigate(90) - ✓ SUCCESS]",
+      "DM: The player's keen eyes and sharp ears allowed them to sneak past a group of bandits guarding the entrance to an ancient tomb. Inside, they discovered a hidden passage filled with traps and the faint glint of gold in the distance, setting the stage for their next daring move through the dark, echoing corridors.",
+      "Player: Seeing if there are functional items on the place",
+      "DM: You scan the area with your flashlight, casting eerie shadows across the wet stone walls. The narrow crack in the wall catches your attention, but it seems too tight for any of your items to fit through.\n\n\n\nThe task is difficult, and you must push your skill to its limit to discern if there's any possibility of opening this crack further.",
+      "[ROLL: Roll 82 vs investigate(90) - ✓ SUCCESS]",
+      "DM: The player's character manages to slip past the guards unnoticed, narrowly avoiding detection as they scavenge through a hidden passage in the ancient ruins. They discover an old, dusty map leading to a secret chamber rumored to contain powerful artifacts long forgotten by time."
+    ],
+    "investigator": {
+      "name": "Dr. Elizabeth Chen",
+      "occupation": "Occult Scholar",
+      "characteristics": {
+        "STR": 50,
+        "CON": 60,
+        "SIZ": 50,
+        "DEX": 55,
+        "INT": 90,
+        "APP": 65,
+        "POW": 85,
+        "EDU": 95,
+        "HP": 10,
+        "SAN": 75,
+        "Luck": 55,
+        "Magic_Points": 17
+      },
+      "skills": {
+        "library": 70,
+        "occult": 65,
+        "language_latin": 60,
+        "psychology": 50,
+        "science_astronomy": 45
+      },
+      "inventory": [
+        "Flashlight",
+        "Notebook"
+      ],
+      "visited_locations": [],
+      "sanity_breaks": []
+    },
+    "recent_actions": [
+      "Investigate",
+      "Try to open the crack in the wall if possible",
+      "find an entrance to go through the wall",
+      "Seeing if there are functional items on the place"
+    ],
+    "game_phase": "exploring",
+    "victory_condition": "Survive and uncover the truth",
+    "ending_reached": null,
+    "ending_narrative": null,
+    "active_combat": null,
+    "npcs_talked_to": {},
+    "last_roll": null,
+    "npc_reputation": {}
+  },
+  "location_state": {
+    "locations": {
+      "lighthouse_exterior": {
+        "key": "lighthouse_exterior",
+        "name": "Point Black Lighthouse - Exterior",
+        "base_description": "A weathered lighthouse stands on rocky black stone, its paint peeling from decades of exposure to salt spray and Atlantic winds. The structure is perhaps thirty feet tall, surrounded by a low stone wall. The keeper's cottage sits nearby, its windows dark and empty.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_quarters": {
+        "key": "keeper_quarters",
+        "name": "Keeper's Quarters",
+        "base_description": "The keeper's sparse living space: a cot, a table with a single chair, shelves of maritime equipment. Everything is covered in dust. Through the single window, you can see the lighthouse. There's a faint smell of decay and something else—something chemical.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "lighthouse_interior": {
+        "key": "lighthouse_interior",
+        "name": "Lighthouse Interior",
+        "base_description": "The interior of the lighthouse is a spiral of iron stairs ascending into darkness. The air is thick and stale. Each step groans under your weight. The walls are covered in moisture and a strange luminescent fungus that glows faintly green in the darkness.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_room_top": {
+        "key": "keeper_room_top",
+        "name": "Keeper's Room - Lighthouse Top",
+        "base_description": "At the top of the lighthouse, a small room contains a cot, desk, and the great lamp mechanism. Papers are scattered everywhere—logbooks, journals, sketches of impossible symbols. The light mechanism hasn't been lit in weeks. Through the windows, you can see the entire rocky coast and far out to sea.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      }
+    },
+    "unlocked": [
+      "keeper_room_top",
+      "lighthouse_interior",
+      "keeper_quarters",
+      "lighthouse_exterior"
+    ]
+  }
+}

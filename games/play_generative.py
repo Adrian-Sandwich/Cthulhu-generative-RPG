@@ -13,7 +13,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.game_generative import GenerativeGameEngine, InvestigatorState, CoC7eRulesEngine
 from ui.keeper_thinking import show_keeper_thinking, KeeperThinking
-from ui.game_display import GameDisplayManager
 
 
 def clear():
@@ -202,12 +201,24 @@ def create_new_investigator() -> InvestigatorState:
     )
 
 
-def display_game_state(engine: GenerativeGameEngine, display: GameDisplayManager = None):
+def display_game_state(engine: GenerativeGameEngine):
     """Display current game status"""
-    if display is None:
-        display = GameDisplayManager()
+    inv = engine.state.investigator
+    san_bar = "█" * int(inv.characteristics['SAN'] / 4) + "░" * (25 - int(inv.characteristics['SAN'] / 4))
+    hp_bar = "♥" * inv.characteristics['HP'] + "♡" * (15 - inv.characteristics['HP'])
 
-    display.show_game_state(engine)
+    print("\n" + "-" * 80)
+    print(f"{inv.name} ({inv.occupation})")
+    print(f"  HP: [{hp_bar}] {inv.characteristics['HP']:2d}  │  SAN: [{san_bar}] {inv.characteristics['SAN']:3d}  │  Luck: {inv.characteristics['Luck']:2d}")
+    print(f"  Location: {engine.state.location}")
+
+    # Show enemy HP if in combat
+    if engine.state.active_combat:
+        enemy = engine.state.active_combat
+        enemy_hp_bar = "█" * enemy['hp'] + "░" * (12 - min(enemy['hp'], 12))
+        print(f"  Enemy: {enemy['name']} [{enemy_hp_bar}] {enemy['hp']} HP")
+
+    print("-" * 80 + "\n")
 
 
 def show_help():
@@ -308,12 +319,9 @@ def _run_game_loop(engine: GenerativeGameEngine, model: str):
         engine: Initialized GenerativeGameEngine
         model: LLM model name
     """
-    # Initialize display manager
-    display = GameDisplayManager(width=80)
-
     # Main game loop
     while True:
-        display.clear_screen()
+        clear()
 
         # Check for ending
         ending = engine.check_ending_condition()
@@ -331,7 +339,7 @@ def _run_game_loop(engine: GenerativeGameEngine, model: str):
             break
 
         # Display state
-        display_game_state(engine, display)
+        display_game_state(engine)
 
         # Show recent narrative (last 2 DM responses)
         print("━" * 80)

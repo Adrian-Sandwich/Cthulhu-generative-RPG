@@ -72,7 +72,10 @@ class GameDisplayManager:
         self.base.print_divider()
         location = state.location or "Unknown"
         inv_count = len(inv.inventory)
-        companions = len(engine.companion_manager.get_active_companions())
+
+        # Get companions count (with graceful fallback)
+        companion_mgr = getattr(engine, 'companion_manager', None)
+        companions = len(companion_mgr.get_active_companions()) if companion_mgr else 0
 
         self.base.print_columns([
             f"📍 {location}",

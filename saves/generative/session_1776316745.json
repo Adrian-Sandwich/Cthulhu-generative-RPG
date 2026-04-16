@@ -2,16 +2,16 @@
   "metadata": {
     "session_id": "session_1776316745",
     "model": "qwen2.5:7b",
-    "timestamp": "2026-04-15T23:25:15.991352",
-    "turn": 5,
+    "timestamp": "2026-04-16T09:28:59.125513",
+    "turn": 6,
     "investigator": "Dr. Elizabeth Chen",
     "location": "Lighthouse Interior",
     "sanity": 75,
     "phase": "exploring",
-    "play_duration": 15
+    "play_duration": 17
   },
   "game_state": {
-    "turn": 5,
+    "turn": 6,
     "location": "Lighthouse Interior",
     "narrative": [
       "\n    ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.\n    ",
@@ -28,7 +28,9 @@
       "Player: Seeing if there are functional items on the place",
       "DM: You scan the area with your flashlight, casting eerie shadows across the wet stone walls. The narrow crack in the wall catches your attention, but it seems too tight for any of your items to fit through.\n\n\n\nThe task is difficult, and you must push your skill to its limit to discern if there's any possibility of opening this crack further.",
       "[ROLL: Roll 82 vs investigate(90) - ✓ SUCCESS]",
-      "DM: The player's character manages to slip past the guards unnoticed, narrowly avoiding detection as they scavenge through a hidden passage in the ancient ruins. They discover an old, dusty map leading to a secret chamber rumored to contain powerful artifacts long forgotten by time."
+      "DM: The player's character manages to slip past the guards unnoticed, narrowly avoiding detection as they scavenge through a hidden passage in the ancient ruins. They discover an old, dusty map leading to a secret chamber rumored to contain powerful artifacts long forgotten by time.",
+      "Player: y",
+      "DM: You press your hand against the crack, feeling its edges with a careful touch. Your fingers find some loose mortar around one edge, and you start to pry it gently. The wind howls outside, making the task difficult, but with a steady hand, you manage to widen the opening slightly.\n\nInside, you can see a faint glimmer of light—a passage that leads deeper into the lighthouse's heart. The narrow crack reveals enough to confirm that this could be the entrance to the hidden passage you discovered earlier.\n\nYou pull your flashlight closer and shine it inside. The light bounces off damp stone walls and illuminates a small, dark tunnel leading further in. You note the passage is barely wide enough for one person at a time, and it's likely filled with traps or obstacles.\n\nFeeling both cautious and excited, you decide to proceed carefully into the unknown depths of the lighthouse."
     ],
     "investigator": {
       "name": "Dr. Elizabeth Chen",
@@ -65,7 +67,8 @@
       "Investigate",
       "Try to open the crack in the wall if possible",
       "find an entrance to go through the wall",
-      "Seeing if there are functional items on the place"
+      "Seeing if there are functional items on the place",
+      "y"
     ],
     "game_phase": "exploring",
     "victory_condition": "Survive and uncover the truth",
@@ -124,10 +127,10 @@
       }
     },
     "unlocked": [
-      "keeper_room_top",
-      "lighthouse_interior",
       "keeper_quarters",
-      "lighthouse_exterior"
+      "keeper_room_top",
+      "lighthouse_exterior",
+      "lighthouse_interior"
     ]
   }
 }

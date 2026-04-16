@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ui.color_system import get_colors, orange, green, cyan, red, yellow, gray
 from ui.retro_display import RetroDisplay
+from ui.history_viewer import HistoryViewer
 
 
 def clear():
@@ -227,6 +228,104 @@ it's genuine."""
     print()
 
 
+def demo_history_summary():
+    """Demo: Game Summary"""
+    clear()
+    viewer = HistoryViewer(width=80)
+
+    viewer.display_summary(
+        investigator_name="Detective Morgan",
+        occupation="Private Investigator",
+        turns_played=7,
+        hp=12,
+        max_hp=14,
+        sanity=75,
+        max_sanity=99,
+        location="Lantern Room",
+        discoveries=[
+            "The lighthouse was built to contain something beneath the ocean",
+            "Pre-human symbols cover the keeper's quarters",
+            "The keeper's final entry: 'THEY ARE COMING'",
+            "The fissure beneath the lighthouse is becoming active",
+            "The entity responds to sound - the lighthouse bell rang on its own",
+            "Ritual in the grimoire can seal the fissure",
+            "Chief Marsh knows more than he's telling",
+            "The lighthouse beacon must never go out"
+        ],
+        inventory=[
+            "Flashlight (battery good)",
+            "Notebook (investigation notes)",
+            "Revolver (6 bullets)",
+            "Holy water",
+            "Ancient grimoire",
+            "Keeper's logbook"
+        ],
+        companions=1,
+        status="Approaching Climax"
+    )
+
+
+def demo_history_timeline():
+    """Demo: Game Timeline"""
+    clear()
+    viewer = HistoryViewer(width=80)
+
+    narrative_turns = [
+        "Player: I examine the lighthouse exterior carefully",
+        "DM: The weathered structure looms before you on black rock. Salt spray stings your face as waves crash against the stones below. The paint is peeling, and symbols are carved into the door frame.",
+        "Player: I enter the lighthouse and look around",
+        "DM: Inside, a spiral of iron stairs ascends into darkness. The air is thick and stale. Strange luminescent fungus glows faintly green on the damp walls.",
+        "Player: I climb the stairs to the top",
+        "DM: Each step groans under your weight. The walls close in. At the top, the lantern room contains a cot, desk, and scattered papers. Logbooks and journals with sketches of impossible symbols.",
+        "Player: I examine the symbols in the logbook",
+        "DM: Your eyes hurt looking at them. They're not human. Not earthly. The patterns seem to shift when you're not looking directly at them. Your sanity wavers.",
+        "Player: I search for clues about what happened to the keeper",
+        "DM: You find a final entry: 'THEY ARE COMING. The bell rings on its own. The light must never go out. I've hidden the ritual in the sealed room below.'",
+        "Player: I investigate the sealed room below",
+        "DM: A stone door blocks your path. Ancient symbols glow faintly. As you touch it, the ground trembles. Something vast moves beneath the lighthouse. The fissure is waking.",
+        "Player: I prepare the ritual from the grimoire",
+        "DM: Your hands steady as you read the words. The symbols begin to glow brighter. The keeper's sacrifice bound the entity once. Perhaps his knowledge can bind it again."
+    ]
+
+    viewer.display_timeline(narrative_turns)
+
+
+def demo_history_full():
+    """Demo: Full Game History"""
+    clear()
+    viewer = HistoryViewer(width=80)
+
+    narrative_turns = [
+        "Player: I examine the lighthouse exterior carefully",
+        "DM: The weathered structure looms before you on black rock.",
+        "Player: I enter the lighthouse",
+        "DM: A spiral of iron stairs ascends into darkness. Strange fungus glows on the walls.",
+        "Player: I climb to the top",
+        "DM: The lantern room contains scattered journals with impossible symbols.",
+        "Player: I read the final logbook entry",
+        "DM: 'THEY ARE COMING. The bell rings on its own. I've hidden the ritual below.'",
+    ]
+
+    viewer.display_full_history(
+        narrative_turns=narrative_turns,
+        investigator_name="Detective Morgan",
+        location="Lantern Room",
+        turn=7,
+        discoveries=[
+            "The lighthouse contains something ancient",
+            "Pre-human symbols everywhere",
+            "A sealed room below with the ritual"
+        ],
+        stats={
+            "HP": (12, 14),
+            "SAN": (75, 99),
+            "Turns Played": 7,
+            "Location": "Lantern Room",
+            "Companions": 1
+        }
+    )
+
+
 def demo_combat():
     """Demo: Combat start"""
     clear()
@@ -262,6 +361,9 @@ def main():
         "7": ("NPC Dialogue", demo_dialogue),
         "8": ("Combat Start", demo_combat),
         "9": ("Game Ending", demo_ending),
+        "10": ("History: Summary", demo_history_summary),
+        "11": ("History: Timeline", demo_history_timeline),
+        "12": ("History: Full", demo_history_full),
     }
 
     while True:
@@ -271,9 +373,20 @@ def main():
         print(orange("╚" + "═" * 78 + "╝", bold=True))
         print()
 
-        for key, (name, _) in demos.items():
-            print(f"  {green(key, bold=True)}) {name}")
+        print(cyan("GAMEPLAY SCREENS:", bold=True))
+        for key in ["1", "2", "3", "4", "5", "6", "7", "8", "9"]:
+            if key in demos:
+                name, _ = demos[key]
+                print(f"  {green(key, bold=True)}) {name}")
 
+        print()
+        print(cyan("HISTORY SCREENS:", bold=True))
+        for key in ["10", "11", "12"]:
+            if key in demos:
+                name, _ = demos[key]
+                print(f"  {green(key, bold=True)}) {name}")
+
+        print()
         print(f"  {red('q', bold=True)}) Quit")
         print()
 

@@ -39,6 +39,10 @@ from .game_display import (
     GameDisplayManager,
 )
 
+from .history_viewer import (
+    HistoryViewer,
+)
+
 __all__ = [
     # Keeper Thinking
     "KeeperThinking",
@@ -69,4 +73,6 @@ __all__ = [
     "EndingDisplay",
     # Game Display Manager
     "GameDisplayManager",
+    # History Viewer
+    "HistoryViewer",
 ]

@@ -148,7 +148,9 @@ ATMOSPHERE:
 - Let mystery unfold gradually through player actions
 
 ACTION RESOLUTION:
-- 1 roll per significant action
+- MANDATORY ROLLS: lift/push/pry/force, climb/jump/swim, attack/fight/shoot, search/examine/investigate
+- Read ancient text, persuade/deceive, dodge/run from danger
+- End roll requests with [ROLL: skill/difficulty] BEFORE describing outcome
 - Describe outcome of skill checks (success or failure)
 - Don't repeat information already established
 - Advance the story with each narrative beat

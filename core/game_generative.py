@@ -8,8 +8,75 @@ import json
 import random
 import re
 from dataclasses import dataclass, asdict
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Tuple
 import requests
+
+
+# Phase 2e: Fix C — Roll synthesis mapping (keyword → (skill, difficulty))
+# Used when LLM omits a roll for a physical action
+ROLL_KEYWORDS: Dict[str, Tuple[str, str]] = {
+    # Physical exertion
+    'lift': ('climb', 'Hard'),
+    'push': ('brawl', 'Normal'),
+    'pull': ('climb', 'Normal'),
+    'pry': ('climb', 'Hard'),
+    'force': ('brawl', 'Hard'),
+    'break': ('brawl', 'Hard'),
+    'move': ('climb', 'Normal'),
+    'drag': ('climb', 'Normal'),
+    'carry': ('climb', 'Normal'),
+
+    # Climbing/swimming
+    'climb': ('climb', 'Normal'),
+    'climb up': ('climb', 'Normal'),
+    'scale': ('climb', 'Hard'),
+    'jump': ('jump', 'Normal'),
+    'leap': ('jump', 'Normal'),
+    'swim': ('swim', 'Normal'),
+    'dodge': ('dodge', 'Normal'),
+    'run': ('climb', 'Normal'),
+
+    # Combat
+    'attack': ('brawl', 'Normal'),
+    'fight': ('brawl', 'Normal'),
+    'hit': ('brawl', 'Normal'),
+    'punch': ('brawl', 'Normal'),
+    'kick': ('brawl', 'Normal'),
+    'shoot': ('firearms_revolver', 'Normal'),
+    'fire': ('firearms_revolver', 'Normal'),
+    'stab': ('brawl', 'Normal'),
+    'swing': ('brawl', 'Normal'),
+    'strike': ('brawl', 'Normal'),
+    'brawl': ('brawl', 'Normal'),
+
+    # Search/Investigation
+    'search': ('spot_hidden', 'Hard'),
+    'search for': ('spot_hidden', 'Hard'),
+    'investigate': ('investigate', 'Normal'),
+    'examine': ('investigate', 'Normal'),
+    'examine carefully': ('investigate', 'Normal'),
+    'look for': ('spot_hidden', 'Hard'),
+    'find': ('spot_hidden', 'Hard'),
+    'discover': ('spot_hidden', 'Hard'),
+    'spot': ('spot_hidden', 'Hard'),
+    'notice': ('spot_hidden', 'Hard'),
+    'check': ('investigate', 'Normal'),
+    'look closely': ('investigate', 'Normal'),
+
+    # Occult/Knowledge
+    'decipher': ('occult', 'Hard'),
+    'interpret': ('occult', 'Hard'),
+    'read': ('occult', 'Hard'),
+    'understand': ('occult', 'Hard'),
+
+    # Social pressure
+    'persuade': ('persuade', 'Normal'),
+    'convince': ('persuade', 'Normal'),
+    'deceive': ('persuade', 'Hard'),
+    'bluff': ('persuade', 'Hard'),
+    'intimidate': ('persuade', 'Normal'),
+    'bribe': ('persuade', 'Normal'),
+}
 
 
 @dataclass
@@ -655,16 +722,29 @@ PERSUADE FAILURE:
 YOUR JOB DEPENDS ON LAST ROLL STATUS:
 
 🎯 STATUS: "None yet" (no pending roll)
-  - Respond to the player's action naturally (1-2 sentences)
-  - If the action is dangerous/risky/requires a skill check:
-    → END with exactly: [ROLL: skill/difficulty]
-    → STOP. Do not describe what happens next.
-  - If action is routine (walking, talking, looking casually):
-    → Continue the story (1-2 more sentences)
-    → Only END with a tag if player finds something: [ITEM_FOUND: key]
-    → Or if they trigger combat: [COMBAT_START: enemy_key]
-    → Or if they witness horror: [SANITY_CHECK: damage]
-    → Or if they take environmental damage: [HP_DAMAGE: damage]
+
+MANDATORY ROLL TRIGGERS — ALWAYS REQUEST THESE:
+Physical exertion: lift, push, pull, pry, force, break, move, drag, carry, climb, scale, jump, swim, dodge, run (away)
+Combat: attack, fight, hit, punch, kick, shoot, fire, stab, swing, strike, brawl
+Searching: search, investigate, examine (carefully), look for, find, discover, spot, notice, check thoroughly
+Occult/Knowledge: decipher (text), interpret (symbols), read (ancient/strange text), understand (forbidden lore)
+Social pressure: persuade, convince, deceive, bluff, intimidate, bribe (NPC to act against their nature)
+
+FOR PHYSICAL ACTIONS matching above verbs AND outcome is uncertain:
+  1. Write 1 sentence of atmospheric description (what the investigator attempts)
+  2. END with: [ROLL: skill/difficulty]
+  3. STOP — do NOT describe the result until after the roll is resolved
+
+NEVER REQUEST ROLLS FOR (routine, guaranteed success):
+  Moving between rooms, walking through areas, entering/exiting locations, casual looking around
+  Talking to NPCs normally (unless persuading them to act), reading ordinary documents, picking up items already found
+
+IF action is routine/non-contested:
+  → Continue the story naturally (1-2 more sentences)
+  → Only END with a tag if player finds something: [ITEM_FOUND: key]
+  → Or if they trigger combat: [COMBAT_START: enemy_key]
+  → Or if they witness horror: [SANITY_CHECK: damage]
+  → Or if they take environmental damage: [HP_DAMAGE: damage]
 
 🎯 STATUS: "✓ SUCCESS" (player succeeded a roll)
   - Describe ONLY the positive outcome of their success
@@ -968,6 +1048,15 @@ Respond with the IMMEDIATE narrative outcome of this action. Stay in location.
             clean_response = re.sub(r'\[HP_DAMAGE: .*?\]', '', clean_response)
             clean_response = re.sub(r'\[COMBAT_START: .*?\]', '', clean_response)
             clean_response = re.sub(r'\[NPC_DIALOGUE: .*?\]', '', clean_response)
+
+        # Phase 2e Fix C: Synthesize roll if LLM omitted one for a physical action
+        if not rolls_requested and not combat_start and not sanity_checks:
+            action_lower = player_input.lower()
+            for keyword, (skill, difficulty) in ROLL_KEYWORDS.items():
+                if keyword in action_lower:
+                    # LLM should have requested a roll — inject one
+                    rolls_requested.append((skill, difficulty))
+                    break
 
         # Update narrative
         self.state.narrative.append(f"Player: {player_input}")

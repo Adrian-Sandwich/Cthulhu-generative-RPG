@@ -428,17 +428,48 @@ class GenerativeGameEngine:
             pass
 
     def _call_ollama(self, prompt: str, max_tokens: int = 200, on_chunk=None) -> str:
-        """Call local Mistral model with optional streaming callback. Retries once on failure."""
+        """
+        Call Ollama using /api/chat with message history (not stateless generate).
+        This maintains conversation context for better narrative coherence.
+
+        Improvements:
+        - Temperature 0.5 (less hallucination than 0.7)
+        - Max tokens reduced to 180 (avoid rambling)
+        - Uses /api/chat for true conversation history
+        - Retry logic on failure
+        """
+        from .adventure_context import AdventureContext
+
         for attempt in range(2):  # Try twice
             try:
+                # Build messages with adventure context + history
+                system_prompt = AdventureContext.build_system_prompt(
+                    location=self.state.location,
+                    game_phase=self.state.game_phase
+                )
+
+                # Build message history from narrative (alternating user/assistant)
+                message_history = AdventureContext.build_message_history(
+                    self.state.narrative,
+                    max_messages=15  # Keep sliding window of last 15 turns
+                )
+
+                # Add current action as user message
+                message_history.append({
+                    "role": "user",
+                    "content": prompt
+                })
+
+                # Call /api/chat with message history
                 response = requests.post(
-                    f"{self.ollama_endpoint}/api/generate",
+                    f"{self.ollama_endpoint}/api/chat",
                     json={
                         "model": self.model,
-                        "prompt": prompt,
-                        "stream": True,  # Always use streaming
-                        "temperature": 0.7,
-                        "num_predict": max_tokens
+                        "system": system_prompt,
+                        "messages": message_history,
+                        "stream": True,
+                        "temperature": 0.5,  # IMPROVEMENT: Reduced from 0.7
+                        "num_predict": max_tokens  # Uses 180 default instead of 200
                     },
                     timeout=120,
                     stream=True
@@ -450,7 +481,7 @@ class GenerativeGameEngine:
                     if line:
                         try:
                             chunk = json.loads(line)
-                            text = chunk.get("response", "")
+                            text = chunk.get("message", {}).get("content", "")
                             full_response += text
 
                             # Call callback to stream text to UI
@@ -658,47 +689,79 @@ DO NOT output template text. Do not show IF/ELSE logic. Just tell the story.
 """
 
     def _build_dm_prompt(self, player_action: str) -> str:
-        """Build comprehensive DM prompt with rules hardcoded and semantic memory context"""
+        """
+        Build DM prompt with:
+        - Adventure context (global + endings guidance)
+        - Current game state
+        - Semantic memory for facts
+        - Strong location pinning to prevent hallucinations
+        - Constraints to maintain narrative coherence
+        """
+        from .adventure_context import AdventureContext
 
-        # Build narrative context: combine recent turns + semantic memory results
+        # Build narrative context from memory
         if self.memory and self.memory.enabled:
-            # Query semantic memory for relevant facts (uses mem0ai if available, falls back to ChromaDB)
             semantic_hits = self.memory.query_relevant_facts(player_action, n=5)
-            # Combine: 2 most recent (immediate context) + up to 5 semantic matches
-            recent = self.state.narrative[-2:]
+            recent = self.state.narrative[-3:]  # Increased from 2 to 3
             seen = set(recent)
             extra = [h for h in semantic_hits if h not in seen]
             narrative_context = "\n".join(recent + extra[:5])
         else:
-            # Fallback: just use last 5 narrative beats
             narrative_context = "\n".join(self.state.narrative[-5:])
 
-        # Get system prompt (rules + character info) and append narrative context
-        system_prompt = self._build_dm_system_prompt()
+        # Build current game state context
+        state_context = AdventureContext.build_current_state_prompt(
+            investigator_name=self.state.investigator.name,
+            location=self.state.location,
+            hp=self.state.investigator.characteristics['HP'],
+            max_hp=self.state.investigator.characteristics.get('max_hp', 14),
+            san=self.state.investigator.characteristics['SAN'],
+            max_san=self.state.investigator.characteristics.get('max_san', 99),
+            inventory=self.state.investigator.inventory,
+            discoveries=[d for d in self.state.narrative if "discover" in d.lower()][:5],
+            companions_alive=len(getattr(self, 'companion_manager', None) and
+                                self.companion_manager.get_active_companions() or []),
+            turn=self.state.turn
+        )
 
-        # Location-specific sensory details to ground narrative and prevent hallucinations
+        # Location-specific sensory details - IMPROVED
         location_details = {
-            "Point Black Lighthouse - Exterior": "salt-air smell, dark rocks, crashing waves, fog, lighthouse tower visible",
-            "Lighthouse Interior": "damp stone walls, creaking stairs, salt smell, cold stone, flickering shadows",
-            "Keeper's Quarters": "sparse furniture, faded pictures, musty air, old books, personal effects scattered",
-            "Lighthouse Stairs": "spiral stone stairs, flickering light from above, salt smell, echoing sounds",
-            "Lantern Room": "bright light from beacon, wide windows with ocean view, mechanical gears, heat from lamp",
-            "Ground Floor": "solid stone floor, damp smell, darkness beyond flashlight range, echoing sounds",
-            "Upper Level": "narrow passages, low ceilings, damp air, distant sounds, old wood fixtures",
+            "Point Black Lighthouse - Exterior": "salt-air smell, dark rocks, crashing waves, fog, lighthouse tower visible above",
+            "Lighthouse Interior": "damp stone walls, spiral iron stairs, salt smell, cold stone, strange luminescent fungus glowing faintly green",
+            "Keeper's Quarters": "sparse furniture, dust, faded pictures on walls, musty air, old maritime books, personal effects, chemical smell",
+            "Lighthouse Stairs": "spiral stone stairs groaning underfoot, flickering light from above, salt smell, echoing sounds, fungus on walls",
+            "Lantern Room": "bright beacon light, wide windows with ocean view, mechanical gears, heat from lamp, scattered papers with symbols",
+            "Ground Floor": "solid stone floor, damp smell, darkness beyond flashlight range, echoing sounds, metal door",
+            "Upper Level": "narrow passages, low ceilings, damp air, distant sounds, old wood fixtures creaking",
         }
 
-        sensory_grounding = location_details.get(self.state.location, "")
-        location_constraint = f"SETTING ANCHOR: You are in '{self.state.location}'. Maintain this setting. Include sensory details: {sensory_grounding}. Do NOT suddenly shift to crypts, caves, tombs, or other locations."
+        sensory_grounding = location_details.get(self.state.location, "You are still in the lighthouse, with its damp stone walls.")
 
-        prompt = system_prompt + f"""
-[LOCATION: {self.state.location}]
+        # IMPROVED: Stronger location pinning (mentioned 3 times in prompt for emphasis)
+        location_constraint = f"""
+CRITICAL - LOCATION ANCHOR:
+1. You are ONLY in: {self.state.location}
+2. Sensory details of this location: {sensory_grounding}
+3. Do NOT suddenly shift locations without player requesting it and a transition
+4. Do NOT introduce areas (crypts, caves, dungeons, forests, buildings) not mentioned
+5. Do NOT create enemies/guards that weren't established in previous narrative
+6. Stay grounded in THIS PLACE with its details
+
+If the player tries to leave, describe the TRANSITION first.
+"""
+
+        prompt = f"""
 {location_constraint}
 
-Recent story:
+{state_context}
+
+Recent narrative:
 {narrative_context}
 
-=== PLAYER ACTION ===
+=== PLAYER ACTION THIS TURN ===
 {player_action}
+
+Respond with the IMMEDIATE narrative outcome of this action. Stay in location.
 """
         return prompt
 

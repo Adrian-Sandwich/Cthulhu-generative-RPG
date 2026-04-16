@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.game_generative import GenerativeGameEngine, InvestigatorState, CoC7eRulesEngine
 from ui.keeper_thinking import show_keeper_thinking, KeeperThinking
+from ui.history_viewer import HistoryViewer
 
 
 def clear():
@@ -230,6 +231,7 @@ COMMANDS:
   [u]se [item]      Use an item (e.g., "use flashlight", "use revolver")
   [d]rop [item]     Drop an item (e.g., "drop notebook")
   [s]tatus          Full character status
+  [v]iew history    Review complete game history
   [h]elp            Show this help
   [q]uit            Quit game
 
@@ -400,6 +402,24 @@ def _run_game_loop(engine: GenerativeGameEngine, model: str):
                   f"Luck: {inv.characteristics['Luck']:3d}")
             print(f"\nTurns: {engine.state.turn}")
             print()
+            input("Press ENTER to continue...")
+
+        elif action.lower() in ('v', 'hist', 'history'):
+            # View game history
+            viewer = HistoryViewer(width=80)
+            inv = engine.state.investigator
+            viewer.display_full_history(
+                narrative_turns=engine.state.narrative,
+                investigator_name=inv.name,
+                location=engine.state.location,
+                turn=engine.state.turn,
+                discoveries=[d for d in engine.state.narrative if "discover" in d.lower()],
+                stats={
+                    "HP":  (inv.characteristics['HP'],  inv.characteristics.get('max_hp', 14)),
+                    "SAN": (inv.characteristics['SAN'], inv.characteristics.get('max_san', 99)),
+                    "Luck": inv.characteristics['Luck'],
+                }
+            )
             input("Press ENTER to continue...")
 
         elif action.lower().startswith('u ') or action.lower().startswith('use '):

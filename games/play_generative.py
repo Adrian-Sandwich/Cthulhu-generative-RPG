@@ -12,6 +12,7 @@ import json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.game_generative import GenerativeGameEngine, InvestigatorState, CoC7eRulesEngine
+from ui.keeper_thinking import show_keeper_thinking, KeeperThinking
 
 
 def clear():
@@ -96,17 +97,25 @@ def select_model() -> str:
      • Good coherence, more concise
      • 1-2 seconds per turn
      • Recommended: Quick playthroughs
+
+  4) Qwen 2.5 7B (Advanced Reasoning)
+     • Advanced reasoning & context understanding
+     • Rich narratives with logical consistency
+     • 4-6 seconds per turn
+     • Recommended: Complex storylines
 """)
 
     while True:
-        choice = input("Enter choice (1-3): ").strip()
+        choice = input("Enter choice (1-4): ").strip()
         if choice == "1":
             return "mistral"
         elif choice == "2":
             return "neural-chat"
         elif choice == "3":
             return "orca-mini"
-        print("Invalid choice. Enter 1, 2, or 3.")
+        elif choice == "4":
+            return "qwen2.5:7b"
+        print("Invalid choice. Enter 1, 2, 3, or 4.")
 
 
 def select_investigator() -> InvestigatorState:
@@ -260,45 +269,56 @@ def handle_roll_request(engine: GenerativeGameEngine, skill: str, difficulty: st
     input("Press ENTER to continue...")
 
 
-def main():
-    """Main game loop"""
-    clear()
-    print_box("""
-╔═══════════════════════════════════════════════════════════════════════════╗
-║                                                                           ║
-║           ALONE AGAINST THE DARK - GENERATIVE EDITION                    ║
-║                                                                           ║
-║                  Play with an AI Dungeon Master                          ║
-║              (Mistral 7B running locally via Ollama)                     ║
-║                                                                           ║
-║               "In the darkness, something ancient stirs..."             ║
-║                                                                           ║
-╚═══════════════════════════════════════════════════════════════════════════╝
-    """, width=82)
+def detect_and_resume() -> Optional[Tuple[GenerativeGameEngine, str]]:
+    """
+    Detect available saves and ask player if they want to continue.
 
-    input("Press ENTER to select your model...")
+    Returns:
+        Tuple of (engine, model) if continuing, None if new game
+    """
+    from core.generative_save import GenerativeSave
 
-    # Model selection
-    model = select_model()
+    saves = GenerativeSave.list_saves()
 
-    input("Press ENTER to select your investigator...")
-
-    # Character selection/creation
-    investigator = select_investigator()
-
-    # Initialize engine with selected model
-    engine = GenerativeGameEngine(model=model)
-    engine.create_game(investigator)
-
-    # Show selected model
-    model_name = "Mistral 7B (Best Quality)" if model == "mistral" else "Mistral 3B (Fast)"
-    print(f"\n🤖 Using: {model_name}")
+    if not saves:
+        return None
 
     clear()
-    print_box(engine.state.narrative[0], width=82)
+    print_header("SAVED SESSIONS FOUND")
 
-    input("Press ENTER to start your investigation...")
+    for i, save in enumerate(saves[:5], 1):
+        ts = save["timestamp"][:16].replace("T", " ")
+        print(f"  {i}) {save['investigator']:25} | Turn {save['turn']:3} | {save['location'][:30]}")
+        print(f"     Model: {save['model']:20} | Saved: {ts}")
+        print()
 
+    print("  0) Start new game\n")
+
+    while True:
+        choice = input("Continue a session (0-{}): ".format(min(len(saves), 5))).strip()
+        if choice == "0":
+            return None
+        if choice.isdigit():
+            choice_num = int(choice)
+            if 1 <= choice_num <= min(len(saves), 5):
+                save_meta = saves[choice_num - 1]
+                try:
+                    engine = GenerativeGameEngine.load_game(save_meta["session_id"])
+                    return engine, save_meta["model"]
+                except Exception as e:
+                    print(f"Error loading save: {e}")
+                    return None
+        print("Invalid choice. Try again.")
+
+
+def _run_game_loop(engine: GenerativeGameEngine, model: str):
+    """
+    Run the main game loop for an engine.
+
+    Args:
+        engine: Initialized GenerativeGameEngine
+        model: LLM model name
+    """
     # Main game loop
     while True:
         clear()
@@ -417,6 +437,10 @@ def main():
             if npc_key:
                 clear()
                 print_header("NPC DIALOGUE")
+
+                # Show Keeper thinking while NPC responds
+                show_keeper_thinking(preset="npc_dialogue")
+
                 dialogue = engine.talk_to_npc(npc_key, npc_text)
                 print(dialogue)
                 input("\nPress ENTER to continue...")
@@ -428,7 +452,9 @@ def main():
             # Regular action
             clear()
             print_header("DUNGEON MASTER")
-            print("🌊 ", end="", flush=True)  # Streaming indicator
+
+            # Show Keeper thinking animation while processing
+            show_keeper_thinking(preset="action_resolution")
 
             # Process action with streaming callback - response displays in real-time
             result = engine.process_player_action(action, on_chunk=stream_callback)
@@ -472,7 +498,10 @@ def main():
                 # Automatically resolve the consequences of the roll
                 clear()
                 print_header("RESOLVING OUTCOME")
-                print("🌊 ", end="", flush=True)
+
+                # Show Keeper thinking while determining consequences
+                show_keeper_thinking(preset="action_resolution")
+
                 consequence_result = engine.resolve_roll_consequences(on_chunk=stream_callback)
                 print("\n")
 
@@ -484,7 +513,10 @@ def main():
 
                 for damage in consequence_result['sanity_checks']:
                     san_res = engine.apply_sanity_check(int(damage))
-                    print(f"\n😰 SANITY: {san_res['message']}")
+                    san_msg = f"You lose {damage} sanity points"
+                    if san_res.get('broke'):
+                        san_msg += f" - {san_res.get('narrative', 'breaking point!')}"
+                    print(f"\n😰 SANITY: {san_msg}")
                     input("Press ENTER to continue...")
 
                 # If in combat, resolve that round
@@ -515,12 +547,77 @@ def main():
                 san_result = engine.apply_sanity_check(int(damage))
                 clear()
                 print_header("SANITY CHECK")
-                print(san_result['message'])
-                if san_result['state'] != 'NORMAL':
-                    print(f"  Status: {san_result['state']}")
+                san_msg = f"You lose {damage} sanity points"
+                if san_result.get('broke'):
+                    san_msg += f"\n\n{san_result.get('narrative', 'A breaking point!')}"
+                print(san_msg)
+                new_san = engine.state.investigator.characteristics['SAN']
+                print(f"\nSanity: {new_san}/99")
                 input("\nPress ENTER to continue...")
 
+            # AUTO-SAVE after each turn (silent)
+            engine.save_game()
+
             input("\nPress ENTER to continue...")
+
+
+def main():
+    """Main entry point - handles session detection and game startup"""
+    clear()
+    print_box("""
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                                                                           ║
+║           ALONE AGAINST THE DARK - GENERATIVE EDITION                    ║
+║                                                                           ║
+║                  Play with an AI Dungeon Master                          ║
+║              (Mistral 7B running locally via Ollama)                     ║
+║                                                                           ║
+║               "In the darkness, something ancient stirs..."             ║
+║                                                                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+    """, width=82)
+
+    # Try to detect and resume existing session
+    resume_result = detect_and_resume()
+    if resume_result:
+        engine, model = resume_result
+        print(f"\n✓ Resuming session (Turn {engine.state.turn})")
+        input("Press ENTER to continue your investigation...")
+        _run_game_loop(engine, model)
+        return
+
+    # New game flow
+    input("Press ENTER to select your model...")
+
+    # Model selection
+    model = select_model()
+
+    input("Press ENTER to select your investigator...")
+
+    # Character selection/creation
+    investigator = select_investigator()
+
+    # Initialize engine with selected model
+    engine = GenerativeGameEngine(model=model)
+    engine.create_game(investigator)
+
+    # Show selected model
+    MODEL_NAMES = {
+        "mistral": "Mistral 7B (Best Quality)",
+        "neural-chat": "Neural Chat 7B (Balanced)",
+        "orca-mini": "Orca Mini 3B (Speed)",
+        "qwen2.5:7b": "Qwen 2.5 7B (Advanced Reasoning)"
+    }
+    model_name = MODEL_NAMES.get(model, model)
+    print(f"\n🤖 Using: {model_name}")
+
+    clear()
+    print_box(engine.state.narrative[0], width=82)
+
+    input("Press ENTER to start your investigation...")
+
+    # Run game loop
+    _run_game_loop(engine, model)
 
 
 if __name__ == '__main__':

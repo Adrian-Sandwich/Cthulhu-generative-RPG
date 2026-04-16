@@ -1,0 +1,135 @@
+{
+  "metadata": {
+    "session_id": "session_1776307124",
+    "model": "orca-mini",
+    "timestamp": "2026-04-15T20:39:52.610035",
+    "turn": 3,
+    "investigator": "Prof. Nathaniel Blackwood",
+    "location": "Point Black Lighthouse - Exterior",
+    "sanity": 75,
+    "phase": "exploring",
+    "play_duration": 5
+  },
+  "game_state": {
+    "turn": 3,
+    "location": "Point Black Lighthouse - Exterior",
+    "narrative": [
+      "\n    ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.\n    ",
+      "Player: I search the lighthouse for ancient symbols or occult markings",
+      "DM: You follow your training and approach the lighthouse slowly, taking deep breaths to steady your nerves. Up ahead, you see a small opening in the fog that leads to the lighthouse. You step inside and scan the dimly lit room for anything out of the ordinary.\n\nYou notice a book on a dusty shelf near the back of the room, but it's the writing on the wall that sends shivers down your spine. It seems to be some kind of ancient language or symbol, but you can't make out the letters.\n\nAs you approach the wall, you notice something else. There's a small niche in the corner of the room, and when you peep inside, you see an old-fashioned lantern with an intricate design etched onto the glass. It seems to be glowing faintly, and you wonder if it's connected to whatever is causing all this trouble.\n\nYou take a deep breath and step closer to the niche. As you uncover the lid of the lantern, a surge of energy bursts out of your fingertips and floods the room. The symbols on the wall start to glow with an otherworldly light, and you realize that you're not alone in this place. Someone else is here with you.\n\nYou hear a rustling sound from behind you, and you turn around to see a shadowy figure emerging from the darkness. Your heart races as you recognize the man you were sent to find. He raises his hand, and suddenly a gunshot rings out through the fog.",
+      "Player: I look for signs of what happened to the lighthouse keeper",
+      "DM: You search the lighthouse for any clues about what might have happened to the Keeper. As you make your way through the dimly lit room, you notice a small niche in the corner of the room, and when you peep inside, you see an old-fashioned lantern with an intricate design etched onto the glass. It seems to be glowing faintly, and you wonder if it's connected to whatever is causing all this trouble. You take a deep breath and step closer to the niche, and as you uncover the lid of the lantern, a surge of energy bursts out of your fingertips and floods the room. The symbols on the wall start to glow with an otherworldly light, and you realize that you're not alone in this place. Someone else is here with you. You hear a rustling sound from behind you, and you turn around to see a shadowy figure emerging from the darkness. Your heart races as you recognize the man you were sent to find. He raises his hand, and suddenly a gunshot rings out through the fog."
+    ],
+    "investigator": {
+      "name": "Prof. Nathaniel Blackwood",
+      "occupation": "Occult Scholar",
+      "characteristics": {
+        "STR": 55,
+        "CON": 65,
+        "DEX": 60,
+        "INT": 95,
+        "APP": 70,
+        "POW": 85,
+        "EDU": 95,
+        "SIZ": 60,
+        "HP": 12,
+        "SAN": 75,
+        "Luck": 55
+      },
+      "skills": {
+        "investigate": 75,
+        "psychology": 70,
+        "occult": 90,
+        "dodge": 40,
+        "fight": 25,
+        "climb": 35,
+        "library": 95,
+        "spot_hidden": 75,
+        "persuade": 70,
+        "navigate": 40,
+        "firearms_revolver": 10,
+        "first_aid": 50,
+        "swimming": 30
+      },
+      "inventory": [
+        "Ancient Grimoire",
+        "Notebook",
+        "Candles"
+      ],
+      "visited_locations": [],
+      "sanity_breaks": []
+    },
+    "recent_actions": [
+      "I search the lighthouse for ancient symbols or occult markings",
+      "I look for signs of what happened to the lighthouse keeper"
+    ],
+    "game_phase": "exploring",
+    "victory_condition": "Survive and uncover the truth",
+    "ending_reached": null,
+    "ending_narrative": null,
+    "active_combat": null,
+    "npcs_talked_to": {
+      "warner": [
+        "Who are you and what do you know about this place?"
+      ]
+    },
+    "last_roll": null,
+    "npc_reputation": {
+      "warner": 0
+    }
+  },
+  "location_state": {
+    "locations": {
+      "lighthouse_exterior": {
+        "key": "lighthouse_exterior",
+        "name": "Point Black Lighthouse - Exterior",
+        "base_description": "A weathered lighthouse stands on rocky black stone, its paint peeling from decades of exposure to salt spray and Atlantic winds. The structure is perhaps thirty feet tall, surrounded by a low stone wall. The keeper's cottage sits nearby, its windows dark and empty.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_quarters": {
+        "key": "keeper_quarters",
+        "name": "Keeper's Quarters",
+        "base_description": "The keeper's sparse living space: a cot, a table with a single chair, shelves of maritime equipment. Everything is covered in dust. Through the single window, you can see the lighthouse. There's a faint smell of decay and something else—something chemical.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "lighthouse_interior": {
+        "key": "lighthouse_interior",
+        "name": "Lighthouse Interior",
+        "base_description": "The interior of the lighthouse is a spiral of iron stairs ascending into darkness. The air is thick and stale. Each step groans under your weight. The walls are covered in moisture and a strange luminescent fungus that glows faintly green in the darkness.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_room_top": {
+        "key": "keeper_room_top",
+        "name": "Keeper's Room - Lighthouse Top",
+        "base_description": "At the top of the lighthouse, a small room contains a cot, desk, and the great lamp mechanism. Papers are scattered everywhere—logbooks, journals, sketches of impossible symbols. The light mechanism hasn't been lit in weeks. Through the windows, you can see the entire rocky coast and far out to sea.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      }
+    },
+    "unlocked": [
+      "lighthouse_exterior",
+      "keeper_quarters",
+      "lighthouse_interior",
+      "keeper_room_top"
+    ]
+  }
+}

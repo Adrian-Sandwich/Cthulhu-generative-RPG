@@ -1,0 +1,127 @@
+{
+  "metadata": {
+    "session_id": "session_1776306987",
+    "model": "qwen2.5:7b",
+    "timestamp": "2026-04-15T20:37:58.791760",
+    "turn": 5,
+    "investigator": "Detective Morgan",
+    "location": "Point Black Lighthouse - Exterior",
+    "sanity": 70,
+    "phase": "exploring",
+    "play_duration": 9
+  },
+  "game_state": {
+    "turn": 5,
+    "location": "Point Black Lighthouse - Exterior",
+    "narrative": [
+      "\n    ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.\n    ",
+      "Player: i try to climb the lighthouse wall to reach an open window",
+      "DM: Something feels wrong. You steady yourself and push forward.",
+      "Player: i try to continue climbing",
+      "DM: Something feels wrong. You steady yourself and push forward.",
+      "Player: nothing",
+      "DM: Something feels wrong. You steady yourself and push forward.",
+      "Player: eat shet",
+      "DM: Something feels wrong. You steady yourself and push forward."
+    ],
+    "investigator": {
+      "name": "Detective Morgan",
+      "occupation": "Private Investigator",
+      "characteristics": {
+        "STR": 65,
+        "CON": 65,
+        "SIZ": 60,
+        "DEX": 65,
+        "INT": 80,
+        "APP": 60,
+        "POW": 70,
+        "EDU": 85,
+        "HP": 13,
+        "SAN": 70,
+        "Luck": 50,
+        "Magic_Points": 14
+      },
+      "skills": {
+        "investigate": 60,
+        "library": 50,
+        "persuade": 40,
+        "spot_hidden": 55,
+        "psychology": 45
+      },
+      "inventory": [
+        "Flashlight",
+        "Notebook"
+      ],
+      "visited_locations": [],
+      "sanity_breaks": []
+    },
+    "recent_actions": [
+      "i try to climb the lighthouse wall to reach an open window",
+      "i try to continue climbing",
+      "nothing",
+      "eat shet"
+    ],
+    "game_phase": "exploring",
+    "victory_condition": "Survive and uncover the truth",
+    "ending_reached": null,
+    "ending_narrative": null,
+    "active_combat": null,
+    "npcs_talked_to": {},
+    "last_roll": null,
+    "npc_reputation": {}
+  },
+  "location_state": {
+    "locations": {
+      "lighthouse_exterior": {
+        "key": "lighthouse_exterior",
+        "name": "Point Black Lighthouse - Exterior",
+        "base_description": "A weathered lighthouse stands on rocky black stone, its paint peeling from decades of exposure to salt spray and Atlantic winds. The structure is perhaps thirty feet tall, surrounded by a low stone wall. The keeper's cottage sits nearby, its windows dark and empty.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_quarters": {
+        "key": "keeper_quarters",
+        "name": "Keeper's Quarters",
+        "base_description": "The keeper's sparse living space: a cot, a table with a single chair, shelves of maritime equipment. Everything is covered in dust. Through the single window, you can see the lighthouse. There's a faint smell of decay and something else—something chemical.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "lighthouse_interior": {
+        "key": "lighthouse_interior",
+        "name": "Lighthouse Interior",
+        "base_description": "The interior of the lighthouse is a spiral of iron stairs ascending into darkness. The air is thick and stale. Each step groans under your weight. The walls are covered in moisture and a strange luminescent fungus that glows faintly green in the darkness.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_room_top": {
+        "key": "keeper_room_top",
+        "name": "Keeper's Room - Lighthouse Top",
+        "base_description": "At the top of the lighthouse, a small room contains a cot, desk, and the great lamp mechanism. Papers are scattered everywhere—logbooks, journals, sketches of impossible symbols. The light mechanism hasn't been lit in weeks. Through the windows, you can see the entire rocky coast and far out to sea.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      }
+    },
+    "unlocked": [
+      "lighthouse_exterior",
+      "keeper_room_top",
+      "lighthouse_interior",
+      "keeper_quarters"
+    ]
+  }
+}

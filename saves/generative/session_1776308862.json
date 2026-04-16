@@ -1,0 +1,150 @@
+{
+  "metadata": {
+    "session_id": "session_1776308862",
+    "model": "qwen2.5:7b",
+    "timestamp": "2026-04-15T21:09:36.198797",
+    "turn": 7,
+    "investigator": "Detective Sarah Chen",
+    "location": "Keeper's Quarters",
+    "sanity": 70,
+    "phase": "exploring",
+    "play_duration": 16
+  },
+  "game_state": {
+    "turn": 7,
+    "location": "Keeper's Quarters",
+    "narrative": [
+      "\n    ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.\n    ",
+      "Player: Search for evidence of foul play",
+      "DM: You methodically search through the lighthouse, your flashlight cutting through the dim light as you examine every inch of the keeper's work area. The air is thick with a musty smell, and the creaking of old wood adds to the eerie atmosphere.\n\n",
+      "[ROLL: Roll 13 vs investigate(85) - ✓ SUCCESS]",
+      "Player: Interview anyone present about events",
+      "DM: You approach the door of the keeper's quarters. The wood creaks under your weight as you push it open, revealing a room cluttered with old books and maps. You notice Armitage, the lighthouse assistant, sitting hunched in a corner, staring blankly.\n\n\n\n\nYou find that Armitage is wary but willing to talk. He mentions hearing strange noises at night and seeing something shadowy near the window. He doesn't seem to remember much more, his eyes drifting to a page in one of the books.\n\n",
+      "Player: Search keeper's quarters thoroughly",
+      "DM: You continue your thorough search, your flashlight casting long shadows across the room. Armitage watches you warily from the corner.\n\n",
+      "Player: Investigate signs of struggle or violence",
+      "DM: You carefully scan every inch of the room, your flashlight revealing no obvious signs of recent violence. The air is thick with the musty scent of old parchment and decaying wood. Armitage shifts uncomfortably in his seat, his gaze fixed on a page in an ancient text.\n\n",
+      "Player: Attempt to apprehend any suspects",
+      "DM: Armitage seems startled by your sudden focus. He quickly stands, backing away slightly. \"I... I haven't seen anything suspicious,\" he stammers, his voice barely above a whisper.\n\n",
+      "[ROLL: Roll 83 vs psychology(75) - ✗ FAILURE]",
+      "Player: Document findings for official report",
+      "DM: Armitage's unease is palpable as you pull out your notebook. He shifts again, clearly uncomfortable under your scrutiny. \"Be... be careful,\" he whispers, his eyes darting around the room.\n\n",
+      "[ROLL: Roll 12 vs psychology(75) - ✓ SUCCESS]"
+    ],
+    "investigator": {
+      "name": "Detective Sarah Chen",
+      "occupation": "Police Detective",
+      "characteristics": {
+        "STR": 70,
+        "CON": 75,
+        "DEX": 75,
+        "INT": 80,
+        "APP": 65,
+        "POW": 60,
+        "EDU": 70,
+        "SIZ": 65,
+        "HP": 14,
+        "SAN": 70,
+        "Luck": 50
+      },
+      "skills": {
+        "investigate": 85,
+        "psychology": 75,
+        "occult": 35,
+        "dodge": 70,
+        "fight": 75,
+        "climb": 50,
+        "library": 50,
+        "spot_hidden": 80,
+        "persuade": 75,
+        "navigate": 65,
+        "firearms_revolver": 80,
+        "first_aid": 60,
+        "swimming": 40
+      },
+      "inventory": [
+        "Badge",
+        "Revolver",
+        "Notebook"
+      ],
+      "visited_locations": [],
+      "sanity_breaks": []
+    },
+    "recent_actions": [
+      "Interview anyone present about events",
+      "Search keeper's quarters thoroughly",
+      "Investigate signs of struggle or violence",
+      "Attempt to apprehend any suspects",
+      "Document findings for official report"
+    ],
+    "game_phase": "exploring",
+    "victory_condition": "Survive and uncover the truth",
+    "ending_reached": null,
+    "ending_narrative": null,
+    "active_combat": null,
+    "npcs_talked_to": {},
+    "last_roll": {
+      "skill": "psychology",
+      "difficulty": "hard",
+      "success": true,
+      "roll": 12,
+      "target": 75,
+      "message": "Roll 12 vs psychology(75) - ✓ SUCCESS"
+    },
+    "npc_reputation": {}
+  },
+  "location_state": {
+    "locations": {
+      "lighthouse_exterior": {
+        "key": "lighthouse_exterior",
+        "name": "Point Black Lighthouse - Exterior",
+        "base_description": "A weathered lighthouse stands on rocky black stone, its paint peeling from decades of exposure to salt spray and Atlantic winds. The structure is perhaps thirty feet tall, surrounded by a low stone wall. The keeper's cottage sits nearby, its windows dark and empty.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_quarters": {
+        "key": "keeper_quarters",
+        "name": "Keeper's Quarters",
+        "base_description": "The keeper's sparse living space: a cot, a table with a single chair, shelves of maritime equipment. Everything is covered in dust. Through the single window, you can see the lighthouse. There's a faint smell of decay and something else—something chemical.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "lighthouse_interior": {
+        "key": "lighthouse_interior",
+        "name": "Lighthouse Interior",
+        "base_description": "The interior of the lighthouse is a spiral of iron stairs ascending into darkness. The air is thick and stale. Each step groans under your weight. The walls are covered in moisture and a strange luminescent fungus that glows faintly green in the darkness.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_room_top": {
+        "key": "keeper_room_top",
+        "name": "Keeper's Room - Lighthouse Top",
+        "base_description": "At the top of the lighthouse, a small room contains a cot, desk, and the great lamp mechanism. Papers are scattered everywhere—logbooks, journals, sketches of impossible symbols. The light mechanism hasn't been lit in weeks. Through the windows, you can see the entire rocky coast and far out to sea.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      }
+    },
+    "unlocked": [
+      "lighthouse_exterior",
+      "keeper_quarters",
+      "lighthouse_interior",
+      "keeper_room_top"
+    ]
+  }
+}

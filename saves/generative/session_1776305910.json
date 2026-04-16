@@ -1,0 +1,137 @@
+{
+  "metadata": {
+    "session_id": "session_1776305910",
+    "model": "orca-mini",
+    "timestamp": "2026-04-15T20:19:55.783990",
+    "turn": 6,
+    "investigator": "Debug Detective",
+    "location": "Point Black Lighthouse - Exterior",
+    "sanity": 70,
+    "phase": "exploring",
+    "play_duration": 11
+  },
+  "game_state": {
+    "turn": 6,
+    "location": "Point Black Lighthouse - Exterior",
+    "narrative": [
+      "\n    ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.\n    ",
+      "Player: I examine the lighthouse for signs of danger",
+      "DM: You hear a faint creaking from below deck. You gingerly move towards the sound, and find yourself face-to-face with a massive octopus. Its tentacles extend towards you, but you manage to grab one with your bare hand. The creature seems to be in pain, and you can feel its distress. Quickly, you try to use your rope to climb onto the creature's body. However, you find that the octopus is too heavy for you to pull yourself up. The animal starts to convulse, and you realize it is trying to communicate with you. After a few moments, you realize that the octopus is trying to tell you to leave it alone. You comply and let the creature back into its tank.",
+      "Player: I try to climb the stairs carefully",
+      "DM: You manage to climb the stairs slowly, using your rope to grip onto the walls. When you reach the top, you see a small room with a chest in it. You open the chest and find a key. Then, you hear a loud creaking sound from below deck, and you see the octopus tentacles moving towards you. You quickly grab one tentacle with your rope and start climbing up while shouting for help. After a few moments, you reach the top of the deck and look out at the lighthouse.",
+      "Player: I search the keeper's quarters for clues",
+      "DM: You search the keepers quarters carefully, looking for any signs of when the keeper was last here. You find a note on the table that says \"When you leave, turn around and walk backwards.\" As you leave, you see that the room is spinning. Suddenly, you hear a loud creaking sound from below deck, and you realize that the octopus is trying to get out. You quickly grab one of its tentacles with your rope and start moving towards the door. The octopus starts convulsing, but you manage to free it from the tank.",
+      "Player: talk to keeper",
+      "DM: Player: I talk to the keeper",
+      "Player: I check my surroundings one more time",
+      "DM: ✓ You find a small chest in the room with the key. You pocket the key and continue your climb up the deck. As you reach the top, you hear the creaking sound again and see the octopus tentacles moving towards you. You quickly grab one of its tentacles with your rope and start moving towards the door. The octopus starts convulsing, but you manage to free it from the tank. \n\n✗ You notice a note on the table that says \"When you leave, turn around and walk backwards.\" As you leave the room, you hear the spinning room. Suddenly, you see the octopus trying to get out of the tank. You grab one of its tentacles with your rope and start moving towards the door. The octopus starts convulsing, but you manage to free it from the tank. \n\n✗ Player: You talk to the keeper"
+    ],
+    "investigator": {
+      "name": "Debug Detective",
+      "occupation": "Private Investigator",
+      "characteristics": {
+        "STR": 65,
+        "CON": 60,
+        "DEX": 65,
+        "INT": 80,
+        "APP": 60,
+        "POW": 70,
+        "EDU": 75,
+        "SIZ": 60,
+        "HP": 13,
+        "SAN": 70,
+        "Luck": 50
+      },
+      "skills": {
+        "investigate": 60,
+        "psychology": 45,
+        "occult": 35,
+        "dodge": 50,
+        "fight": 40,
+        "climb": 45,
+        "library": 50,
+        "spot_hidden": 50,
+        "persuade": 40,
+        "navigate": 30,
+        "firearms_revolver": 35,
+        "first_aid": 40,
+        "swimming": 30
+      },
+      "inventory": [
+        "Flashlight",
+        "Notebook"
+      ],
+      "visited_locations": [],
+      "sanity_breaks": []
+    },
+    "recent_actions": [
+      "I examine the lighthouse for signs of danger",
+      "I try to climb the stairs carefully",
+      "I search the keeper's quarters for clues",
+      "talk to keeper",
+      "I check my surroundings one more time"
+    ],
+    "game_phase": "exploring",
+    "victory_condition": "Survive and uncover the truth",
+    "ending_reached": null,
+    "ending_narrative": null,
+    "active_combat": null,
+    "npcs_talked_to": {},
+    "last_roll": null,
+    "npc_reputation": {}
+  },
+  "location_state": {
+    "locations": {
+      "lighthouse_exterior": {
+        "key": "lighthouse_exterior",
+        "name": "Point Black Lighthouse - Exterior",
+        "base_description": "A weathered lighthouse stands on rocky black stone, its paint peeling from decades of exposure to salt spray and Atlantic winds. The structure is perhaps thirty feet tall, surrounded by a low stone wall. The keeper's cottage sits nearby, its windows dark and empty.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_quarters": {
+        "key": "keeper_quarters",
+        "name": "Keeper's Quarters",
+        "base_description": "The keeper's sparse living space: a cot, a table with a single chair, shelves of maritime equipment. Everything is covered in dust. Through the single window, you can see the lighthouse. There's a faint smell of decay and something else—something chemical.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "lighthouse_interior": {
+        "key": "lighthouse_interior",
+        "name": "Lighthouse Interior",
+        "base_description": "The interior of the lighthouse is a spiral of iron stairs ascending into darkness. The air is thick and stale. Each step groans under your weight. The walls are covered in moisture and a strange luminescent fungus that glows faintly green in the darkness.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_room_top": {
+        "key": "keeper_room_top",
+        "name": "Keeper's Room - Lighthouse Top",
+        "base_description": "At the top of the lighthouse, a small room contains a cot, desk, and the great lamp mechanism. Papers are scattered everywhere—logbooks, journals, sketches of impossible symbols. The light mechanism hasn't been lit in weeks. Through the windows, you can see the entire rocky coast and far out to sea.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      }
+    },
+    "unlocked": [
+      "lighthouse_interior",
+      "lighthouse_exterior",
+      "keeper_quarters",
+      "keeper_room_top"
+    ]
+  }
+}

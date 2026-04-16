@@ -39,6 +39,7 @@ class GameState:
     active_combat: Optional[Dict] = None  # Current enemy stats
     npcs_talked_to: Dict[str, List[str]] = None  # NPC key -> topics discussed
     last_roll: Optional[Dict] = None  # Track last roll result (skill, difficulty, success)
+    npc_reputation: Dict[str, int] = None  # NPC key -> reputation score (-100 to +100)
 
 
 class CoC7eRulesEngine:
@@ -236,6 +237,10 @@ class GenerativeGameEngine:
             "name": "Lt. William Warner",
             "role": "Coast Guard Officer",
             "knows": ["keeper vanished", "lighthouse abandoned 2 weeks", "strange sounds at night"],
+            "knows_secret": [
+                "I saw something in the water two months ago. Unnatural. Not a whale, not a fish.",
+                "The keeper's name was Marinus Weld. He was afraid of something specific... kept muttering about 'the deep'."
+            ],
             "personality": "professional but visibly shaken, trying to maintain composure",
             "available_turns": range(1, 10)
         },
@@ -243,12 +248,17 @@ class GenerativeGameEngine:
             "name": "Dr. Henry Armitage",
             "role": "Miskatonic University Professor",
             "knows": ["symbols are pre-human", "fissure predates lighthouse", "ritual to seal it"],
+            "knows_secret": [
+                "I've decoded part of the inscription. It's a warning, not a seal. The seal was never completed.",
+                "The lighthouse wasn't built to protect anything from us. It was built to contain something beneath the ocean. To keep it sleeping."
+            ],
             "personality": "academic, grave, speaks in measured tones",
             "available_turns": range(3, 10)
         }
     }
 
-    def __init__(self, ollama_endpoint: str = "http://localhost:11434", model: str = "mistral"):
+    def __init__(self, ollama_endpoint: str = "http://localhost:11434", model: str = "mistral",
+                 session_id: Optional[str] = None, use_memory: bool = True):
         """
         Initialize game engine.
 
@@ -258,11 +268,51 @@ class GenerativeGameEngine:
                 - "mistral" - 7B, best quality (5-7 sec/turn)
                 - "neural-chat" - Balanced speed & quality (3-4 sec/turn)
                 - "orca-mini" - Very fast (1-2 sec/turn)
+                - "qwen3:8b" - Advanced reasoning (4-6 sec/turn)
+            session_id: Unique session identifier (auto-generated if None)
+            use_memory: Enable semantic memory with ChromaDB (default True)
         """
+        import time
+
         self.ollama_endpoint = ollama_endpoint
         self.model = model
+        self.session_id = session_id or f"session_{int(time.time())}"
         self.state: Optional[GameState] = None
         self.rules = CoC7eRulesEngine()
+
+        # Initialize semantic memory if available and enabled
+        self.memory = None
+        if use_memory:
+            try:
+                from .dm_memory import DMMemory
+                self.memory = DMMemory(self.session_id)
+            except ImportError:
+                pass  # ChromaDB not installed - degrade gracefully
+
+        # Initialize entity relationship graph (Neo4j)
+        self.entity_graph = None
+        try:
+            from .entity_graph import EntityGraph
+            self.entity_graph = EntityGraph()
+        except Exception:
+            pass  # Neo4j not available - degrade gracefully
+
+        # Sanity system will be initialized in create_game()
+        self.sanity_system = None
+
+        # Location state manager for dynamic world
+        try:
+            from .location_state import LocationStateManager
+            self.location_state = LocationStateManager()
+        except ImportError:
+            self.location_state = None
+
+        # Companion system for ally mechanics
+        try:
+            from .companion_system import CompanionManager
+            self.companions = CompanionManager()
+        except ImportError:
+            self.companions = None
 
     def create_game(self, investigator: InvestigatorState) -> GameState:
         """Initialize a new game"""
@@ -278,45 +328,154 @@ class GenerativeGameEngine:
             ending_narrative=None,
             active_combat=None,
             npcs_talked_to={},
-            last_roll=None
+            last_roll=None,
+            npc_reputation={}
         )
+
+        # Initialize entity relationships if graph is available
+        if self.entity_graph and self.entity_graph.enabled:
+            self._initialize_cthulhu_entities()
+
+        # Initialize sanity system
+        from .sanity_system import SanitySystem
+        self.sanity_system = SanitySystem(investigator)
+
+        # Initialize location state system
+        if self.location_state:
+            self._initialize_cthulhu_locations()
+
         return self.state
 
-    def _call_ollama(self, prompt: str, max_tokens: int = 200, on_chunk=None) -> str:
-        """Call local Mistral model with optional streaming callback"""
+    def _initialize_cthulhu_entities(self):
+        """Bootstrap Cthulhu-specific entities and relationships into Neo4j"""
+        if not self.entity_graph or not self.entity_graph.enabled:
+            return
+
         try:
-            response = requests.post(
-                f"{self.ollama_endpoint}/api/generate",
-                json={
-                    "model": self.model,
-                    "prompt": prompt,
-                    "stream": True,  # Always use streaming
-                    "temperature": 0.7,
-                    "num_predict": max_tokens
-                },
-                timeout=120,
-                stream=True
+            # Clear previous data
+            self.entity_graph.clear()
+
+            # Add factions
+            self.entity_graph.add_faction("coast_guard", "U.S. Coast Guard", "neutral")
+            self.entity_graph.add_faction("miskatonic", "Miskatonic University", "neutral")
+            self.entity_graph.add_faction("cultists", "Deep One Cultists", "hostile")
+
+            # Add NPCs (from NPC_DEFINITIONS)
+            for npc_key, npc_data in self.NPC_DEFINITIONS.items():
+                self.entity_graph.add_npc(
+                    npc_key,
+                    npc_data["name"],
+                    npc_data["role"]
+                )
+
+            # Add specific relationships
+            self.entity_graph.add_relationship("warner", "WORKS_FOR", "coast_guard")
+            self.entity_graph.add_relationship("armitage", "WORKS_FOR", "miskatonic")
+            self.entity_graph.add_relationship("warner", "KNOWS", "armitage")
+
+            # Add locations
+            self.entity_graph.add_location(
+                "lighthouse_exterior",
+                "Point Black Lighthouse - Exterior",
+                "A weathered lighthouse stands on black rock..."
             )
-            response.raise_for_status()
+            self.entity_graph.add_location(
+                "keeper_quarters",
+                "Keeper's Quarters",
+                "The keeper's sparse living space..."
+            )
 
-            full_response = ""
-            for line in response.iter_lines():
-                if line:
-                    try:
-                        chunk = json.loads(line)
-                        text = chunk.get("response", "")
-                        full_response += text
-
-                        # Call callback to stream text to UI
-                        if on_chunk and text:
-                            on_chunk(text)
-                    except json.JSONDecodeError:
-                        continue
-
-            return full_response.strip()
+            # Add protections
+            self.entity_graph.add_relationship("warner", "PROTECTS", "lighthouse_exterior")
 
         except Exception as e:
-            return f"[DM ERROR: {str(e)}]"
+            # Gracefully handle entity initialization errors
+            pass
+
+    def _initialize_cthulhu_locations(self):
+        """Bootstrap Cthulhu-specific locations with descriptions"""
+        if not self.location_state:
+            return
+
+        try:
+            # Register main locations
+            self.location_state.register_location(
+                "lighthouse_exterior",
+                "Point Black Lighthouse - Exterior",
+                "A weathered lighthouse stands on rocky black stone, its paint peeling from decades of exposure to salt spray and Atlantic winds. The structure is perhaps thirty feet tall, surrounded by a low stone wall. The keeper's cottage sits nearby, its windows dark and empty."
+            )
+
+            self.location_state.register_location(
+                "keeper_quarters",
+                "Keeper's Quarters",
+                "The keeper's sparse living space: a cot, a table with a single chair, shelves of maritime equipment. Everything is covered in dust. Through the single window, you can see the lighthouse. There's a faint smell of decay and something else—something chemical."
+            )
+
+            self.location_state.register_location(
+                "lighthouse_interior",
+                "Lighthouse Interior",
+                "The interior of the lighthouse is a spiral of iron stairs ascending into darkness. The air is thick and stale. Each step groans under your weight. The walls are covered in moisture and a strange luminescent fungus that glows faintly green in the darkness."
+            )
+
+            self.location_state.register_location(
+                "keeper_room_top",
+                "Keeper's Room - Lighthouse Top",
+                "At the top of the lighthouse, a small room contains a cot, desk, and the great lamp mechanism. Papers are scattered everywhere—logbooks, journals, sketches of impossible symbols. The light mechanism hasn't been lit in weeks. Through the windows, you can see the entire rocky coast and far out to sea."
+            )
+
+        except Exception:
+            # Gracefully handle location initialization errors
+            pass
+
+    def _call_ollama(self, prompt: str, max_tokens: int = 200, on_chunk=None) -> str:
+        """Call local Mistral model with optional streaming callback. Retries once on failure."""
+        for attempt in range(2):  # Try twice
+            try:
+                response = requests.post(
+                    f"{self.ollama_endpoint}/api/generate",
+                    json={
+                        "model": self.model,
+                        "prompt": prompt,
+                        "stream": True,  # Always use streaming
+                        "temperature": 0.7,
+                        "num_predict": max_tokens
+                    },
+                    timeout=120,
+                    stream=True
+                )
+                response.raise_for_status()
+
+                full_response = ""
+                for line in response.iter_lines():
+                    if line:
+                        try:
+                            chunk = json.loads(line)
+                            text = chunk.get("response", "")
+                            full_response += text
+
+                            # Call callback to stream text to UI
+                            if on_chunk and text:
+                                on_chunk(text)
+                        except json.JSONDecodeError:
+                            continue
+
+                return full_response.strip() if full_response.strip() else "You pause, thinking..."
+
+            except (requests.Timeout, requests.ConnectionError) as e:
+                if attempt == 0:
+                    # First failure - retry
+                    import time
+                    time.sleep(0.5)
+                    continue
+                # Second failure - fallback narrative
+                return "The world around you seems to pause. You take a moment to collect yourself and continue your investigation."
+            except Exception as e:
+                if attempt == 0:
+                    continue
+                # Generic error fallback
+                return "Something feels wrong. You steady yourself and push forward."
+
+        return "You take a deep breath and continue."
 
     def _format_last_roll_info(self) -> str:
         """Format last roll information for DM prompt"""
@@ -329,13 +488,24 @@ class GenerativeGameEngine:
         else:
             return f"✗ FAILURE - {roll['skill']} {roll['difficulty']}: Rolled {roll['roll']} vs {roll['target']} (APPLY CONSEQUENCES)"
 
-    def _build_dm_prompt(self, player_action: str) -> str:
-        """Build comprehensive DM prompt with rules hardcoded"""
+    def _get_location_context_for_prompt(self) -> str:
+        """Get location state context for DM prompt"""
+        if not self.location_state:
+            return ""
 
+        context = self.location_state.get_location_context(self.state.location)
+        if context:
+            return f"{context}\n"
+        return ""
+
+    def _build_dm_system_prompt(self) -> str:
+        """
+        Build system prompt for DM role with Call of Cthulhu 7e rules.
+        Used for both regular prompts and tool calling mode.
+        """
         inv = self.state.investigator
-        narrative_context = "\n".join(self.state.narrative[-5:])  # Last 5 narrative beats
 
-        prompt = f"""You are the Dungeon Master for Call of Cthulhu 7th Edition.
+        return f"""You are the Dungeon Master for Call of Cthulhu 7th Edition.
 
 === CORE RULES (ENFORCE STRICTLY) ===
 - ALL skill checks are d100 (roll 1-100)
@@ -407,18 +577,12 @@ Available: warner, armitage
 
 === CURRENT SITUATION ===
 Location: {self.state.location}
-Turn: {self.state.turn}
+{self._get_location_context_for_prompt()}Turn: {self.state.turn}
 Phase: {self.state.game_phase}
 Combat: {'In combat with ' + self.state.active_combat['name'] if self.state.active_combat else 'None'}
 
 Last Roll Status:
 {self._format_last_roll_info()}
-
-Recent story:
-{narrative_context}
-
-=== PLAYER ACTION ===
-{player_action}
 
 === CONSEQUENCE MATRIX ===
 
@@ -492,12 +656,164 @@ YOUR JOB DEPENDS ON LAST ROLL STATUS:
 
 DO NOT output template text. Do not show IF/ELSE logic. Just tell the story.
 """
+
+    def _build_dm_prompt(self, player_action: str) -> str:
+        """Build comprehensive DM prompt with rules hardcoded and semantic memory context"""
+
+        # Build narrative context: combine recent turns + semantic memory results
+        if self.memory and self.memory.enabled:
+            # Query semantic memory for relevant facts (uses mem0ai if available, falls back to ChromaDB)
+            semantic_hits = self.memory.query_relevant_facts(player_action, n=5)
+            # Combine: 2 most recent (immediate context) + up to 5 semantic matches
+            recent = self.state.narrative[-2:]
+            seen = set(recent)
+            extra = [h for h in semantic_hits if h not in seen]
+            narrative_context = "\n".join(recent + extra[:5])
+        else:
+            # Fallback: just use last 5 narrative beats
+            narrative_context = "\n".join(self.state.narrative[-5:])
+
+        # Get system prompt (rules + character info) and append narrative context
+        system_prompt = self._build_dm_system_prompt()
+
+        # Location-specific sensory details to ground narrative and prevent hallucinations
+        location_details = {
+            "Point Black Lighthouse - Exterior": "salt-air smell, dark rocks, crashing waves, fog, lighthouse tower visible",
+            "Lighthouse Interior": "damp stone walls, creaking stairs, salt smell, cold stone, flickering shadows",
+            "Keeper's Quarters": "sparse furniture, faded pictures, musty air, old books, personal effects scattered",
+            "Lighthouse Stairs": "spiral stone stairs, flickering light from above, salt smell, echoing sounds",
+            "Lantern Room": "bright light from beacon, wide windows with ocean view, mechanical gears, heat from lamp",
+            "Ground Floor": "solid stone floor, damp smell, darkness beyond flashlight range, echoing sounds",
+            "Upper Level": "narrow passages, low ceilings, damp air, distant sounds, old wood fixtures",
+        }
+
+        sensory_grounding = location_details.get(self.state.location, "")
+        location_constraint = f"SETTING ANCHOR: You are in '{self.state.location}'. Maintain this setting. Include sensory details: {sensory_grounding}. Do NOT suddenly shift to crypts, caves, tombs, or other locations."
+
+        prompt = system_prompt + f"""
+[LOCATION: {self.state.location}]
+{location_constraint}
+
+Recent story:
+{narrative_context}
+
+=== PLAYER ACTION ===
+{player_action}
+"""
         return prompt
+
+    def _call_ollama_with_tools(self, narrative_context: str, player_action: str) -> Dict:
+        """
+        Call Ollama /api/chat with tool calling support.
+        Only used for models that support tools (mistral, neural-chat, qwen3:8b).
+
+        Args:
+            narrative_context: Game context and rules
+            player_action: Current player action
+
+        Returns:
+            Dict with "narrative" and "tool_calls" keys, or fallback dict with "fallback": True
+        """
+        from .cthulhu_tools import CTHULHU_TOOLS
+
+        system_prompt = self._build_dm_system_prompt()
+
+        messages = [
+            {
+                "role": "system",
+                "content": system_prompt
+            },
+            {
+                "role": "user",
+                "content": f"Recent story:\n{narrative_context}\n\n=== PLAYER ACTION ===\n{player_action}"
+            }
+        ]
+
+        try:
+            response = requests.post(
+                f"{self.ollama_endpoint}/api/chat",
+                json={
+                    "model": self.model,
+                    "messages": messages,
+                    "tools": CTHULHU_TOOLS,
+                    "stream": False,
+                    "options": {
+                        "temperature": 0.7,
+                        "num_predict": 300
+                    }
+                },
+                timeout=120
+            )
+            response.raise_for_status()
+            data = response.json()
+            message = data.get("message", {})
+
+            return {
+                "narrative": message.get("content", ""),
+                "tool_calls": message.get("tool_calls", [])
+            }
+        except Exception as e:
+            # Fallback to tag-based system on any tool calling failure
+            return {"narrative": "", "tool_calls": [], "fallback": True}
+
+    def _execute_tool_calls(self, tool_calls: list) -> Dict:
+        """
+        Execute tool calls returned by LLM and return structured results.
+
+        Args:
+            tool_calls: List of tool call dictionaries from LLM
+
+        Returns:
+            Dict with keys like "rolls_requested", "sanity_checks", etc.
+        """
+        results = {
+            "rolls_requested": [],
+            "sanity_checks": [],
+            "hp_damage": [],
+            "items_found": [],
+            "combat_start": []
+        }
+
+        for call in tool_calls:
+            fn = call.get("function", {})
+            name = fn.get("name", "")
+            args = fn.get("arguments", {})
+
+            if isinstance(args, str):
+                try:
+                    args = json.loads(args)
+                except:
+                    continue
+
+            if name == "roll_skill_check":
+                skill = args.get("skill", "unknown")
+                difficulty = args.get("difficulty", "Normal")
+                results["rolls_requested"].append((skill, difficulty))
+
+            elif name == "apply_sanity_damage":
+                damage = args.get("damage", 1)
+                results["sanity_checks"].append(str(damage))
+
+            elif name == "apply_hp_damage":
+                damage = args.get("damage", 1)
+                results["hp_damage"].append(str(damage))
+
+            elif name == "pickup_item":
+                item_key = args.get("item_key", "")
+                results["items_found"].append(item_key)
+
+            elif name == "start_combat":
+                enemy_key = args.get("enemy_key", "")
+                results["combat_start"].append(enemy_key)
+
+        return results
 
     def process_player_action(self, player_input: str, on_chunk=None) -> Dict:
         """
         Process player action and get DM response.
         Returns DM narrative + any requested rolls/sanity checks/items/combat.
+
+        Supports both tool calling (for capable models) and tag-based parsing (fallback).
 
         Args:
             player_input: What the player does
@@ -506,25 +822,89 @@ DO NOT output template text. Do not show IF/ELSE logic. Just tell the story.
         if not self.state:
             return {"error": "No active game"}
 
-        # Get DM response with optional streaming
-        dm_prompt = self._build_dm_prompt(player_input)
-        dm_response = self._call_ollama(dm_prompt, on_chunk=on_chunk)
+        from .cthulhu_tools import TOOL_CAPABLE_MODELS
 
-        # Parse all tag types
-        rolls_requested = re.findall(r'\[ROLL: (\w+)/(\w+)\]', dm_response)
-        sanity_checks = re.findall(r'\[SANITY_CHECK: (\d+)\]', dm_response)
-        items_found = re.findall(r'\[ITEM_FOUND: (\w+)\]', dm_response)
-        hp_damage = re.findall(r'\[HP_DAMAGE: (\d+)\]', dm_response)
-        combat_start = re.findall(r'\[COMBAT_START: (\w+)\]', dm_response)
-        npc_dialogue = re.findall(r'\[NPC_DIALOGUE: (\w+)\]', dm_response)
+        # Try tool calling for capable models
+        rolls_requested = []
+        sanity_checks = []
+        items_found = []
+        hp_damage = []
+        combat_start = []
+        npc_dialogue = []
+        clean_response = ""
 
-        # Clean response (remove all tags)
-        clean_response = re.sub(r'\[ROLL: .*?\]', '', dm_response)
-        clean_response = re.sub(r'\[SANITY_CHECK: .*?\]', '', clean_response)
-        clean_response = re.sub(r'\[ITEM_FOUND: .*?\]', '', clean_response)
-        clean_response = re.sub(r'\[HP_DAMAGE: .*?\]', '', clean_response)
-        clean_response = re.sub(r'\[COMBAT_START: .*?\]', '', clean_response)
-        clean_response = re.sub(r'\[NPC_DIALOGUE: .*?\]', '', clean_response)
+        if self.model in TOOL_CAPABLE_MODELS:
+            # Build narrative context for tool calling
+            if self.memory and self.memory.enabled:
+                semantic_hits = self.memory.query_relevant_facts(player_input, n=5)
+                recent = self.state.narrative[-2:]
+                seen = set(recent)
+                extra = [h for h in semantic_hits if h not in seen]
+                narrative_context = "\n".join(recent + extra[:5])
+            else:
+                narrative_context = "\n".join(self.state.narrative[-5:])
+
+            # Attempt tool calling
+            tool_response = self._call_ollama_with_tools(narrative_context, player_input)
+
+            if not tool_response.get("fallback"):
+                # Tool calling succeeded - get narrative and execute tools
+                clean_response = tool_response.get("narrative", "")
+
+                # Print narrative if streaming callback is provided
+                if on_chunk and clean_response:
+                    on_chunk(clean_response)
+
+                # Execute tool calls
+                tool_results = self._execute_tool_calls(tool_response.get("tool_calls", []))
+                rolls_requested = tool_results.get("rolls_requested", [])
+                sanity_checks = tool_results.get("sanity_checks", [])
+                items_found = tool_results.get("items_found", [])
+                hp_damage = tool_results.get("hp_damage", [])
+                combat_start = tool_results.get("combat_start", [])
+
+                # Tool calling complete - proceed to state update
+            else:
+                # Tool calling failed or returned empty - fall back to tag-based system
+                dm_prompt = self._build_dm_prompt(player_input)
+                dm_response = self._call_ollama(dm_prompt, on_chunk=on_chunk)
+
+                # Parse tag-based response
+                rolls_requested = re.findall(r'\[ROLL: (\w+)/(\w+)\]', dm_response)
+                sanity_checks = re.findall(r'\[SANITY_CHECK: (\d+)\]', dm_response)
+                items_found = re.findall(r'\[ITEM_FOUND: (\w+)\]', dm_response)
+                hp_damage = re.findall(r'\[HP_DAMAGE: (\d+)\]', dm_response)
+                combat_start = re.findall(r'\[COMBAT_START: (\w+)\]', dm_response)
+                npc_dialogue = re.findall(r'\[NPC_DIALOGUE: (\w+)\]', dm_response)
+
+                # Clean response
+                clean_response = re.sub(r'\[ROLL: .*?\]', '', dm_response)
+                clean_response = re.sub(r'\[SANITY_CHECK: .*?\]', '', clean_response)
+                clean_response = re.sub(r'\[ITEM_FOUND: .*?\]', '', clean_response)
+                clean_response = re.sub(r'\[HP_DAMAGE: .*?\]', '', clean_response)
+                clean_response = re.sub(r'\[COMBAT_START: .*?\]', '', clean_response)
+                clean_response = re.sub(r'\[NPC_DIALOGUE: .*?\]', '', clean_response)
+        else:
+            # Model doesn't support tool calling - use tag-based system
+            # Get DM response with optional streaming
+            dm_prompt = self._build_dm_prompt(player_input)
+            dm_response = self._call_ollama(dm_prompt, on_chunk=on_chunk)
+
+            # Parse all tag types
+            rolls_requested = re.findall(r'\[ROLL: (\w+)/(\w+)\]', dm_response)
+            sanity_checks = re.findall(r'\[SANITY_CHECK: (\d+)\]', dm_response)
+            items_found = re.findall(r'\[ITEM_FOUND: (\w+)\]', dm_response)
+            hp_damage = re.findall(r'\[HP_DAMAGE: (\d+)\]', dm_response)
+            combat_start = re.findall(r'\[COMBAT_START: (\w+)\]', dm_response)
+            npc_dialogue = re.findall(r'\[NPC_DIALOGUE: (\w+)\]', dm_response)
+
+            # Clean response (remove all tags)
+            clean_response = re.sub(r'\[ROLL: .*?\]', '', dm_response)
+            clean_response = re.sub(r'\[SANITY_CHECK: .*?\]', '', clean_response)
+            clean_response = re.sub(r'\[ITEM_FOUND: .*?\]', '', clean_response)
+            clean_response = re.sub(r'\[HP_DAMAGE: .*?\]', '', clean_response)
+            clean_response = re.sub(r'\[COMBAT_START: .*?\]', '', clean_response)
+            clean_response = re.sub(r'\[NPC_DIALOGUE: .*?\]', '', clean_response)
 
         # Update narrative
         self.state.narrative.append(f"Player: {player_input}")
@@ -533,7 +913,42 @@ DO NOT output template text. Do not show IF/ELSE logic. Just tell the story.
         if len(self.state.recent_actions) > 5:
             self.state.recent_actions.pop(0)
 
+        # Persist narrative fragments to semantic memory (uses mem0ai for fact extraction if available)
+        if self.memory and self.memory.enabled:
+            self.memory.extract_and_store(
+                f"Player: {player_input}",
+                self.state.turn,
+                {"location": self.state.location, "phase": self.state.game_phase, "speaker": "Player"}
+            )
+            self.memory.extract_and_store(
+                f"DM: {clean_response}",
+                self.state.turn,
+                {"location": self.state.location, "phase": self.state.game_phase, "speaker": "DM"}
+            )
+
         self.state.turn += 1
+
+        # Update sanity system (reduce disorder durations, etc.)
+        self.update_sanity_system()
+
+        # Auto-detect location changes from narrative
+        narrative_lower = clean_response.lower()
+        location_map = {
+            'keeper': 'Keeper\'s Quarters',
+            'chamber': 'Hidden Chamber',
+            'basement': 'Basement',
+            'roof': 'Lighthouse Top',
+            'stairs': 'Lighthouse Stairs',
+            'lantern room': 'Lantern Room',
+            'ground floor': 'Ground Floor',
+            'upper level': 'Upper Level',
+            'interior': 'Lighthouse Interior',
+            'inside': 'Lighthouse Interior',
+        }
+        for keyword, new_location in location_map.items():
+            if keyword in narrative_lower and new_location != self.state.location:
+                self.state.location = new_location
+                break
 
         # If a new roll is requested, clear the previous roll record
         # (DM has now responded to the consequences)
@@ -588,18 +1003,47 @@ DO NOT output template text. Do not show IF/ELSE logic. Just tell the story.
 
         return result
 
-    def apply_sanity_check(self, damage: int) -> Dict:
-        """Apply sanity damage from witnessing horror"""
-        if not self.state:
+    def apply_sanity_check(self, damage: int, source: str = "unknown") -> Dict:
+        """
+        Apply sanity damage from witnessing horror.
+        Uses enhanced sanity system with breaking points and disorders.
+
+        Args:
+            damage: Sanity points to lose
+            source: What caused the damage (for narrative context)
+
+        Returns:
+            Dict with sanity results and any breaking points/disorders
+        """
+        if not self.state or not self.sanity_system:
             return {"error": "No active game"}
 
-        result = self.rules.apply_sanity_damage(
-            self.state.investigator.characteristics['SAN'],
-            damage
+        # Apply damage through enhanced sanity system
+        result = self.sanity_system.apply_sanity_damage(damage, source)
+
+        # Record in narrative
+        self.state.investigator.sanity_breaks.append(
+            f"Turn {self.state.turn}: Lost {damage} SAN ({source})"
         )
 
-        self.state.investigator.characteristics['SAN'] = result['sanity']
-        self.state.investigator.sanity_breaks.append(f"Turn {self.state.turn}: {result['message']}")
+        # If breaking point occurred, add narrative context
+        if result.get("broke"):
+            self.state.narrative.append(f"[SANITY BREAK: {result['narrative']}]")
+
+            # If disorder created, record it for future reference
+            if result.get("temporary_insanity"):
+                disorder = result["temporary_insanity"]
+                self.state.narrative.append(
+                    f"[TEMPORARY INSANITY: {disorder.type} will last {disorder.duration} turns]"
+                )
+
+            if result.get("permanent_disorder"):
+                disorder = result["permanent_disorder"]
+                self.state.narrative.append(
+                    f"[PERMANENT DISORDER: {disorder.type} - affecting investigator indefinitely]"
+                )
+
+        return result
 
         # Check for madness ending
         if result['sanity'] == 0:
@@ -685,6 +1129,36 @@ DO NOT output template text. Do not show IF/ELSE logic. Just tell the story.
             return "You study the text. The symbols seem to rearrange themselves, whispering truths your mind cannot fully comprehend."
         else:
             return f"You use {item_name}."
+
+    def get_sanity_status(self) -> Dict:
+        """
+        Get comprehensive sanity status for the investigator.
+
+        Returns:
+            Dict with current sanity, level, disorders, etc.
+        """
+        if not self.state or not self.sanity_system:
+            return {"error": "No active game"}
+
+        return self.sanity_system.get_sanity_status()
+
+    def update_sanity_system(self) -> None:
+        """
+        Called each turn to update sanity system state.
+        Reduces disorder durations, converts temporary to permanent if needed.
+        """
+        if not self.sanity_system:
+            return
+
+        # Update disorder durations
+        changed_disorders = self.sanity_system.reduce_disorder_duration()
+
+        # Record changes in narrative
+        for disorder in changed_disorders:
+            if disorder.duration == 0:
+                self.state.narrative.append(f"[DISORDER RESOLVED: {disorder.type} has passed]")
+            elif disorder.duration == -1:
+                self.state.narrative.append(f"[DISORDER PERMANENT: {disorder.type} is now permanent]")
 
     def start_combat(self, enemy_key: str) -> Dict:
         """Start combat with an enemy"""
@@ -801,31 +1275,74 @@ NO NEW ROLLS. Just the outcome."""
         }
 
     def talk_to_npc(self, npc_key: str, player_question: str) -> str:
-        """Have NPC respond to player"""
+        """Have NPC respond to player with memory of past interactions and reputation system"""
         if npc_key not in self.NPC_DEFINITIONS:
             return f"That person isn't here."
 
         npc = self.NPC_DEFINITIONS[npc_key]
+
+        # Get current reputation score and attitude label
+        if npc_key not in self.state.npc_reputation:
+            self.state.npc_reputation[npc_key] = 0
+        rep_score = self.state.npc_reputation[npc_key]
+        attitude = self._reputation_label(rep_score)
 
         # Track conversation
         if npc_key not in self.state.npcs_talked_to:
             self.state.npcs_talked_to[npc_key] = []
         self.state.npcs_talked_to[npc_key].append(player_question)
 
-        # Build NPC prompt
+        # Retrieve relevant past interactions with this NPC from semantic memory
+        npc_history_context = ""
+        if self.memory and self.memory.enabled:
+            past_interactions = self.memory.query_npc_history(npc_key, player_question, n_results=3)
+            if past_interactions:
+                npc_history_context = "\nPrevious topics discussed:\n" + "\n".join(past_interactions)
+
+        # Retrieve entity relationships (who they know, who they work for, what they fear)
+        entity_context = ""
+        if self.entity_graph and self.entity_graph.enabled:
+            entity_context_str = self.entity_graph.get_npc_context(npc_key)
+            if entity_context_str:
+                entity_context = f"\nKnown associations: {entity_context_str}"
+
+        # Determine what the NPC reveals based on reputation
+        known_info = npc['knows']
+        if rep_score > 50 and 'knows_secret' in npc:
+            # Reveal secrets only to trusted allies
+            known_info = known_info + npc['knows_secret']
+
+        # Build NPC prompt with reputation context
         prompt = f"""You are {npc['name']}, a {npc['role']}.
 
 Personality: {npc['personality']}
 
-You know about: {', '.join(npc['knows'])}
+Your attitude toward this person is: {attitude}
+(hostile = distrustful, minimal info; neutral = standard responses; friendly = helpful, friendly tone; trusted = reveals secrets and deeper knowledge)
+
+You know about: {', '.join(known_info)}{entity_context}{npc_history_context}
 
 The player asks: "{player_question}"
 
-Respond in character, in 2-3 sentences. Be dramatic, mysterious, and atmospheric. Reference what you know if relevant."""
+Respond in character, in 2-3 sentences. Be dramatic, mysterious, and atmospheric. Reference what you know if relevant. Let your attitude shape how much you reveal."""
 
         # Get NPC response
-        response = self._call_ollama(prompt, max_tokens=80)
-        return f"{npc['name']}: {response}"
+        response = self._call_ollama(prompt, max_tokens=100)
+
+        # Update reputation: friendly/helpful interaction = +5, neutral = no change
+        # This is a simple heuristic - in a fuller system we'd parse the response
+        if "help" in response.lower() or "certainly" in response.lower() or "of course" in response.lower():
+            self.update_npc_reputation(npc_key, 5, "friendly interaction")
+        elif "refuse" in response.lower() or "won't" in response.lower():
+            self.update_npc_reputation(npc_key, -5, "refused to help")
+
+        # Persist interaction to semantic memory
+        if self.memory and self.memory.enabled:
+            self.memory.add_npc_interaction(npc_key, player_question, response, self.state.turn)
+
+        # Show reputation status to player
+        rep_indicator = f" [Reputation: {rep_score:+3d}]"
+        return f"{npc['name']}: {response}{rep_indicator}"
 
     def _generate_ending_narrative(self, ending_type: str) -> str:
         """Generate rich narrative for ending"""
@@ -865,6 +1382,41 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
         # Other endings checked by DM narrative
         return None
 
+    def update_npc_reputation(self, npc_key: str, delta: int, reason: str = "") -> int:
+        """
+        Update reputation with an NPC.
+
+        Args:
+            npc_key: NPC identifier (e.g., 'warner', 'armitage')
+            delta: Change in reputation (positive = friendlier, negative = hostile)
+            reason: Optional reason for the change (for logging)
+
+        Returns:
+            New reputation score (clamped to [-100, 100])
+        """
+        if npc_key not in self.state.npc_reputation:
+            self.state.npc_reputation[npc_key] = 0
+
+        old_rep = self.state.npc_reputation[npc_key]
+        new_rep = max(-100, min(100, old_rep + delta))
+        self.state.npc_reputation[npc_key] = new_rep
+
+        return new_rep
+
+    @staticmethod
+    def _reputation_label(score: int) -> str:
+        """Convert reputation score to NPC attitude label"""
+        if score < -50:
+            return "hostile"
+        elif score < 0:
+            return "distrustful"
+        elif score < 50:
+            return "neutral"
+        elif score < 75:
+            return "friendly"
+        else:
+            return "trusted"
+
     def get_ending_text(self) -> Optional[str]:
         """Get narrative for current ending"""
         if not self.state.ending_reached:
@@ -875,3 +1427,103 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             return f"\n{ending['name'].upper()}\n{ending['description']}"
 
         return None
+
+    def save_game(self) -> str:
+        """
+        Save current game session to disk with all state.
+
+        Returns:
+            Path to saved file
+        """
+        from .generative_save import GenerativeSave
+
+        path = GenerativeSave.save(
+            self.state,
+            self.session_id,
+            self.model,
+            location_state=self.location_state,
+            sanity_system=self.sanity_system
+        )
+
+        # Also persist ChromaDB memory if available
+        if self.memory and self.memory.enabled:
+            self.memory.persist()
+
+        return path
+
+    @classmethod
+    def load_game(cls, session_id: str,
+                  ollama_endpoint: str = "http://localhost:11434") -> 'GenerativeGameEngine':
+        """
+        Load a saved game session from disk.
+
+        Args:
+            session_id: Unique session identifier
+            ollama_endpoint: Ollama endpoint URL
+
+        Returns:
+            Reconstructed GenerativeGameEngine instance
+
+        Raises:
+            FileNotFoundError: If save doesn't exist
+        """
+        from .generative_save import GenerativeSave
+        from .location_state import LocationStateManager
+        from .sanity_system import SanitySystem
+
+        metadata, state_dict, location_state_data = GenerativeSave.load(session_id)
+
+        # Reconstruct InvestigatorState from dictionary
+        inv_dict = state_dict["investigator"]
+        investigator = InvestigatorState(
+            name=inv_dict["name"],
+            occupation=inv_dict["occupation"],
+            characteristics=inv_dict["characteristics"],
+            skills=inv_dict["skills"],
+            inventory=inv_dict["inventory"],
+            visited_locations=inv_dict["visited_locations"],
+            sanity_breaks=inv_dict["sanity_breaks"]
+        )
+
+        # Reconstruct GameState from dictionary
+        state = GameState(
+            turn=state_dict["turn"],
+            location=state_dict["location"],
+            narrative=state_dict["narrative"],
+            investigator=investigator,
+            recent_actions=state_dict["recent_actions"],
+            game_phase=state_dict["game_phase"],
+            victory_condition=state_dict.get("victory_condition"),
+            ending_reached=state_dict.get("ending_reached"),
+            ending_narrative=state_dict.get("ending_narrative"),
+            active_combat=state_dict.get("active_combat"),
+            npcs_talked_to=state_dict.get("npcs_talked_to", {}),
+            npc_reputation=state_dict.get("npc_reputation", {}),
+            last_roll=state_dict.get("last_roll")
+        )
+
+        # Create engine instance with same model and session
+        engine = cls(
+            ollama_endpoint=ollama_endpoint,
+            model=metadata["model"],
+            session_id=session_id,
+            use_memory=True
+        )
+
+        # Inject the loaded state
+        engine.state = state
+
+        # Restore location state if available
+        if location_state_data:
+            try:
+                engine.location_state = LocationStateManager.from_dict(location_state_data)
+            except Exception:
+                pass  # Location state restoration failed, continue with default
+
+        # Reinitialize sanity system from loaded state
+        try:
+            engine.sanity_system = SanitySystem(investigator)
+        except Exception:
+            pass  # Sanity system restoration failed
+
+        return engine

@@ -1,0 +1,149 @@
+{
+  "metadata": {
+    "session_id": "session_1776306129",
+    "model": "neural-chat",
+    "timestamp": "2026-04-15T20:26:13.042637",
+    "turn": 6,
+    "investigator": "Dr. Eleanor Vance",
+    "location": "Point Black Lighthouse - Exterior",
+    "sanity": 78,
+    "phase": "exploring",
+    "play_duration": 13
+  },
+  "game_state": {
+    "turn": 6,
+    "location": "Point Black Lighthouse - Exterior",
+    "narrative": [
+      "\n    ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.\n    ",
+      "Player: I examine the lighthouse exterior methodically, focusing on any occult symbols or warnings",
+      "DM: \nYou carefully inspect the lighthouse's exterior, searching for any sign of the supernatural. The ocean breeze rises as you gaze at the foggy cliffs below. As your hand touches a mysterious inscription on the weathered stones, you realize it matches the ancient text you found earlier...\n\n\nYour heart races with fear and excitement as you remember that deep one hybrid may have something to do with these symbols. You continue searching the lighthouse, your mind racing with possibilities.\n\nYou reach the weathered tower. The windows are broken, and the door creaks as you open it.  A dark shape slips past you into the darkness!  A deep one hybrid emerges from beneath the fog! The battle is on...\n\n (enemy's attacks),  (falling while avoiding attacks)\nYou dodge the shadow thing's attack, but a deep one hybrid lunges at you. You dart into the tower, evading their claws. A loud crash echoes behind as the shadow thing loses balance and falls with a terrible shriek! The deep one hybrid chases after your footsteps, its eyes fixed on its prey.\n\n[COMBAT_END: enemy_dead] (shadow thing), \nYou race to the top of the lighthouse. The tower is a maze of corridors. As you scramble upwards, your heart beats frantically. You hear a distant crash. A deep one hybrid has just been killed by the collapsing shadow thing it was chasing! Now the fog has grown heavy with the scent of blood and terror...\n\n[COMBAT_END: enemy_dead] (deep one hybrid),  (fall during escape)\nYou continue your frantic climb. The lighthouse's interior is filled with eerie shadows, and you fear the worst. You find the keeper's room, strewn with arcane symbols and books. A terrible knowledge seems to radiate from it...\n\n\nYour eyes scan the room, searching for clues. They finally land on a familiar symbol on the wall - the one you found earlier. Your heart races as you realize that this is all connected! You must act quickly before the lighthouse is lost to darkness forever...\n\n\nYou rush back down and call Warner and Armitage, begging for their help in deciphering these symbols. The three of you gather evidence from the lighthouse and scour library records for clues. As you work together, your fear is replaced by a deep sense of purpose. The point black lighthouse might be the key to stopping a cosmic horror.\n\nYou are not alone against the dark.",
+      "[ROLL: Roll 5 vs investigate(75) - ✓ SUCCESS [CRITICAL SUCCESS]]",
+      "[ROLL: Roll 16 vs occult(85) - ✓ SUCCESS]",
+      "Player: I approach the door carefully and try to open it",
+      "DM: You move cautiously towards the door. As your fingers touch the rusty latch, you feel an unexpected sense of calm, almost like it is welcoming you in. Opening the door, you step inside, revealing a dark room filled with ancient furniture and decaying remnants of the keeper's life. You start to search for any clues or hidden meanings behind the symbols...\n\n\nYou quickly scan the surroundings, looking for anything out of place. As your eyes fall upon a small box tucked away in the corner, you notice strange characters etched into the lid. You pick it up carefully and try to decipher the markings with your occult knowledge.\n\n\nYou feel a sudden rush of understanding as the meaning of the symbols begins to unfold before you. The box contains ancient runes, linking this lighthouse to the very origins of your quest. You realize that the lighthouse is more than just a beacon against darkness; it may hold answers to the mysteries you've been pursuing.\n\n\nYour mind races with possibilities. You recall reading about a powerful artifact once discovered here, but long lost since. The box could hold the key to finding it. You decide to keep exploring for now and see what other clues or connections await you in this place.\n\n\nDriven by this new discovery, you search relentlessly through the lighthouse's archives and records. Warner joins you in your pursuit of knowledge, piecing together a greater picture of what lies beneath the ocean outside the lighthouse. The three of you start to uncover a larger conspiracy that has been hidden for generations...\n\n\nAs you continue your investigation, you learn about an ancient pact made long ago between the lighthouse keeper and an otherworldly entity. But there's a catch - one that requires sacrifice to maintain the balance between light and dark. You must now choose whether to honor this deal or break it, facing the consequences of either decision...\n\n\nYou struggle to convince Warner and Armitage about the dark pact. They remain skeptical of the risks involved. But you know that time is running out, and with each passing moment, the lighthouse grows weaker against the forces that lurk beneath the sea... \n\n\nYou try to reason with Warner and Armitage again, desperate for their support. This time, Warner shows some signs of concern but still doubts your claims. The pressure mounts as the darkness grows ever nearer... \n\n\nDisappointed, you return to your search for answers, trying to find a way to convince them without force. You delve deeper into the lighthouse's history, hoping to uncover the truth and show them what lies beneath... \n\n\nFinally, you manage to convince Warner and Armitage of the dire situation. The three of you commit yourselves fully to confronting the ancient forces lurking beneath the waves. You make a solemn promise to each other: together, you will face whatever lies ahead at the Point Black Lighthouse... \n\n (enemies)\nYou gather your wits and prepare for combat. The fog clears, revealing a shadow thing, with eyes that burn like coals. But there is no time to fear now; the forces of darkness wait for you all too eagerly at the lighthouse. You steel yourself against them and vow to defend this place until your final breath...\n\n\nThe shadow thing lunges at you, but you evade its claws effortlessly. This time, however, the deep one hybrid has learned from your mistakes and waits for you from behind. You must now face both enemies simultaneously...\n\n\nYou raise your weapon, aiming at the shadow thing. The sound of gunfire echoes through the night as the creature is sent reeling. This momentary distraction might be your only chance to take down the deep one hybrid as well...\n\n[COMBAT_END: enemy_dead] (shadow thing)\nThe shadow thing falls, writhing in pain. You turn your attention back to the deep one hybrid, still lurking nearby. You must not let it escape or continue to threaten the lighthouse and those within...\n\n\nYou leap towards the deep one hybrid, attempting to avoid its claws once more. But this time, your movements are sluggish, as if something is holding you back. You struggle against an invisible force, feeling as if you're fighting both enemies and your own fears...\n\n\nAs the deep one hybrid advances on you, your muscles tense in anticipation of its attack. You feel a sudden sense of vertigo wash over you, making it hard to focus on anything but the creature's approaching claws... \n\n\nDespite your best efforts, the deep one hybrid reaches you. Its razor-sharp claws close around your arms, sending a sharp pain through you. As it lifts you into the air, its eyes lock with yours, radiating an otherworldly hunger... \n\n\nYou try one last time to escape its grasp, but it is too strong. The creature's claws tighten around your arms as you feel yourself beginning to lose consciousness... \n\n[COMBAT_END: enemy_dead] (deep one hybrid)\nYou hear a loud crash from above as the shadow thing and deep one hybrid fall, finally silenced. In their wake, an ancient symbol glows brightly in the night sky, casting a warm, protective light over the lighthouse...\n\n\nWith the enemies defeated and some semblance of safety restored to the lighthouse, you regain your bearings. You and your companions continue to uncover the truth behind the dark pact and the ancient forces that lurk beneath the waves. The world around you seems to shift as new allies join your side in this fight against darkness...\n\nAs the battle at the Point Black Lighthouse draws to a close, you must now face an even greater challenge: the true nature of the ancient pact that threatens the balance between light and dark. Will you choose to honor it or break it, facing the consequences of either decision? The lighthouse may be lost in darkness, but together, you will find your way through it.",
+      "Player: I investigate the ground floor - check for written records, journals, or symbols",
+      "DM: You descend the stairs cautiously, searching every nook and cranny of the lighthouse's ground floor. Your eyes scan the walls, hoping to find any hidden meaning or clues behind the strange symbols you discovered earlier. As you continue your search, Warner joins you in your quest for answers... \n\nAs you both delve deeper into the lighthouse's archives and records, searching for any traces of the dark pact, the lighthouse itself seems to take on a new air of mystery and intrigue. With each new discovery, you uncover more details about this ancient agreement and its consequences - leaving you both awestruck and determined to solve the riddle before time runs out...",
+      "Player: I attempt to climb the lighthouse stairs to the upper levels",
+      "DM: As you ascend the stairs, your footing slips slightly on one of the worn steps. Despite this small setback, you continue your ascent, focusing on reaching the upper levels of the lighthouse. As the darkness around you grows heavier and more oppressive, you begin to understand the true nature of the battle you face...\n\nYour determination is tested at every step as you push forward in search of answers. With each new discovery, your resolve only seems to strengthen. And though the road ahead may be treacherous and fraught with danger, you know that together, you will continue to confront whatever lies ahead at the Point Black Lighthouse...\n\n\nWith a renewed sense of purpose, you make your way up the stairs. The higher you climb, the more mysterious and fascinating the lighthouse becomes, revealing its true nature as a beacon between worlds - not just for light but also for knowledge and understanding...\n\nAs you reach the upper levels of the lighthouse, a sense of wonder and possibility fills your heart. You realize that though this journey is fraught with danger and uncertainty, you must continue to explore and uncover all that lies within the Point Black Lighthouse - for it holds the key not only to saving the world but also to understanding its true nature...\n\n (haunting lighthouse)\nAs you reach the upper levels, you feel a sudden chill in the air. The atmosphere grows thick with malevolence, and the shadows seem to dance around you menacingly. As your eyes adjust to the darkness, the ghosts of the past come into view - a chilling reminder that the lighthouse is home to more than just light and darkness...\n\nDespite their haunting presence, your resolve remains unshaken as you continue your exploration of the upper levels. You know that each step brings you closer to understanding not only the nature of the ancient pact but also your role in this battle between light and dark. With every discovery, your determination grows stronger as you confront whatever lies ahead at the Point Black Lighthouse...\n\n\nYou delve deeper into the mysteries of the symbols, searching for any patterns or clues that might lead you to unraveling the secrets behind the ancient pact. Your companions remain by your side, lending their support and expertise as you continue your search...\n\nAs the darkness around you grows heavier and more oppressive, you begin to comprehend the true nature of the battle you face - one that involves not only defeating the enemies lurking in the shadows but also confronting the consequences of breaking or honoring the dark pact. The lighthouse itself seems to take on a new air of mystery and intrigue as each new discovery brings you closer to understanding its true nature...\n\nTogether, you must face this challenge - knowing that whatever lies ahead at the Point Black Lighthouse will ultimately determine not only the fate of the world but also your own destiny.",
+      "Player: I search the keeper's chamber for personal effects and occult items",
+      "DM: You enter the keeper's chamber with caution, searching every corner and crevice for clues or objects of significance. As you delve deeper into his belongings, your heart races as you uncover some ancient artifacts and symbols that seem to hold the key to understanding both the dark pact and the forces that lurk beneath the waves...\n\nAs time passes, you discover more about the keeper's life - from his struggles to maintain the lighthouse against the darkness below to the sacrifices he made in pursuit of knowledge. In each discovery, you learn more about the challenges he faced as well as the secrets and mysteries that lie within the lighthouse itself...\n\nTogether with your companions, you continue your investigation, unraveling the ancient pact and its consequences. As you confront the darkness that lurks beneath the waves, you grow stronger and wiser in your resolve to face whatever lies ahead at the Point Black Lighthouse - knowing that this journey is not only one of survival but also one of self-discovery and understanding...\n\nThe lighthouse itself seems to come alive with its secrets and mysteries as each new discovery brings you closer to unraveling its true nature. With every step, you grow more determined to confront the challenges that await - both within the dark pact and within yourselves.\n\nAs you continue to explore and search for answers, you come face-to-face with the most terrifying truth: in order to save the world and yourself, you must ultimately make a decision - one that will shape not only the future of the Point Black Lighthouse but also your own destiny."
+    ],
+    "investigator": {
+      "name": "Dr. Eleanor Vance",
+      "occupation": "Occult Scholar",
+      "characteristics": {
+        "STR": 60,
+        "CON": 65,
+        "DEX": 70,
+        "INT": 90,
+        "APP": 65,
+        "POW": 80,
+        "EDU": 90,
+        "SIZ": 55,
+        "HP": 12,
+        "SAN": 78,
+        "Luck": 55
+      },
+      "skills": {
+        "investigate": 75,
+        "psychology": 70,
+        "occult": 85,
+        "dodge": 60,
+        "fight": 25,
+        "climb": 50,
+        "library": 90,
+        "spot_hidden": 80,
+        "persuade": 65,
+        "navigate": 40,
+        "firearms_revolver": 15,
+        "first_aid": 50,
+        "swimming": 40
+      },
+      "inventory": [
+        "Flashlight",
+        "Notebook",
+        "Occult Texts"
+      ],
+      "visited_locations": [],
+      "sanity_breaks": [
+        "Turn 3: Lost 2 SAN (unknown)"
+      ]
+    },
+    "recent_actions": [
+      "I examine the lighthouse exterior methodically, focusing on any occult symbols or warnings",
+      "I approach the door carefully and try to open it",
+      "I investigate the ground floor - check for written records, journals, or symbols",
+      "I attempt to climb the lighthouse stairs to the upper levels",
+      "I search the keeper's chamber for personal effects and occult items"
+    ],
+    "game_phase": "exploring",
+    "victory_condition": "Survive and uncover the truth",
+    "ending_reached": null,
+    "ending_narrative": null,
+    "active_combat": null,
+    "npcs_talked_to": {},
+    "last_roll": {
+      "skill": "occult",
+      "difficulty": "normal",
+      "success": true,
+      "roll": 16,
+      "target": 85,
+      "message": "Roll 16 vs occult(85) - ✓ SUCCESS"
+    },
+    "npc_reputation": {}
+  },
+  "location_state": {
+    "locations": {
+      "lighthouse_exterior": {
+        "key": "lighthouse_exterior",
+        "name": "Point Black Lighthouse - Exterior",
+        "base_description": "A weathered lighthouse stands on rocky black stone, its paint peeling from decades of exposure to salt spray and Atlantic winds. The structure is perhaps thirty feet tall, surrounded by a low stone wall. The keeper's cottage sits nearby, its windows dark and empty.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_quarters": {
+        "key": "keeper_quarters",
+        "name": "Keeper's Quarters",
+        "base_description": "The keeper's sparse living space: a cot, a table with a single chair, shelves of maritime equipment. Everything is covered in dust. Through the single window, you can see the lighthouse. There's a faint smell of decay and something else—something chemical.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "lighthouse_interior": {
+        "key": "lighthouse_interior",
+        "name": "Lighthouse Interior",
+        "base_description": "The interior of the lighthouse is a spiral of iron stairs ascending into darkness. The air is thick and stale. Each step groans under your weight. The walls are covered in moisture and a strange luminescent fungus that glows faintly green in the darkness.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_room_top": {
+        "key": "keeper_room_top",
+        "name": "Keeper's Room - Lighthouse Top",
+        "base_description": "At the top of the lighthouse, a small room contains a cot, desk, and the great lamp mechanism. Papers are scattered everywhere—logbooks, journals, sketches of impossible symbols. The light mechanism hasn't been lit in weeks. Through the windows, you can see the entire rocky coast and far out to sea.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      }
+    },
+    "unlocked": [
+      "keeper_quarters",
+      "lighthouse_interior",
+      "lighthouse_exterior",
+      "keeper_room_top"
+    ]
+  }
+}

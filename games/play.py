@@ -9,6 +9,7 @@ import sys
 import json
 from core.game_enhanced import EnhancedGameEngine
 from core.game_universal import Investigator
+from core.game_generative import GenerativeGameEngine, InvestigatorState
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -72,7 +73,23 @@ def setup_game():
             break
         print("  Invalid choice. Try again.")
 
-    return entries_file, adventure_name, inv_data
+    # Select AI model for potential fallback continuation
+    clear()
+    print("SELECT LLM MODEL (for AI continuation if story reaches dead-end):\n")
+    print("  1) Mistral 7B (Best Quality) - recommended")
+    print("  2) Neural Chat 7B (Balanced)")
+    print("  3) Orca Mini 3B (Speed)")
+    print("  4) Qwen3 8B (Reasoning)\n")
+
+    while True:
+        choice = input("  Enter 1-4 (default 1): ").strip() or "1"
+        if choice in ['1', '2', '3', '4']:
+            break
+
+    model_map = {"1": "mistral", "2": "neural-chat", "3": "orca-mini", "4": "qwen3:8b"}
+    selected_model = model_map.get(choice, "mistral")
+
+    return entries_file, adventure_name, inv_data, selected_model
 
 # ═══════════════════════════════════════════════════════════════════════════
 # GAME PHASE
@@ -160,7 +177,44 @@ def format_journal(engine):
 
     return output
 
-def play_game(entries_file, adventure_name, inv_data):
+def launch_generative_continuation(engine: EnhancedGameEngine, last_entry_num: int, model: str = "mistral"):
+    """Launch AI DM continuation when fixed adventure reaches a dead-end"""
+    clear()
+
+    last_entry = engine.base_engine.get_entry(last_entry_num)
+    last_text = last_entry.get('text', '') if last_entry else ''
+    last_text = last_text[:600]
+
+    fixed_inv = engine.game.investigator
+    gen_inv = InvestigatorState(
+        name=fixed_inv.name,
+        occupation=fixed_inv.occupation if hasattr(fixed_inv, 'occupation') else 'Investigator',
+        characteristics=fixed_inv.characteristics,
+        skills=fixed_inv.skills,
+        inventory=[],
+        visited_locations=[str(n) for n in engine.game.visited_entries[-10:]],
+        sanity_breaks=[]
+    )
+
+    gen_engine = GenerativeGameEngine(model=model)
+    gen_engine.create_game(gen_inv)
+    gen_engine.state.narrative = [
+        f"[CONTINUATION FROM FIXED ADVENTURE - Entry {last_entry_num}]",
+        f"[The adventure book continues generatively from this point]",
+        f"DM: {last_text}"
+    ]
+    gen_engine.state.location = f"Adventure Entry {last_entry_num}"
+
+    print("=" * 80)
+    print("THE STORY CONTINUES...")
+    print("=" * 80)
+    print("\nThe adventure book ends here. But the story does not.")
+    input("Press ENTER to begin the generative adventure...")
+
+    from games.play_generative import _run_game_loop
+    _run_game_loop(gen_engine, model)
+
+def play_game(entries_file, adventure_name, inv_data, selected_model: str = "mistral"):
     """Main game loop"""
 
     # Initialize engine
@@ -243,10 +297,10 @@ def main():
     """Main entry point"""
     try:
         # Setup
-        entries_file, adventure_name, inv_data = setup_game()
+        entries_file, adventure_name, inv_data, selected_model = setup_game()
 
         # Play
-        play_game(entries_file, adventure_name, inv_data)
+        play_game(entries_file, adventure_name, inv_data, selected_model)
 
     except KeyboardInterrupt:
         print("\n\n👋 Interrupted.\n")

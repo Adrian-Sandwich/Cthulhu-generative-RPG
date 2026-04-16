@@ -1,0 +1,128 @@
+{
+  "metadata": {
+    "session_id": "session_1776307822",
+    "model": "qwen2.5:7b",
+    "timestamp": "2026-04-15T20:54:47.474091",
+    "turn": 4,
+    "investigator": "Detective Morgan",
+    "location": "Point Black Lighthouse - Exterior",
+    "sanity": 70,
+    "phase": "exploring",
+    "play_duration": 11
+  },
+  "game_state": {
+    "turn": 4,
+    "location": "Point Black Lighthouse - Exterior",
+    "narrative": [
+      "\n    ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.\n    ",
+      "Player: i try to climb a wall",
+      "DM: You grip the rough stone wall, your fingers searching for purchase. The surface is slick with rain and algae. ",
+      "[ROLL: Roll 6 vs climb(65) - ✓ SUCCESS]",
+      "DM: You expertly leveraged your powerful grip and sheer strength to scale the slick rock face, finding a hidden crevice that guided you upward. With a final heave, you pull yourself over the last ledge, catching your breath on the narrow outcropping just as the first tendrils of morning light touch the distant peaks below.",
+      "Player: y enter trought the open window",
+      "DM: You push through the slightly ajar window, your flashlight cutting through the dim light inside the lighthouse. The interior is damp and musty, with water droplets forming on the walls. You step cautiously into the keepers' quarters, noting the disarray of personal items and tools scattered about.\n\n",
+      "Player: i search for indications of someone been there recently?",
+      "DM: You carefully scan the walls, flashlight beam flickering over the damp surfaces. A small footprint catches your eye near the base of a ladder leading higher up the tower.\n\n",
+      "[ROLL: Roll 3 vs investigate(60) - ✓ SUCCESS [CRITICAL SUCCESS]]",
+      "DM: You peer into the depths of the ancient tomb, your torch casting eerie shadows on the dusty walls. The成功的玩家仔细探索，发现了一扇隐藏在壁画背后的密室入口。空气中弥漫着潮湿和古老的气息，显然很久没有人踏入这里。你的心跳加速，充满了未知的激动与紧张。\n\nThe player has discovered a hidden entrance to an ancient chamber behind a wall of ancient murals, creating suspense for what lies within. The atmosphere is thick with the weight of history and potential danger, setting the stage for a thrilling adventure ahead."
+    ],
+    "investigator": {
+      "name": "Detective Morgan",
+      "occupation": "Private Investigator",
+      "characteristics": {
+        "STR": 65,
+        "CON": 65,
+        "SIZ": 60,
+        "DEX": 65,
+        "INT": 80,
+        "APP": 60,
+        "POW": 70,
+        "EDU": 85,
+        "HP": 13,
+        "SAN": 70,
+        "Luck": 50,
+        "Magic_Points": 14
+      },
+      "skills": {
+        "investigate": 60,
+        "library": 50,
+        "persuade": 40,
+        "spot_hidden": 55,
+        "psychology": 45
+      },
+      "inventory": [
+        "Flashlight",
+        "Notebook"
+      ],
+      "visited_locations": [],
+      "sanity_breaks": []
+    },
+    "recent_actions": [
+      "i try to climb a wall",
+      "y enter trought the open window",
+      "i search for indications of someone been there recently?"
+    ],
+    "game_phase": "exploring",
+    "victory_condition": "Survive and uncover the truth",
+    "ending_reached": null,
+    "ending_narrative": null,
+    "active_combat": null,
+    "npcs_talked_to": {},
+    "last_roll": null,
+    "npc_reputation": {}
+  },
+  "location_state": {
+    "locations": {
+      "lighthouse_exterior": {
+        "key": "lighthouse_exterior",
+        "name": "Point Black Lighthouse - Exterior",
+        "base_description": "A weathered lighthouse stands on rocky black stone, its paint peeling from decades of exposure to salt spray and Atlantic winds. The structure is perhaps thirty feet tall, surrounded by a low stone wall. The keeper's cottage sits nearby, its windows dark and empty.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_quarters": {
+        "key": "keeper_quarters",
+        "name": "Keeper's Quarters",
+        "base_description": "The keeper's sparse living space: a cot, a table with a single chair, shelves of maritime equipment. Everything is covered in dust. Through the single window, you can see the lighthouse. There's a faint smell of decay and something else—something chemical.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "lighthouse_interior": {
+        "key": "lighthouse_interior",
+        "name": "Lighthouse Interior",
+        "base_description": "The interior of the lighthouse is a spiral of iron stairs ascending into darkness. The air is thick and stale. Each step groans under your weight. The walls are covered in moisture and a strange luminescent fungus that glows faintly green in the darkness.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_room_top": {
+        "key": "keeper_room_top",
+        "name": "Keeper's Room - Lighthouse Top",
+        "base_description": "At the top of the lighthouse, a small room contains a cot, desk, and the great lamp mechanism. Papers are scattered everywhere—logbooks, journals, sketches of impossible symbols. The light mechanism hasn't been lit in weeks. Through the windows, you can see the entire rocky coast and far out to sea.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      }
+    },
+    "unlocked": [
+      "lighthouse_exterior",
+      "keeper_quarters",
+      "lighthouse_interior",
+      "keeper_room_top"
+    ]
+  }
+}

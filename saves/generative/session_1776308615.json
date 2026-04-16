@@ -1,0 +1,140 @@
+{
+  "metadata": {
+    "session_id": "session_1776308615",
+    "model": "orca-mini",
+    "timestamp": "2026-04-15T21:07:42.129821",
+    "turn": 7,
+    "investigator": "Prof. Nathaniel Blackwood",
+    "location": "Lighthouse Interior",
+    "sanity": 75,
+    "phase": "exploring",
+    "play_duration": 13
+  },
+  "game_state": {
+    "turn": 7,
+    "location": "Lighthouse Interior",
+    "narrative": [
+      "\n    ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.\n    ",
+      "Player: Search for occult symbols in the lighthouse",
+      "DM: You search the lighthouse, looking for anything out of place. Suddenly, you spot a glint of light in an alcove. You rush over to investigate, and find a small booklet hidden behind a stack of old papers. The title is spelled out in runes: \"The Keepers' Cipher.\"\n\nAs you read the booklet, you learn that the lighthouse keeper was indeed dead for two weeks before anyone found him, but his body wasn't buried at all. Instead, it was thrown into the sea by a mysterious figure wearing a hooded cloak and a scarf. The booklet also describes the same figure as a \"keeper of secrets,\" who seems to be protecting the lighthouse from something dark.\n\nYou race back to the fog-shrouded coast, hoping to catch the hooded figure in the act. As you approach the lighthouse, you hear a soft voice whisper your name. You turn around and see a young woman with long black hair walk away from you. She disappears into the fog.\n\nYou can't prove anything you've learned, but something doesn't sit right about all of this. You'll have to keep investigating to find out what secrets the lighthouse holds.",
+      "Player: Consult grimoire about supernatural entities",
+      "DM: You take a deep breath and consult your grimoire. It looks like you have a vision of a powerful entity that seems to be protecting the lighthouse. You see a figure wearing a hooded cloak and a scarf, standing on a rocky outcropping above the water. As you peer out at the fog-shrouded coast, you realize that it could be anyone - a person, an animal, or even a creature of another dimension. \n\nYou decide to take a closer look at the lighthouse and see if you can identify any hidden areas or clues. The next few moments are a blur of movement as you explore every corner of the lighthouse, searching for anything out of place. Finally, you come across a hidden room that seems to be filled with strange artifacts - a crystal ball, a set of magical runes, and a book filled with enchanting illustrations. \n\nAs you examine the book, you sense a connection between the images in the book and something you experienced earlier. You feel a strange energy coursing through your body as you realize that the figure you saw was actually the source of this powerful magical energy. \n\nYou set out to find the hooded figure and confront them, but before you can do anything, you're suddenly surrounded by a blinding light. As your vision clears, you see a figure standing before you - it's the young woman from earlier! But she's not alone. A group of other figures appear, all wearing similar hooded cloaks and scarves. \n\nYou quickly realize that these are also powerful magical entities, and they seem to be protecting the lighthouse and its secrets. As the figures begin to disappear one by one, you realize that you may have stumbled upon something much larger than you imagined.",
+      "Player: Attempt spirit communication with rituals",
+      "DM: The player attempts to communicate with spirits using a specific set of rituals. They search for and find a location where they believe the spirits are more active, such as a sacred site or a particular location that holds special meaning for them. Once there, they perform the rituals according to a specific set of guidelines, often involving complex chants and physical gestures. During the ritual, they attempt to connect with the spirits and communicate with them through a series of questions and answers. \n\nAs the player progresses through the rituals, they begin to feel a sense of closeness and connection with the spirits. They may experience vivid visual or auditory hallucinations as they attempt to interpret the spirits' responses. Ultimately, the player may learn valuable insights into the history and secrets of the location they are exploring, but they may also face challenges in maintaining their connection with the spirits and in translating their responses accurately.",
+      "Player: Gather evidence of phenomena",
+      "DM: The player searches the lighthouse for any signs of paranormal activity or hidden areas. They notice a strange energy coursing through their body as they search, and they sense that the hooded figure may be nearby. \n\nAs they make their way to the hidden room, they hear a faint whispering voice calling out to them from behind. The player follows the sound until they come across a hidden door with a strange symbol etched into the wood. They open the door and find a book filled with enchanting illustrations. \n\nThe player believes that this book holds the key to unlocking the secrets of the lighthouse and the hooded figure. They take the book and head back to their campsite, eager to uncover more information about the location's history.",
+      "Player: Confront and attempt to banish entity",
+      "DM: The player approaches the group of figures wearing similar cloaks and scarves and attempts to communicate with them using a series of questions and answers. The figures respond in a telepathic voice, stating that they are not entities but rather powerful magical beings protecting the lighthouse. The player responds by attempting to banish the magical beings, but they fail due to the power of their magic. The player decides to leave the location peacefully and continue exploring.",
+      "Player: Examine aftermath and escape",
+      "DM: After realizing that they have been trapped in a haunted house, the player begins examining the aftermath and attempting to find an escape route. They search the house for any clues or signs of how they got there, but eventually come across a locked room with no way to get inside. The player then realizes that they must have stumbled upon the wrong house and sets out to find the correct one.\n\nAs they explore the new location, the player discovers a hidden room filled with strange artifacts and a map leading to a hidden treasure. Overwhelmed by their newfound riches, the player decides to take a moment to rest and reflect on their adventure."
+    ],
+    "investigator": {
+      "name": "Prof. Nathaniel Blackwood",
+      "occupation": "Occult Scholar",
+      "characteristics": {
+        "STR": 55,
+        "CON": 65,
+        "DEX": 60,
+        "INT": 95,
+        "APP": 70,
+        "POW": 85,
+        "EDU": 95,
+        "SIZ": 60,
+        "HP": 12,
+        "SAN": 75,
+        "Luck": 55
+      },
+      "skills": {
+        "investigate": 75,
+        "psychology": 70,
+        "occult": 90,
+        "dodge": 40,
+        "fight": 25,
+        "climb": 35,
+        "library": 95,
+        "spot_hidden": 75,
+        "persuade": 70,
+        "navigate": 40,
+        "firearms_revolver": 10,
+        "first_aid": 50,
+        "swimming": 30
+      },
+      "inventory": [
+        "Ancient Grimoire",
+        "Notebook",
+        "Candles"
+      ],
+      "visited_locations": [],
+      "sanity_breaks": []
+    },
+    "recent_actions": [
+      "Consult grimoire about supernatural entities",
+      "Attempt spirit communication with rituals",
+      "Gather evidence of phenomena",
+      "Confront and attempt to banish entity",
+      "Examine aftermath and escape"
+    ],
+    "game_phase": "exploring",
+    "victory_condition": "Survive and uncover the truth",
+    "ending_reached": null,
+    "ending_narrative": null,
+    "active_combat": null,
+    "npcs_talked_to": {},
+    "last_roll": null,
+    "npc_reputation": {}
+  },
+  "location_state": {
+    "locations": {
+      "lighthouse_exterior": {
+        "key": "lighthouse_exterior",
+        "name": "Point Black Lighthouse - Exterior",
+        "base_description": "A weathered lighthouse stands on rocky black stone, its paint peeling from decades of exposure to salt spray and Atlantic winds. The structure is perhaps thirty feet tall, surrounded by a low stone wall. The keeper's cottage sits nearby, its windows dark and empty.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_quarters": {
+        "key": "keeper_quarters",
+        "name": "Keeper's Quarters",
+        "base_description": "The keeper's sparse living space: a cot, a table with a single chair, shelves of maritime equipment. Everything is covered in dust. Through the single window, you can see the lighthouse. There's a faint smell of decay and something else—something chemical.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "lighthouse_interior": {
+        "key": "lighthouse_interior",
+        "name": "Lighthouse Interior",
+        "base_description": "The interior of the lighthouse is a spiral of iron stairs ascending into darkness. The air is thick and stale. Each step groans under your weight. The walls are covered in moisture and a strange luminescent fungus that glows faintly green in the darkness.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_room_top": {
+        "key": "keeper_room_top",
+        "name": "Keeper's Room - Lighthouse Top",
+        "base_description": "At the top of the lighthouse, a small room contains a cot, desk, and the great lamp mechanism. Papers are scattered everywhere—logbooks, journals, sketches of impossible symbols. The light mechanism hasn't been lit in weeks. Through the windows, you can see the entire rocky coast and far out to sea.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      }
+    },
+    "unlocked": [
+      "lighthouse_exterior",
+      "keeper_quarters",
+      "lighthouse_interior",
+      "keeper_room_top"
+    ]
+  }
+}

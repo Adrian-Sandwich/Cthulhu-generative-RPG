@@ -6,6 +6,7 @@ Shows the DM (Keeper) contemplating the player's action with atmospheric visuals
 
 import time
 import sys
+import os
 from typing import Optional, Callable
 
 
@@ -44,7 +45,8 @@ class KeeperThinking:
     def show_thinking(
         self,
         duration: float = 0.1,
-        on_complete: Optional[Callable] = None
+        on_complete: Optional[Callable] = None,
+        use_animation: bool = True
     ) -> None:
         """
         Display animated thinking state with progress bar.
@@ -52,44 +54,58 @@ class KeeperThinking:
         Args:
             duration: How long to animate (seconds) - actual time depends on LLM
             on_complete: Optional callback when animation completes
+            use_animation: If False, show static thinking message instead (for terminals with no carriage return support)
         """
         print()
-        self._animate_progress_bar()
+        if use_animation:
+            self._animate_progress_bar()
+        else:
+            self._show_static_thinking()
         if on_complete:
             on_complete()
 
+    def _show_static_thinking(self) -> None:
+        """Show a simple static thinking message (for terminals with carriage return issues)"""
+        print("  ⧗ The Keeper contemplates your fate...\n")
+
     def _animate_progress_bar(self) -> None:
         """Animate a progress bar representing the Keeper's thinking"""
-        # Calculate animation cycles
-        cycles = 8
-        steps_per_cycle = self.width
+        # Use simpler animation that avoids carriage return issues
+        # Show a single line that updates smoothly
 
-        for cycle in range(cycles):
-            # Thinking message (rotates through frames)
-            frame_idx = cycle % len(self.THINKING_FRAMES)
+        total_steps = self.width * 8  # Total animation frames
+
+        for step in range(total_steps):
+            progress = step / total_steps
+            filled_count = int(progress * self.width)
+
+            # Build bar
+            bar = (
+                self.filled * filled_count +
+                self.empty * (self.width - filled_count)
+            )
+
+            # Pick thinking frame (changes every 5 steps)
+            frame_idx = (step // 5) % len(self.THINKING_FRAMES)
             thinking_msg = self.THINKING_FRAMES[frame_idx]
 
-            # Build progress bar
-            for step in range(steps_per_cycle):
-                progress = (cycle * steps_per_cycle + step) / (cycles * steps_per_cycle)
-                filled_count = int(progress * self.width)
+            # Format: limit message width to prevent line wrapping
+            msg_portion = thinking_msg[:22].ljust(22)
+            percentage = int(progress * 100)
 
-                # Build bar
-                bar = (
-                    self.filled * filled_count +
-                    self.empty * (self.width - filled_count)
-                )
+            # Build output line
+            output = f"\r  ⧗ {msg_portion} [{bar}] {percentage:>3}%"
 
-                # Print with carriage return (overwrite previous line)
-                percentage = int(progress * 100)
-                output = f"\r  ⧗ {thinking_msg:<30} [{bar}] {percentage:>3}%"
-                sys.stdout.write(output)
-                sys.stdout.flush()
+            # Write with explicit line clearing
+            sys.stdout.write(output)
+            sys.stdout.flush()
 
-                # Small delay for animation effect
-                time.sleep(0.02)
+            # Small delay for animation effect
+            time.sleep(0.015)
 
-        # Final state - complete
+        # Clear the line and add newlines
+        sys.stdout.write("\r" + " " * 80 + "\r")
+        sys.stdout.flush()
         print()
         print()
 
@@ -195,6 +211,9 @@ def show_keeper_thinking(
         preset: Preset scenario name (action_resolution, sanity_check, etc.)
         custom_hint: Custom hint text (overrides preset)
         style: Progress bar style
+
+    Environment variables:
+        CTHULHU_STATIC_THINKING: Set to 1 to disable animation (for terminals with no carriage return)
     """
     keeper = KeeperThinking(style=style)
 
@@ -210,5 +229,6 @@ def show_keeper_thinking(
     if hint:
         keeper.show_cosmic_hint(hint)
 
-    # Show thinking animation
-    keeper.show_thinking()
+    # Show thinking animation (disable if environment variable set)
+    use_animation = os.environ.get("CTHULHU_STATIC_THINKING", "0") != "1"
+    keeper.show_thinking(use_animation=use_animation)

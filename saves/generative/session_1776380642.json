@@ -1,0 +1,124 @@
+{
+  "metadata": {
+    "session_id": "session_1776380642",
+    "model": "qwen2.5:7b",
+    "timestamp": "2026-04-16T17:06:35.240454",
+    "turn": 4,
+    "investigator": "Detective Morgan",
+    "location": "Lighthouse Interior",
+    "sanity": 70,
+    "phase": "exploring",
+    "play_duration": 7
+  },
+  "game_state": {
+    "turn": 4,
+    "location": "Lighthouse Interior",
+    "narrative": [
+      "\n    ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.\n    ",
+      "Player: i enter kicking the door open",
+      "DM: Detective Morgan approaches the sturdy wooden door of the lighthouse and kicks it open, the force causing a slight creak as the wood shifts under the impact. The gusty wind howls through the opening, carrying with it the salty smell of the sea and the distant crashing waves. You glance around, noting the dark rocks and the towering lighthouse standing proudly against the dense fog.\n\nThe door swings wide enough to admit you, and you step inside, your flashlight beam slicing through the dim interior. The light flickers over the entrance, revealing a narrow corridor leading into the heart of the lighthouse. The sound of crashing waves grows louder as you move deeper into the structure. The logbook lies open on one of the tables, its pages filled with cryptic entries that seem to defy logic.\n\nYou hear a faint whispering in the fog, like distant voices calling from beneath the water’s surface. The light blinks once more, casting an eerie glow across the walls.\n\nWhat will you do next?",
+      "Player: y try to point the origin of the noise with my lantern",
+      "DM: You adjust your flashlight and shine it around the dimly lit interior, trying to pinpoint the source of the faint whispering. The light dances across damp stone walls and the spiral iron stairs leading upwards. As you move closer to one of the lower windows, the sound becomes slightly more distinct—a series of soft, almost inaudible whispers.\n\nThe whispers seem to be coming from a small, shadowy corner by one of the workbenches. You approach cautiously, your flashlight illuminating a strange luminescent fungus growing faintly green on the stone walls. The whispers grow louder, now sounding like someone murmuring in a language you cannot quite place.\n\nYou see a slight movement out of the corner of your eye and quickly turn to find nothing but the cold stone floor. The light flickers again, casting long shadows that dance across the room. You take a deep breath and move closer to the source of the whispers, your flashlight beam illuminating an old wooden chest half-hidden by a pile of books and papers.\n\nWhat will you do next?",
+      "Player: i see a lose tile on the fllor and try to lift it, but its quite heavy",
+      "DM: You carefully approach the loose tile that seems to be partially embedded in the stone floor. You attempt to lift it with both hands, knowing that if it's covering something important, it might contain clues or answers. The tile is indeed heavy, and as you tug at it, a musty smell fills the air, and a small gap opens beneath your fingers.\n\nWith some effort, you manage to pry the tile up enough to reveal a hidden compartment underneath. Inside, you find an old, leather-bound journal and a weathered map of the nearby coastline. The journal appears to be in poor condition, with pages yellowed and crumbling at the edges. The map shows a series of unmarked locations along the coast, some marked with cryptic symbols.\n\nYou set the journal and map aside, marveling at the discovery. The whispers seem to have paused now that you've disturbed the tile, and the room grows still except for the sound of dripping water from higher up in the lighthouse.\n\nWhat will you do next?"
+    ],
+    "investigator": {
+      "name": "Detective Morgan",
+      "occupation": "Private Investigator",
+      "characteristics": {
+        "STR": 65,
+        "CON": 65,
+        "SIZ": 60,
+        "DEX": 65,
+        "INT": 80,
+        "APP": 60,
+        "POW": 70,
+        "EDU": 85,
+        "HP": 13,
+        "SAN": 70,
+        "Luck": 50,
+        "Magic_Points": 14
+      },
+      "skills": {
+        "investigate": 60,
+        "library": 50,
+        "persuade": 40,
+        "spot_hidden": 55,
+        "psychology": 45
+      },
+      "inventory": [
+        "Flashlight",
+        "Notebook"
+      ],
+      "visited_locations": [],
+      "sanity_breaks": []
+    },
+    "recent_actions": [
+      "i enter kicking the door open",
+      "y try to point the origin of the noise with my lantern",
+      "i see a lose tile on the fllor and try to lift it, but its quite heavy"
+    ],
+    "game_phase": "exploring",
+    "victory_condition": "Survive and uncover the truth",
+    "ending_reached": null,
+    "ending_narrative": null,
+    "active_combat": null,
+    "npcs_talked_to": {},
+    "last_roll": null,
+    "npc_reputation": {}
+  },
+  "location_state": {
+    "locations": {
+      "lighthouse_exterior": {
+        "key": "lighthouse_exterior",
+        "name": "Point Black Lighthouse - Exterior",
+        "base_description": "A weathered lighthouse stands on rocky black stone, its paint peeling from decades of exposure to salt spray and Atlantic winds. The structure is perhaps thirty feet tall, surrounded by a low stone wall. The keeper's cottage sits nearby, its windows dark and empty.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_quarters": {
+        "key": "keeper_quarters",
+        "name": "Keeper's Quarters",
+        "base_description": "The keeper's sparse living space: a cot, a table with a single chair, shelves of maritime equipment. Everything is covered in dust. Through the single window, you can see the lighthouse. There's a faint smell of decay and something else—something chemical.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "lighthouse_interior": {
+        "key": "lighthouse_interior",
+        "name": "Lighthouse Interior",
+        "base_description": "The interior of the lighthouse is a spiral of iron stairs ascending into darkness. The air is thick and stale. Each step groans under your weight. The walls are covered in moisture and a strange luminescent fungus that glows faintly green in the darkness.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      },
+      "keeper_room_top": {
+        "key": "keeper_room_top",
+        "name": "Keeper's Room - Lighthouse Top",
+        "base_description": "At the top of the lighthouse, a small room contains a cot, desk, and the great lamp mechanism. Papers are scattered everywhere—logbooks, journals, sketches of impossible symbols. The light mechanism hasn't been lit in weeks. Through the windows, you can see the entire rocky coast and far out to sea.",
+        "visited_count": 0,
+        "secrets_revealed": [],
+        "danger_level": 1,
+        "contamination": 0,
+        "events_triggered": [],
+        "last_visited_turn": 0
+      }
+    },
+    "unlocked": [
+      "keeper_quarters",
+      "lighthouse_interior",
+      "keeper_room_top",
+      "lighthouse_exterior"
+    ]
+  }
+}

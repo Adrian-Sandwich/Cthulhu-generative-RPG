@@ -9,6 +9,8 @@ from pathlib import Path
 
 from .snapshot import Snapshot, GameStateSnapshot
 from .storage import SnapshotStorage
+from .image.generator import ProceduralImageGenerator
+from io import BytesIO
 
 
 def create_test_snapshots() -> list:
@@ -133,18 +135,43 @@ def main():
         images_dir="graphics_engine/data/images"
     )
 
+    # Create image generator
+    image_gen = ProceduralImageGenerator(width=640, height=480)
+
     # Generate test snapshots
-    print("📸 Creating test snapshots...")
+    print("📸 Creating test snapshots with procedural images...")
     snapshots = create_test_snapshots()
 
-    # Save snapshots
-    print(f"💾 Saving {len(snapshots)} snapshots to database...\n")
+    # Generate and save snapshots
+    print(f"🎨 Generating {len(snapshots)} procedural images...\n")
     for snap in snapshots:
+        # Generate procedural image
+        print(f"  ⚙️  Generating image for Turn {snap.turn_id}: {snap.state.location}")
+
+        try:
+            pil_image = image_gen.generate(
+                location=snap.state.location,
+                seed=snap.image_seed
+            )
+
+            # Convert PIL Image to bytes
+            img_bytes = BytesIO()
+            pil_image.save(img_bytes, format='PNG')
+            snap.image = img_bytes.getvalue()
+
+            print(f"     ✓ Image generated ({len(snap.image)} bytes)")
+        except Exception as e:
+            print(f"     ✗ Error generating image: {e}")
+            snap.image = None
+
+        # Save to storage
         path = storage.save_snapshot(snap)
         print(f"  ✓ Turn {snap.turn_id}: {snap.state.location}")
         print(f"    HP: {snap.state.investigator_hp}/{snap.state.investigator_max_hp} | "
               f"SAN: {snap.state.investigator_san}/{snap.state.investigator_max_san}")
         print(f"    Narrative: {snap.narrative[:50]}...")
+        if snap.image:
+            print(f"    Image: {path}")
         print()
 
     # List snapshots

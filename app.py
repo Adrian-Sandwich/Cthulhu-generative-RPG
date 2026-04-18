@@ -51,26 +51,30 @@ def start_game():
 
     data = request.json
     investigator_name = data.get('name', 'Unknown Investigator')
-    archetype = data.get('archetype', 'scholar')
+    occupation = data.get('archetype', 'scholar')  # Called 'occupation' in game engine
 
     try:
         # Initialize investigator
         current_investigator = InvestigatorState(
             name=investigator_name,
-            archetype=archetype,
+            occupation=occupation,
             characteristics={
                 'STR': 50,
                 'CON': 50,
                 'SIZ': 50,
                 'DEX': 50,
                 'APP': 50,
-                'INT': 70 if archetype == 'scholar' else 60,
+                'INT': 70 if occupation == 'scholar' else 60,
                 'POW': 60,
-                'EDU': 75 if archetype == 'scholar' else 65,
+                'EDU': 75 if occupation == 'scholar' else 65,
                 'HP': 7,
                 'SAN': 70,
                 'Luck': 50
-            }
+            },
+            skills={},
+            inventory=[],
+            visited_locations=[],
+            sanity_breaks=[]
         )
 
         # Initialize game engine
@@ -82,7 +86,7 @@ def start_game():
             "message": f"Game started! Welcome, {investigator_name}",
             "investigator": {
                 "name": current_investigator.name,
-                "archetype": current_investigator.archetype,
+                "archetype": current_investigator.occupation,
                 "HP": current_investigator.characteristics['HP'],
                 "SAN": current_investigator.characteristics['SAN'],
                 "Luck": current_investigator.characteristics['Luck']
@@ -103,7 +107,7 @@ def get_game_state():
         "turn": game_engine.state.turn,
         "investigator": {
             "name": current_investigator.name,
-            "archetype": current_investigator.archetype,
+            "archetype": current_investigator.occupation,
             "HP": current_investigator.characteristics['HP'],
             "SAN": current_investigator.characteristics['SAN'],
             "Luck": current_investigator.characteristics['Luck']

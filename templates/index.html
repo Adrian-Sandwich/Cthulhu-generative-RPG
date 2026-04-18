@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏮 The Lighthouse - A Tale of Cosmic Horror</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🏮 THE LIGHTHOUSE</h1>
+            <p class="tagline">A generative horror RPG set on the edge of known reality</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar: Character Stats & Controls -->
+            <aside class="sidebar">
+                <div class="panel stats-panel">
+                    <h3>⚔️ INVESTIGATOR</h3>
+                    <div id="character-info" class="character-info hidden">
+                        <div class="stat-row">
+                            <span class="stat-label">Name:</span>
+                            <span class="stat-value" id="char-name">—</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Archetype:</span>
+                            <span class="stat-value" id="char-archetype">—</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">HP:</span>
+                            <div class="stat-bar">
+                                <div class="bar-fill hp-fill" id="hp-bar" style="width: 100%"></div>
+                                <span class="stat-value" id="hp-value">—</span>
+                            </div>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">SAN:</span>
+                            <div class="stat-bar">
+                                <div class="bar-fill san-fill" id="san-bar" style="width: 100%"></div>
+                                <span class="stat-value" id="san-value">—</span>
+                            </div>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Luck:</span>
+                            <div class="stat-bar">
+                                <div class="bar-fill luck-fill" id="luck-bar" style="width: 50%"></div>
+                                <span class="stat-value" id="luck-value">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel location-panel">
+                    <h3>📍 LOCATION</h3>
+                    <div id="location-display" class="location-display">
+                        Exterior - Rocky Shore
+                    </div>
+                </div>
+
+                <div class="panel turn-panel">
+                    <h3>⏱️ TURN</h3>
+                    <div class="turn-counter" id="turn-counter">0</div>
+                </div>
+
+                <div class="panel actions-panel">
+                    <h3>⚙️ ACTIONS</h3>
+                    <button id="scene-button" class="action-btn" onclick="showScene()">View Scene</button>
+                    <button id="history-button" class="action-btn" onclick="showHistory()">Show History</button>
+                    <button id="reset-button" class="action-btn danger" onclick="resetGame()">New Game</button>
+                </div>
+            </aside>
+
+            <!-- Main Area: Game Display -->
+            <main class="game-area">
+                <!-- Scene/Content Display -->
+                <div id="content-display" class="panel content-panel">
+                    <div id="startup-screen" class="startup-screen">
+                        <h2>Welcome to The Lighthouse</h2>
+                        <p>You stand before an ancient lighthouse on a rocky shore. The beam rotates endlessly, calling to something in the deep.</p>
+                        <p>What is your name, investigator?</p>
+                        <form id="character-form" onsubmit="startGame(event)">
+                            <input
+                                type="text"
+                                id="investigator-name"
+                                placeholder="Your name..."
+                                required
+                                maxlength="50"
+                            >
+                            <select id="investigator-archetype">
+                                <option value="scholar">Scholar</option>
+                                <option value="detective">Detective</option>
+                                <option value="occultist">Occultist</option>
+                                <option value="wanderer">Wanderer</option>
+                            </select>
+                            <button type="submit" class="start-btn">Begin Investigation</button>
+                        </form>
+                    </div>
+
+                    <div id="game-screen" class="game-screen hidden">
+                        <!-- Scene Display -->
+                        <div id="scene-display" class="scene-display">
+                            <pre id="scene-content"></pre>
+                        </div>
+
+                        <!-- Narrative Display -->
+                        <div id="narrative-display" class="narrative-display">
+                            <div id="narrative-content" class="narrative-content"></div>
+                        </div>
+
+                        <!-- History Display (hidden by default) -->
+                        <div id="history-display" class="history-display hidden">
+                            <div class="history-header">
+                                <h3>Game History</h3>
+                                <button onclick="showNarrative()" class="close-btn">×</button>
+                            </div>
+                            <div id="history-content" class="history-content"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Input -->
+                <div id="action-input-area" class="panel action-input-area hidden">
+                    <form id="action-form" onsubmit="submitAction(event)">
+                        <input
+                            type="text"
+                            id="action-input"
+                            placeholder="What do you do?"
+                            autocomplete="off"
+                        >
+                        <button type="submit" class="submit-btn">Submit</button>
+                    </form>
+                    <div id="action-status" class="action-status"></div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>🔦 Built with generative AI and Lovecraftian horror | Every playthrough is unique</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

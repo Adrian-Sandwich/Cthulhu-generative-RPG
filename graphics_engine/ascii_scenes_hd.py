@@ -1,453 +1,575 @@
 #!/usr/bin/env python3
 """
-High-Definition ASCII Art Scenes - Production Quality
-Enhanced atmospheric lighthouse scenes with detailed environments
+High-Definition ASCII Art Scenes - MAXIMUM PRODUCTION QUALITY
+Ultra-detailed, cinematic lighthouse scenes with horror atmosphere
 """
-
-from enum import Enum
 
 
 class LighthouseHD:
-    """Production-quality lighthouse scenes with full environment detail"""
+    """Maximum-production-quality lighthouse scenes"""
 
     @staticmethod
     def exterior_storm_hd() -> str:
-        """Lighthouse during violent storm - Enhanced Version"""
+        """Lighthouse during violent storm - Cinema grade detail"""
         return """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║           THE LIGHTHOUSE AT MIDNIGHT - VIOLENT STORM                      ║
-║                    ⚠️  WARNING: DEEP WATERS AHEAD  ⚠️                      ║
+║            ⚡ THE LIGHTHOUSE AT MIDNIGHT - VIOLENT STORM TIDE ⚡           ║
+║         The beam cuts through chaos. Something ANSWERS the light.         ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 
-                                                              ╱─────╲
-                                                             ╱ . . . ╲
-                                                            │ * . * *│ Rain
-                                                             ╲ . * . ╱  streams
-                                                              ╲─────╱   across
-                          ⚡ CRACK! ⚡                       sky
-                              │
-                     ┌────────┴────────┐
-                     │                 │                    . . * . * .
-                     ▼                 ▼                  . * . . * . * .
+                          ╱⚡ LIGHTNING TEARS ╲
+                         ╱  THE PREGNANT SKY  ╲
+         ....***....      .::;|;:::.           ....***....
+        .::;|;:::::...   .;::| |::;.         .::;|;:::::...
+       .;::| |::::;...  .;::| | |::;.       .;::| |::::;...
+       .;::| |::;::.   .;::| | | |::;.     .;::| |::;::.
+        .::|;|:::;..   .;::| | | | |::;.   .::|;|:::;..
+        .::|;|;::.     .;::| | | | | |::;.  .::|;|;::.
+         .:;| |;:      .;::| | | | | | |::;. .:;| |;:
 
-                              ╔═══════╗
-                             ╱  ◯ ◯ ◯  ╲           Heavy winds whip the
-                            │ ◯  ▓▓▓  ◯ │          air. Rain lashes horizon-
-                            │  ◯ ▓▓▓ ◯  │          tally. The beam rotates,
-                            │ ◯ ◯ ▓ ◯ ◯ │          cutting through storm like
-                             ╲  ◯ ◯ ◯  ╱           a blade.
-                              ╚═══════╝
-                               ║  ║  ║
-                    ┌──────────┴──┴──┴──────────┐
-                    │ ╔═════════════════════╗ │
-                    │ ║  BEACON CHAMBER     ║ │
-                    │ ║                     ║ │
-                    │ ║    ◯◯◯◯◯◯◯◯◯◯◯    ║ │
-                    │ ║   ◯ ◯ ◯ ◯ ◯ ◯ ◯   ║ │
-                    │ ║  ◯  LIGHT ROTATES ◯ ║ │
-                    │ ║   ◯ ◯ ◯ ◯ ◯ ◯ ◯   ║ │
-                    │ ║    ◯◯◯◯◯◯◯◯◯◯◯    ║ │
-                    │ ║                     ║ │
-                    │ ╚═════════════════════╝ │
-                    └──────────────────────────┘
-                             │  │  │
-                    ╔────────┴──┴──┴────────╗
-                    │                      │
-                    │    TOWER STRUCTURE   │
-                    │                      │
-                    │   ║  ║     ║  ║     │
-                    │  ◯ ║ ◯║    ║◯ ║ ◯   │  Windows like
-                    │   ║  ║     ║  ║     │  dead eyes watch
-                    │   ║  ║  ◯  ║  ║     │  the sea.
-                    │  ◯ ║ ◯║    ║◯ ║ ◯   │
-                    │   ║  ║     ║  ║     │
-                    │   ║  ║     ║  ║     │
-                    │  ◯ ║ ◯║    ║◯ ║ ◯   │
-                    │   ║  ║     ║  ║     │
-                    │   ║  ║  ◯  ║  ║     │
-                    │   ║  ║     ║  ║     │
-                    │  ◯ ║ ◯║    ║◯ ║ ◯   │
-                    │   ║  ║     ║  ║     │
-                    │   ║  ║     ║  ║     │
-                    │  ◯ ║ ◯║    ║◯ ║ ◯   │
-                    │   ║  ║     ║  ║     │
-                    └────┴──┴─────┴──┴─────┘
-                         │  │ │  │
-          ╔──────────────┴──┴─┴──┴──────────────╗
-          │         BASE & FOUNDATION            │
-          │    ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲  │
-          │   ▲ ROCKS - JAGGED, ANCIENT ▲     │
-          │  ▲▲▲ WEATHERED BY CENTURIES ▲▲▲  │
-          └──────────────────────────────────────┘
-                            │
-    ≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈
-    ≈   ▀▄▄▄▀   ~   ▀▄▄▄▀   ~   ▀▄▄▄▀   ~   ▀▄▄▄▀   ≈  CHURNING
-    ≈ ~ ≈ ~ ≈ ~ ≈ ~ ≈ ~ ≈ ~ ≈ ~ ≈ ~ ≈ ~ ≈ ~ ≈ ~ ≈ ~ ≈  WATERS
-    ≈   ▀▄▄▄▀   ~   ▀▄▄▄▀   ~   ▀▄▄▄▀   ~   ▀▄▄▄▀   ≈
-    ≈ ~ ≈ ~ ≈ ~ ≈ ~ ≈ ~ ≈ ~ ≈ ~ ≈ ~ ≈ ~ ≈ ~ ≈ ~ ≈ ~ ≈
-    ≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈
+                    ┏━━━━━━━━━━━━━━━━━━━━━┓
+                    ┃                     ┃
+                    ┃    ██████████████   ┃
+                    ┃   ██░░░░░░░░░░░██   ┃     🔴 ROTATING BEACON
+                    ┃  ██░░░▓▓▓▓▓▓░░░░██  ┃     SWEEPS & PIERCES
+                    ┃ ██░░░▓▓▓▓▓▓▓▓░░░░██ ┃     THE STORM WALL
+                    ┃ ██░░░▓▓▓▓▓▓▓▓░░░░██ ┃
+                    ┃  ██░░░▓▓▓▓▓▓░░░░██  ┃     ⚡ BLINDING WHITE
+                    ┃   ██░░░░░░░░░░░██   ┃     ⚡ CUTTING DARKNESS
+                    ┃    ██████████████   ┃
+                    ┃                     ┃
+                    ┗━━━━━━━━━━━━━━━━━━━━━┛
+                        ┃ ┃ ┃ ┃ ┃ ┃
+                 ┏━━━━━━┻━╋━╋━╋━╋━┻━━━━━━┓
+                 ┃        │ │ │ │        ┃
+                 ┃ ╔═══════════════════╗ ┃
+                 ┃ ║                   ║ ┃
+                 ┃ ║  BEACON MECHANISM ║ ┃
+                 ┃ ║   FRESNEL LENSES  ║ ┃
+                 ┃ ║                   ║ ┃
+                 ┃ ║  ▓▓▓ ROTATING ▓▓▓  ║ ┃
+                 ┃ ║  @ 5-SEC CYCLE @   ║ ┃
+                 ┃ ║                   ║ ┃
+                 ┃ ╚═══════════════════╝ ┃
+                 ┗━━━━━━━━━━━━━━━━━━━━━━┛
+                        ║ ║ ║ ║
+            ╔───────────╋─╋─╋─╋───────────╗
+            ║           │ │ │ │           ║
+            ║  ╔═══════════════════════╗  ║
+            ║  ║   TOWER SHAFT RISES   ║  ║
+            ║  ║      INTO DARKNESS    ║  ║
+            ║  ║                       ║  ║
+            ║  ║  ║  ║  ║  ║ ║ ║ ║ ║  ║  ║
+            ║  ║ ◉║  ║ ◉║  ║ ║ ║ ║ ║  ║  ║
+            ║  ║  ║  ║  ║  ║ ║ ║ ║ ║  ║  ║    WINDOWS LIKE
+            ║  ║  ║ ◉║  ║ ◉║ ║ ║ ║ ║  ║  ║    DEAD EYES
+            ║  ║  ║  ║  ║  ║ ║ ║ ║ ║  ║  ║
+            ║  ║  ║  ║  ║  ║ ║ ║ ║ ║  ║  ║    STONE MORTAR
+            ║  ║ ◉║  ║ ◉║  ║ ║ ║ ║ ║  ║  ║    CARVED BY
+            ║  ║  ║  ║  ║  ║ ║ ║ ║ ║  ║  ║    CENTURIES OF WIND
+            ║  ║  ║ ◉║  ║ ◉║ ║ ║ ║ ║  ║  ║
+            ║  ║  ║  ║  ║  ║ ║ ║ ║ ║  ║  ║
+            ║  ║  ║  ║  ║  ║ ║ ║ ║ ║  ║  ║    IRON BANDS
+            ║  ║ ◉║  ║ ◉║  ║ ║ ║ ║ ║  ║  ║    HOLD IT TOGETHER
+            ║  ║  ║  ║  ║  ║ ║ ║ ║ ║  ║  ║
+            ║  ║  ║ ◉║  ║ ◉║ ║ ║ ║ ║  ║  ║
+            ║  ║  ║  ║  ║  ║ ║ ║ ║ ║  ║  ║
+            ║  ╚═══════════════════════╝  ║
+            ║                             ║
+            ╠═══════════════════════════════╣
+            ║   ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲   ║
+            ║  ▲▲  JAGGED ROCKS  ▲▲▲▲▲▲▲▲▲ ║
+            ║ ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲║
+            ║▲▲▲▲▲▲▲▲ WEATHERED  ▲▲▲▲▲▲▲▲▲▲║
+            ║▲▲ BY CENTURIES  ▲▲▲▲▲▲▲▲▲▲▲▲▲║
+            ║▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲║
+            ╚═══════════════════════════════╝
+                       ║ ║ ║ ║
 
-    ⚡ THUNDER ECHOES across the coastline. The lighthouse stands alone
-       against the fury—unmoved, eternal, patient. It has witnessed
-       countless storms. But never one quite like this.
+    ~~~::~~::~::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~~::~~
+    ~~::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~
+    ~  ▀█▀  CHURNING WATERS RISE  ▀█▀   SOMETHING EMERGES  ▀█▀  ~
+    ~~::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~
+    ~~~::~~::~::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~~::~~
+    ~~::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~
+    ~::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~~
+    ::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~~::~~::~::~~~::
 
-    🌊 The water rises. Not with waves—with something beneath them.
-       Something that rises in rhythm with the lighthouse beam,
-       as if answering a call only it can hear.
 
-    ⚠️  The beam sweeps toward you. For a moment—just a fraction of a
-        second—you see something else looking back from within the light.
+    💀 THE BEACON ROTATES. In its arc, the water MOVES with it.
+
+    Not waves. Not tide. A synchronization that defies nature.
+
+    The light finds something. Something that has been WAITING for
+    the beam to circle round again. In rhythm. In the dark.
+
+    For two hundred years, the keeper's light has called.
+    And for two hundred years, something has answered.
+
+    🔴 The next rotation brings the light PAST your window.
+
+    You can see it coming. Five seconds until the beam finds south.
+
+    Five seconds until you understand why all the keepers left.
+    Why every keeper DESCENDED instead of fleeing.
+
+    Five seconds—
 """
 
     @staticmethod
     def exterior_clear_hd() -> str:
-        """Clear night with astronomical detail"""
+        """Clear night - astronomical silence and dread"""
         return """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║         THE LIGHTHOUSE - MIDNIGHT VIGIL UNDER DISTANT STARS               ║
+║      🌙 THE LIGHTHOUSE - MIDNIGHT SILENCE BENEATH ETERNAL STARS 🌙        ║
+║   The keeper has abandoned the post. The light rotates alone.             ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 
-                                                    ★ Polaris
-                                                    (North Star)
-    ★                                   ★                      ★
-       ★  Cassiopeia                  ★                    ★
-           constellation      ★                    ★    ★
+              ★ Polaris  ★                                    ★ Capella
+              (True North)                                    (golden giant)
+                  ▲
+                  │           ★ Cassiopeia ★         ★ Vega
+                  │      (five point throne)      (brilliant azure)
+         ★        │                                          ★
+    Alpheratz    │  ★                  ★ Albireo           ★
+      (binary)   │       ★ Deneb (supergiant blue)      ★
+                 │                                      ★
+          ★    ★ │  ★ Andromeda Galaxy - distant island of stars ★
+        ★     ★   │    ★                          ★        ★
+            ★     │        ★                   ★        ★
+                  │
+          ☾ CRESCENT MOON ☾  (waning, 28 days old, 12% illuminated)
+              ╱─────────╲    Earthshine visible on dark limb
+            ╱   ░░░░░░░  ╲   Faint glow of oceans reflecting Earth
+          ╱     ░░░░░░░    ╲  light back through the vacuum
+        ╱        ░░░░░░░      ╲
+       │          ░░░░░░░ ●    │ (terminator line sharp & clear)
+        ╲        ░░░░░░░      ╱
+          ╲     ░░░░░░░    ╱
+            ╲   ░░░░░░░  ╱
+              ╲─────────╱
 
-                          ☾  CRESCENT MOON
-                       (28 days old, waning)
-                      Faint earthshine visible
+
+                           ┏━━━━━━━━━━━━━┓
+                          ┃             ┃
+                          ┃  ██████████  ┃
+                          ┃ ██░░░░░░░░██ ┃
+                          ┃██░░▓▓▓▓▓▓░░██┃     THE BEACON ROTATES ALONE
+                          ┃██░░▓▓▓▓▓▓░░██┃
+                          ┃██░░▓▓▓▓▓▓░░██┃     AT PRECISE 5-SECOND INTERVALS
+                          ┃██░░▓▓▓▓▓▓░░██┃
+                          ┃ ██░░░░░░░░██ ┃     NO KEEPER TO TEND IT
+                          ┃  ██████████  ┃
+                          ┃             ┃
+                          ┗━━━━━━━━━━━━━┛
+                            ┃ ┃ ┃ ┃ ┃ ┃
+                   ┏━━━━━━━━┻━╋━╋━╋━╋━┻━━━━━━━┓
+                   ┃          │ │ │ │         ┃
+                   ┃  ╔════════════════════╗  ┃
+                   ┃  ║                    ║  ┃
+                   ┃  ║  MAINTENANCE LOGS: ║  ┃
+                   ┃  ║                    ║  ┃
+                   ┃  ║  1847: First light ║  ┃
+                   ┃  ║  1902: Still lit   ║  ┃
+                   ┃  ║  1956: Cannot stop ║  ┃
+                   ┃  ║  1993: Keeper gone ║  ┃
+                   ┃  ║  ?????: Still lit  ║  ┃
+                   ┃  ║                    ║  ┃
+                   ┃  ╚════════════════════╝  ┃
+                   ┗━━━━━━━━━━━━━━━━━━━━━━━━━┛
+                          ║ ║ ║ ║ ║ ║
+             ╔════════════╋━╋━╋━╋━╋━╋════════════╗
+             ║            │ │ │ │ │ │            ║
+             ║  ╔═══════════════════════════════╗ ║
+             ║  ║      TOWER SILHOUETTE         ║ ║
+             ║  ║      STANDS ALONE              ║ ║
+             ║  ║                               ║ ║
+             ║  ║  ║  ║  ║  ║ ║ ║ ║ ║ ║ ║ ║  ║ ║
+             ║  ║ ◇║  ║ ◇║  ║ ║ ║ ║ ║ ║ ║ ║  ║ ║
+             ║  ║  ║  ║  ║  ║ ║ ║ ║ ║ ║ ║ ║  ║ ║    WINDOWS
+             ║  ║  ║ ◇║  ║ ◇║ ║ ║ ║ ║ ║ ║ ║  ║ ║    EMPTY
+             ║  ║  ║  ║  ║  ║ ║ ║ ║ ║ ║ ║ ║  ║ ║    DARK
+             ║  ║  ║  ║  ║  ║ ║ ║ ║ ║ ║ ║ ║  ║ ║
+             ║  ║ ◇║  ║ ◇║  ║ ║ ║ ║ ║ ║ ║ ║  ║ ║
+             ║  ║  ║  ║  ║  ║ ║ ║ ║ ║ ║ ║ ║  ║ ║
+             ║  ║  ║ ◇║  ║ ◇║ ║ ║ ║ ║ ║ ║ ║  ║ ║
+             ║  ║  ║  ║  ║  ║ ║ ║ ║ ║ ║ ║ ║  ║ ║
+             ║  ║ ◇║  ║ ◇║  ║ ║ ║ ║ ║ ║ ║ ║  ║ ║
+             ║  ║  ║  ║  ║  ║ ║ ║ ║ ║ ║ ║ ║  ║ ║    STANDING FOR
+             ║  ║  ║ ◇║  ║ ◇║ ║ ║ ║ ║ ║ ║ ║  ║ ║    TWO CENTURIES
+             ║  ║  ║  ║  ║  ║ ║ ║ ║ ║ ║ ║ ║  ║ ║
+             ║  ║ ◇║  ║ ◇║  ║ ║ ║ ║ ║ ║ ║ ║  ║ ║
+             ║  ╚═══════════════════════════════╝  ║
+             ║                                     ║
+             ╠═════════════════════════════════════╣
+             ║  ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲  ║
+             ║ ▲▲▲▲▲  FOUNDATION ON STONE  ▲▲▲▲▲ ║
+             ║▲▲▲▲▲▲▲▲▲ OLDER THAN NAMES ▲▲▲▲▲▲▲║
+             ║▲▲▲▲▲▲ CARVED BY GLACIERS ▲▲▲▲▲▲▲▲║
+             ╚═════════════════════════════════════╝
 
 
-                            ╔═══════╗
-                           ╱         ╲           ★ Vega
-                          │  ◯ ◯ ◯  │              (brilliant white)
-                          │ ◯ ▓▓▓ ◯ │        ★
-                          │ ◯ ▓▓▓ ◯ │   ★        ★
-                           ╲  ◯ ◯  ╱        ★         ★
-                            ╚═══════╝
-                              ║ ║ ║        ★ Deneb (blue giant)
-                    ┌─────────┴─┴─┴─────────┐
-                    │   BEACON ROTATES     │
-                    │   (light frequency:  │
-                    │    5 seconds)        │
-                    └──────────┬───────────┘
-                             ║ ║ ║
-                    ╔────────┴─┴─┴────────╗
-                    │   ◯ ◯ ◯ ◯ ◯ ◯ ◯    │
-                    │  ◯ TOWER DARK ◯   │  The lighthouse
-                    │ ◯ SILHOUETTE   ◯  │  stands like a sentinel
-                    │ ◯  against the    ◯ │  between earth and infinity
-                    │  ◯   ETERNAL      ◯ │
-                    │   ◯ ◯ ◯ ◯ ◯ ◯ ◯    │
-                    │        ║ ║         │
-                    │        ║ ║         │
-                    │   ◯ ║ ◯║ ║◯ ║ ◯   │  Windows dark.
-                    │    ║ ║ ║ ║ ║      │  The keeper's light
-                    │    ║ ║ ║ ║ ║      │  long extinguished.
-                    │   ◯ ║ ◯║ ║◯ ║ ◯   │
-                    │    ║ ║ ║ ║ ║      │
-                    │    ║ ║ ║ ║ ║      │
-                    │   ◯ ║ ◯║ ║◯ ║ ◯   │
-                    │    ║ ║ ║ ║ ║      │
-                    │    ║ ║ ║ ║ ║      │
-                    │   ◯ ║ ◯║ ║◯ ║ ◯   │
-                    │    ║ ║ ║ ║ ║      │
-                    └────┴─┴─┴─┴─┴──────┘
-                         │ │ │ │
-          ╔───────────────┴─┴─┴─┴────────────╗
-          │   ANCIENT STONE - WEATHERED     │
-          │   ▲ ROCKS SMOOTH FROM CENTURIES │
-          │  ▲▲▲ OF WAVES AND WIND ▲▲▲     │
-          │ ▲▲▲▲ TIDE POOLS BELOW ▲▲▲▲    │
-          │  ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲  │
-          └──────────────────────────────────┘
-                          │ │ │
-    ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-    ~   ╱╲  ╱╲     ╱╲  ╱╲     ╱╲  ╱╲     ╱╲  ╱╲     ╱╲  ╱╲     ╱╲  ╱╲   ~
-    ~ ~╱  ╲╱  ╲   ╱  ╲╱  ╲   ╱  ╲╱  ╲   ╱  ╲╱  ╲   ╱  ╲╱  ╲   ╱  ╲╱  ╲~ ~
-    ~      PACIFIC WATERS - COLD, DEEP, ANCIENT
-    ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+    ~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~
+    ~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~
+       PACIFIC WATERS         COLD & DEEP           ANCIENT & WAITING
+    ~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~
+    ~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~
 
-    🌌 The night is clear. Too clear. The stars feel close, pressing down.
-       The lighthouse beam sweeps the water below—brief illuminations
-       revealing nothing but emptiness and foam.
+       TIDAL POOLS AT LIGHTHOUSE BASE
+    ~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~╱╲~~~
+    ~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~╲╱~~~
 
-    ★ In the distance, something moves. Not a ship. Not a whale.
-      Something that rises and falls with the rhythm of the sea itself.
 
-    🌙 The moon watches with its pale, indifferent eye. It has seen
-      what the lighthouse guards. It will not speak.
+    🌌 The silence is profound. Absolute. The kind of silence that
+       has weight. The kind that watches.
 
-    📖 The keeper's log, found three weeks later, reads:
-       "I cannot look anymore. Every night the light shows me
-        what waits below. Tomorrow I close the beacon. Let them
-        come for me if they wish. I will not illuminate the dark."
+    The beacon rotates in perfect darkness, marking time with light.
+    Every five seconds, the beam crosses south. Every five seconds,
+    the waters respond.
+
+    Not with waves. With AWARENESS.
+
+    ★ You notice something the keepers never recorded:
+
+       When the light LEAVES the water, something beneath releases.
+       When the light RETURNS, something emerges to meet it.
+
+       The synchronization is not coincidence.
+       The light does not guide ships to safety.
+
+       The light is calling something HOME.
 """
 
     @staticmethod
     def interior_stairs_hd() -> str:
-        """Detailed spiral staircase descent"""
+        """Spiral staircase descent - psychological horror"""
         return """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║      DESCENDING THE SPIRAL - KEEPER'S PRIVATE STAIRCASE                   ║
-║                 FLOOR -1 → THE DEPTHS BELOW                               ║
+║      🔴 DESCENDING THE SPIRAL - KEEPER'S PRIVATE STAIRCASE 🔴             ║
+║                 EACH STEP TAKES YOU DEEPER INTO DARKNESS                  ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 
-    [GROUND LEVEL]
+    [GROUND LEVEL - KEEPER'S CHAMBER ABOVE]
 
                                   ╔════╗
-                                 ╱ 🕯️ ╲    <- Candle holder
-                                │  ▓▓  │      (holder is empty)
-                                 ╲    ╱
+                                 ╱ 🕯️ ╲    <- Candle (empty holder)
+                                │  ░░  │      LAST KEEPER LEFT IT
+                                 ╲    ╱       WHEN THEY DESCENDED
                                   ╚════╝
                                     │
-                                    │ [breathing sound]
+                        [breathing sound echoes UP]
                                     │
     ┌───────────────────────────────┼───────────────────────────────┐
-    │  [FLOOR -1]                   │   LEVEL 1 DESCENT              │
+    │  [FLOOR -1]  FIRST DESCENT    │   SYMBOLS APPEAR IN STONE      │
     │                          ╔═════════╗                           │
     │                         ╱           ╲                          │
-    │                        │  ◯◯ ◯◯◯◯   │  Carved symbols         │
-    │                        │  ◯ ▓▓▓ ◯   │  (older than stone)     │
+    │  Temperature drops     │  ◯◯ ◯◯◯◯   │  CARVED SYMBOLS         │
+    │  to 55°F              │  ◯ ▓▓▓ ◯   │  (older than stone)     │
     │                        │ ◯▓▓▓▓▓▓▓◯  │                         │
-    │                         ╲ ◯ ◯ ◯ ◯ ╱   Air grows cold          │
-    │                          ╚═════════╝                           │
-    │                             │ │ │                             │
+    │  Sound of steps        ╲ ◯ ◯ ◯ ◯ ╱   SPIRAL PATTERN          │
+    │  multiplying by        ╚═════════╝   REPEATING DOWNWARD      │
+    │  the spiral                                                    │
     │                             │ │ │    [echo of steps]          │
     │                             │ │ │                             │
     └─────────────────────────────┼─┼─┼─────────────────────────────┘
                                   │ │ │
     ┌─────────────────────────────┼─┼─┼─────────────────────────────┐
-    │  [FLOOR -2]                 │ │ │   LEVEL 2 DESCENT           │
+    │  [FLOOR -2]  SECOND DESCENT │ │ │   WALLS GLISTEN WITH MOISTURE│
     │                        ╔═════════════╗                         │
-    │                       ╱               ╲                        │
-    │                      │  ◯◯◯◯◯◯◯◯◯◯◯  │  Stone glistens        │
-    │                      │ ◯▓▓▓▓▓▓▓▓▓▓◯  │  with moisture         │
-    │                      │ ◯▓  DEEPER ▓◯  │                        │
-    │                      │ ◯▓▓▓▓▓▓▓▓▓▓◯  │  Sound from below:     │
-    │                       ╲ ◯◯◯◯◯◯◯◯◯◯  ╱   A low resonance      │
-    │                        ╚═════════════╝   Like a ship's horn     │
+    │  Temperature: 45°F    ╱               ╲                        │
+    │  Your breath now      │  ◯◯◯◯◯◯◯◯◯◯◯  │  Stone glistens        │
+    │  visible              │ ◯▓▓▓▓▓▓▓▓▓▓◯  │  with moisture         │
+    │                       │ ◯▓  DEEPER ▓◯  │                        │
+    │  Sound from BELOW:    │ ◯▓▓▓▓▓▓▓▓▓▓◯  │  A LOW RESONANCE       │
+    │  a low resonance      ╲ ◯◯◯◯◯◯◯◯◯◯  ╱   Like distant horn     │
+    │  Like a ship's horn   ╚═════════════╝    Like a **call**        │
     │                           │ │ │ │                             │
-    │                           │ │ │ │    [breathing gets louder]  │
-    │                           │ │ │ │                             │
+    │                           │ │ │ │    [breathing gets AUDIBLE] │
+    │                           │ │ │ │    [not your breathing]     │
     └───────────────────────────┼─┼─┼─┼─────────────────────────────┘
                                 │ │ │ │
     ┌───────────────────────────┼─┼─┼─┼─────────────────────────────┐
-    │  [FLOOR -3]               │ │ │ │   LEVEL 3 DESCENT           │
+    │  [FLOOR -3]  FINAL DESCENT │ │ │ │   WALLS PULSE WITH RHYTHM    │
     │                     ╔═════════════════╗                        │
-    │                    ╱                   ╲                       │
-    │                   │   ◯◯◯◯◯◯◯◯◯◯◯◯◯◯   │ Walls PULSE             │
-    │                   │  ◯▓▓▓▓▓▓▓▓▓▓▓▓▓▓◯  │ with rhythm             │
-    │                   │  ◯▓  [PRESENCE] ▓◯ │ Not stone. Not           │
-    │                   │  ◯▓  BELOW US  ▓◯  │ water. Something else.  │
-    │                   │  ◯▓▓▓▓▓▓▓▓▓▓▓▓▓▓◯  │                         │
-    │                    ╲   ◯◯◯◯◯◯◯◯◯◯◯◯◯   ╱                        │
-    │                     ╚═════════════════╝   ⚠️  DO NOT PROCEED     │
-    │                         │ │ │ │ │         FURTHER              │
-    │                         │ │ │ │ │                             │
-    │                         ▼ ▼ ▼ ▼ ▼                             │
-    └─────────────────────────────────────────────────────────────────┘
+    │  Temperature: 35°F  ╱                   ╲                       │
+    │  You SHIVER         │   ◯◯◯◯◯◯◯◯◯◯◯◯◯◯   │ Walls PULSE         │
+    │                     │  ◯▓▓▓▓▓▓▓▓▓▓▓▓▓▓◯  │ with rhythm          │
+    │  BREATHING IS NOT   │  ◯▓  [PRESENCE] ▓◯ │ Not stone. Not       │
+    │  YOUR OWN           │  ◯▓  BELOW US  ▓◯  │ water. Something     │
+    │                     │  ◯▓▓▓▓▓▓▓▓▓▓▓▓▓▓◯  │ ELSE.                │
+    │  The rhythm matches │   ╲ ◯◯◯◯◯◯◯◯◯◯◯◯  ╱                      │
+    │  the beacon above   │    ╚═════════════════╝   ⚠️  DO NOT GO      │
+    │  (5-second cycle)   │        │ │ │ │ │         FURTHER           │
+    │                     │        ▼ ▼ ▼ ▼ ▼                        │
+    │  THE STAIRS         └─────────────────────────────────────────────┘
+    │  CONTINUE DOWN
+    │  INTO ABSOLUTE
+    │  BLACKNESS
+    └─────────────────────
 
-                        [DARKNESS BELOW]
+                        [WATER SOUNDS FROM BELOW]
+                        [SOMETHING SHIFTS IN DARKNESS]
+                        [THE BREATHING BECOMES RHYTHMIC]
+                        [YOUR HEARTBEAT SYNCHRONIZES]
+                        [5 SECONDS - 5 SECONDS - 5 SECONDS]
 
-                [water sounds]
-                [something shifts]
-                [breathing synchronized with yours]
+    ⚠️  Your flashlight beam cuts into the darkness below.
+        In the water at the tower's foundation, you see something.
 
-    Your candle flickers. The temperature drops 10 degrees.
-    The stairs continue downward into black beyond measurement.
+    ⚠️  It sees the light.
 
-    The keeper's note you found upstairs: "I descended once.
-    I will not do so again. It called my name in a voice that
-    remembers when the lighthouse was built. Remembers when
-    this land was covered in water. Remembers when it ruled here."
+    ⚠️  It rises in rhythm with the beacon above.
+
+    The keeper's journal entry (dated 1993):
+        "I understand now. The stairs do not lead DOWN.
+         They lead INWARD. Into the space where the light
+         reaches and something WAITS.
+
+         I descend tonight. Not to escape.
+         To finally meet what calls."
+
+    The last entry was never finished.
 """
 
     @staticmethod
     def interior_library_hd() -> str:
-        """Detailed keeper's library with forbidden knowledge"""
+        """Forbidden library - knowledge as horror"""
         return """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║        THE KEEPER'S LIBRARY - CENTURIES OF OBSESSIVE STUDY                ║
-║                FORBIDDEN KNOWLEDGE CATALOGUED & BOUND                     ║
+║       📚 THE LIGHTHOUSE KEEPER'S LIBRARY - FORBIDDEN KNOWLEDGE 📚          ║
+║        Two centuries of research into something they should have feared   ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 
-    ╔════════╗  ╔════════╗  ╔════════╗  ╔════════╗
-    ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║
-    ║▓ ▓ ▓ ▓║  ║░ ░ ░ ░║  ║▓ ▓ ▓ ▓║  ║░ ░ ░ ░║ <- PHILOSOPHY
-    ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║    (Recent works)
-    ║▓ ▓ ▓ ▓║  ║░ ░ ░ ░║  ║▓ ▓ ▓ ▓║  ║░ ░ ░ ░║
-    ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║
-    ║▓ ▓ ▓ ▓║  ║░ ░ ░ ░║  ║▓ ▓ ▓ ▓║  ║░ ░ ░ ░║
-    ╚════════╝  ╚════════╝  ╚════════╝  ╚════════╝
+    ┌────────────────────────────────────────────────────────────────────┐
+    │                    MAIN LIBRARY CHAMBER                             │
+    │                                                                     │
+    │  ╔════════════════════════════════════════════════════════════╗   │
+    │  ║                                                            ║   │
+    │  ║  SECTION 1: MARITIME NAVIGATION (organized 1847-1890)     ║   │
+    │  ║  ──────────────────────────────────────────────────────   ║   │
+    │  ║  📖 Nautical Charts (17 volumes)                          ║   │
+    │  ║  📖 Light Beacon Frequencies & Mechanisms                 ║   │
+    │  ║  📖 Keeper's Maintenance Procedures (handwritten)         ║   │
+    │  ║                                                            ║   │
+    │  ╚════════════════════════════════════════════════════════════╝   │
+    │                                                                     │
+    │  ╔════════════════════════════════════════════════════════════╗   │
+    │  ║                                                            ║   │
+    │  ║  SECTION 2: TIDE & ASTRONOMICAL CALCULATIONS              ║   │
+    │  ║  ──────────────────────────────────────────────────────   ║   │
+    │  ║  📖 Lunar Phase Tables (1800-2000)                        ║   │
+    │  ║  📖 Ocean Current Studies (Pacific Northwest)             ║   │
+    │  ║  📖 Synchronized Emergence Data (1902-1950s)  ← KEY      ║   │
+    │  ║                                                            ║   │
+    │  ║  [Note written on margin of last book:]                  ║   │
+    │  ║  "The pattern repeats exactly. 5 seconds. Always 5.       ║   │
+    │  ║   The light rotates at 5-second intervals. The thing      ║   │
+    │  ║   beneath RISES on this same 5-second cycle.              ║   │
+    │  ║   This is not coincidence. This is synchronization."      ║   │
+    │  ║                                                            ║   │
+    │  ╚════════════════════════════════════════════════════════════╝   │
+    │                                                                     │
+    │  ╔════════════════════════════════════════════════════════════╗   │
+    │  ║  SECTION 3: [LOCKED IRON GRATING - FORBIDDEN TEXTS]       ║   │
+    │  ║  ──────────────────────────────────────────────────────   ║   │
+    │  ║  🔒 Behind grating (key found near keeper's bed):         ║   │
+    │  ║  📖 "On Things That Dwell In Deep Waters" (1823)          ║   │
+    │  ║  📖 "The Innsmouth Coastal Ritual" (water-stained)        ║   │
+    │  ║  📖 "Architectural Alignment: Beacon to the Deep"         ║   │
+    │  ║  📖 "The Call Frequency" (in keeper's handwriting)        ║   │
+    │  ║  📖 "How to Respond" (final pages torn out)               ║   │
+    │  ║                                                            ║   │
+    │  ║  All books marked with the same handwritten symbol:      ║   │
+    │  ║  Five interlocking circles in a spiral pattern.           ║   │
+    │  ║  (Same pattern carved into the spiral staircase)         ║   │
+    │  ║                                                            ║   │
+    │  ╚════════════════════════════════════════════════════════════╝   │
+    │                                                                     │
+    │  ╔════════════════════════════════════════════════════════════╗   │
+    │  ║  SECTION 4: PERSONAL RESEARCH (ABANDONED 1993)            ║   │
+    │  ║  ──────────────────────────────────────────────────────   ║   │
+    │  ║  📖 Loose pages scattered on desk:                        ║   │
+    │  ║      "It's not calling to ships.                          ║   │
+    │  ║       The light is calling HOME."                         ║   │
+    │  ║                                                            ║   │
+    │  ║      "Every keeper who descended came back changed.       ║   │
+    │  ║       Changed in ways that made them understand."         ║   │
+    │  ║                                                            ║   │
+    │  ║      "I will descend. I am ready to understand."          ║   │
+    │  ║                                                            ║   │
+    │  ║  [Date: November 17, 1993]                                ║   │
+    │  ║  [The keeper was never seen again]                        ║   │
+    │  ║  [The light continued to rotate]                          ║   │
+    │  ║  [It rotates still]                                       ║   │
+    │  ║                                                            ║   │
+    │  ╚════════════════════════════════════════════════════════════╝   │
+    │                                                                     │
+    │  ╔════════════════════════════════════════════════════════════╗   │
+    │  ║  SECTION 5: CEREMONIAL OBJECTS                            ║   │
+    │  ║  ──────────────────────────────────────────────────────   ║   │
+    │  ║  🕯️  Oil lamps arranged in 5-circle pattern (unlit)      ║   │
+    │  ║  🕯️  Robes of blue-grey linen, smelling of salt & brine  ║   │
+    │  ║  🕯️  Bone objects - carved with same spiral symbol       ║   │
+    │  ║  🕯️  A journal with entries in different hands:          ║   │
+    │  ║      Each keeper adding notes. Each coming to the        ║   │
+    │  ║      same conclusion. Each descending.                    ║   │
+    │  ║      Each understanding what the light REALLY is.        ║   │
+    │  ║                                                            ║   │
+    │  ╚════════════════════════════════════════════════════════════╝   │
+    │                                                                     │
+    └────────────────────────────────────────────────────────────────────┘
 
-    ╔════════╗  ╔════════╗  ╔════════╗  ╔════════╗
-    ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║
-    ║▓ ▓ ▓ ▓║  ║░ ░ ░ ░║  ║█ █ █ █║  ║▒ ▒ ▒ ▒║ <- MARITIME RECORDS
-    ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║    (Ship manifests)
-    ║▓ ▓ ▓ ▓║  ║░ ░ ░ ░║  ║█ █ █ █║  ║▒ ▒ ▒ ▒║
-    ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║
-    ║▓ ▓ ▓ ▓║  ║░ ░ ░ ░║  ║█ █ █ █║  ║▒ ▒ ▒ ▒║
-    ╚════════╝  ╚════════╝  ╚════════╝  ╚════════╝
 
-    ╔════════╗  ╔════════╗  ╔════════╗  ╔════════╗
-    ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║
-    ║▓ ▓ ▓ ▓║  ║░ ░ ░ ░║  ║█ █ █ █║  ║▒ ▒ ▒ ▒║ <- ASTRONOMICAL
-    ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║    (Star charts)
-    ║▓ ▓ ▓ ▓║  ║░ ░ ░ ░║  ║█ █ █ █║  ║▒ ▒ ▒ ▒║
-    ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║
-    ║▓ ▓ ▓ ▓║  ║░ ░ ░ ░║  ║█ █ █ █║  ║▒ ▒ ▒ ▒║
-    ╚════════╝  ╚════════╝  ╚════════╝  ╚════════╝
+    🔴 The books tell a story across 200 years:
 
-    ╔════════╗  ╔════════╗  ╔════════╗  ╔════════╗
-    ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║
-    ║█ █ █ █║  ║▒ ▒ ▒ ▒║  ║▓ ▓ ▓ ▓║  ║░ ░ ░ ░║ <- OCCULT TEXTS
-    ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║    (Binding: leather?)
-    ║█ █ █ █║  ║▒ ▒ ▒ ▒║  ║▓ ▓ ▓ ▓║  ║░ ░ ░ ░║
-    ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║  ║ ═ ═ ═ ║
-    ║█ █ █ █║  ║▒ ▒ ▒ ▒║  ║▓ ▓ ▓ ▓║  ║░ ░ ░ ░║
-    ╚════════╝  ╚════════╝  ╚════════╝  ╚════════╝
+    Each keeper independently discovers that the lighthouse is not
+    a warning to the deep. It is an INVITATION FROM the deep.
 
-                              [BACK WALL]
+    Each keeper sees the 5-second synchronization.
+    Each keeper reads what came before.
+    Each keeper DESCENDS to understand.
+    Each keeper is transformed by what they learn.
 
-    ╔════════════════════════════════════════════════════╗
-    ║ ████████████████████████████████████████████████ ║
-    ║ ████  [LOCKED IRON GRATING - DO NOT ENTER]  ████ ║
-    ║ ████████████████████████████████████████████████ ║
-    ║                                                    ║
-    ║   Behind the bars, three shelves:                ║
-    ║   • Top shelf: Books written in REVERSED script   ║
-    ║   • Middle shelf: Journals in unknown cipher      ║
-    ║   • Bottom shelf: A single tome bound in HIDE    ║
-    ║                                                    ║
-    ║   All pages are damp. Smell: salt + decay.       ║
-    ║   Weight: They seem to shift position.            ║
-    ║                                                    ║
-    ║  ⚠️  Last entry in locked section:               ║
-    ║   "It came in 1847. A pattern began. Every 73    ║
-    ║    years. The beacon calls. It answers. I am     ║
-    ║    merely recording what the lighthouse sees.    ║
-    ║    What the lighthouse KNOWS.                    ║
-    ║    It will come again. In 1920. I will not be    ║
-    ║    alive. But whoever keeps the light will see.  ║
-    ║    And they too, will write. As I have written.  ║
-    ║    The lighthouse remembers. The light demands." ║
-    ║                                                    ║
-    ║    Next entry: 73 years later, 1920...           ║
-    ║    "IT HAS RETURNED."                            ║
-    ║                                                    ║
-    ║    Next entry: 1993...                           ║
-    ║    [LAST ENTRY - HALF-WRITTEN - INK TRAILS OFF]║
-    ╚════════════════════════════════════════════════════╝
+    The light never stops rotating.
+    The water never stops answering.
+    The beacon never stops calling.
 
-    Dust sheets cover the desk. The chair is pushed back as if
-    abandoned mid-sentence. Tea in the cup. Still warm.
+    And now you understand why you found the library.
+    Why the books were left open.
+    Why the forbidden section key was left in plain sight.
 
-    Someone was here recently. Recently enough to maintain the light.
-    Recently enough to continue adding to the logs.
+    The lighthouse does not need a keeper anymore.
+    It is waiting for something else.
 
-    But the room smells empty. The desk is covered in papers, but—
-    they're all the same date. November 1993. Repeating.
+    Someone else.
 
-    The same observations. The same measurements. The same descent.
-
-    You check the current date on your pocket watch.
-
-    November 17, 1993.
-
-    Three weeks ago.
+    Something that answers the light.
 """
 
     @staticmethod
     def beacon_room_hd() -> str:
-        """The beacon chamber - production enhanced"""
+        """Top of lighthouse - the source of the call"""
         return """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║           THE BEACON CHAMBER - THE LIGHT THAT WATCHES                    ║
-║         ⚡ WARNING: LOOKING DIRECTLY AT BEAM MAY CAUSE DISORIENTATION ⚡  ║
+║         🔴 THE BEACON CHAMBER - WHERE THE CALLING HAPPENS 🔴              ║
+║        160 feet above the water. 200 years of mechanical horror.          ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 
-                                ━━━━━━━━━━━━━━━━━
-                              ║                    ║
-                            ║    ✦ ✦ ✦ ✦ ✦      ║      The light itself seems
-                          ║    ✦   ◯   ◯   ✦    ║      too bright. Geometrically
-                         ║    ✦ ◯ ◯ ◯ ◯ ◯ ◯ ✦   ║      perfect. Almost... aware
-                        ║     ✦  ◯ ◯ ◯ ◯  ✦    ║
-                        ║      ✦   ◯ ◯   ✦     ║      Each rotation marks time
-                        ║       ✦ ✦ ✦ ✦ ✦      ║      like a heartbeat.
-                        ║        ━━━━━━━━       ║
-                         ║        ║ ║ ║ ║        ║      5 seconds between sweeps.
-                          ║       ║ ║ ║ ║       ║      Never varies.
-                            ║     ║ ║ ║ ║      ║      Not once in 200 years.
-                              ║   ║ ║ ║ ║     ║
-                                ┏━━━━━━━━━━━━━┓
-                                ┃    OPTICS   ┃
-                                ┃  CHAMBER    ┃
-                    ╔═══════════╩━━━━━━━━━━━━━╩═══════════╗
-                    ║ ┌───────────────────────────────────┐ ║
-                    ║ │     ═══╔════════╗═══             │ ║
-                    ║ │    ║ LENS SYSTEM │              │ ║  Fresnel lenses
-                    ║ │    ║  (PERFECT)  ║              │ ║  imported from France
-                    ║ │     ═══╚════════╝═══             │ ║  1793
-                    ║ │                                   │ ║
-                    ║ │  [ LAMP MECHANISM ]              │ ║  Fuel: 100-year supply
-                    ║ │  ✦ Wick rotates on axis ✦       │ ║  Never replaced
-                    ║ │  ✦ Flame: PERFECTLY CENTERED ✦  │ ║  Never runs low
-                    ║ │  ✦ Burn rate: CONSTANT ✦        │ ║  Never changes
-                    ║ │                                   │ ║
-                    ║ │  Temperature: 1200°C             │ ║
-                    ║ │  Light output: 500,000 candelas │ ║
-                    ║ │  Beam distance: 25 nautical miles│ ║
-                    ║ │                                   │ ║
-                    ║ │  MAINTENANCE LOG:                │ ║
-                    ║ │  Entry 1797: "Lit today"         │ ║
-                    ║ │  Entry 1850: "Still lit"         │ ║
-                    ║ │  Entry 1920: "Cannot be turned"  │ ║
-                    ║ │  Entry 1950: "Will not turn off" │ ║
-                    ║ │  Entry 1993: "HAS NOT DIMMED"    │ ║
-                    ║ │                                   │ ║
-                    ║ └───────────────────────────────────┘ ║
-                    ╚═════════════════════════════════════════╝
-                                    ║ ║ ║ ║
-                      ┌─────────────┼─┼─┼─┼─────────────┐
-                      │             │ │ │ │             │
-                      │  [MIRRORS]  │ │ │ │  [MIRRORS]  │
-                      │  (rotating) │ │ │ │  (rotating) │
-                      │             ▼ ▼ ▼ ▼             │
-                      │                                  │
-                      │         [OBSERVATION]           │
-                      │         WINDOWS (8)             │
-                      │         360° VIEW              │
-                      │                                  │
-                      │    When you look south,        │
-                      │    toward open water:          │
-                      │    The light beam shows you    │
-                      │    something RISING with it.   │
-                      │                                  │
-                      │    Same rise. Same frequency.   │
-                      │    1 beam rotation = 5 sec      │
-                      │    1 emergence = 5 sec          │
-                      │                                  │
-                      │    It's in synchronization.     │
-                      │    It KNOWS when the beam      │
-                      │    will find it.                │
-                      │                                  │
-                      │    And it WAITS for the light.  │
-                      │                                  │
-                      └──────────────────────────────────┘
-
-    🔦 You should go. The beam will rotate past the south window
-       in 2 seconds. If you look toward the water when it does...
-
-       ...you'll see what the lighthouse sees.
-
-       And you'll understand why the keeper descended into darkness.
-       Why they never came back.
-
-       Why every keeper eventually understands that the light
-       isn't FOR the ships below.
-
-       The light is CALLING.
+    ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+    ┃                                                              ┃
+    ┃              THE BEACON CHAMBER - WORKING INTERIOR            ┃
+    ┃                                                              ┃
+    ┃   ╔════════════════════════════════════════════════════╗    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║  ROTATING BEACON MECHANISM (FRESNEL LENSES)       ║    ┃
+    ┃   ║  ─────────────────────────────────────────────    ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║         ┌─────────────────────────┐               ║    ┃
+    ┃   ║         │   LIGHT SOURCE          │               ║    ┃
+    ┃   ║         │  (Originally gas, now   │               ║    ┃
+    ┃   ║         │   electric since 1956)  │               ║    ┃
+    ┃   ║         │                         │               ║    ┃
+    ┃   ║         └────────┬────────────────┘               ║    ┃
+    ┃   ║                  │                                ║    ┃
+    ┃   ║         ╔════════╩═══════╗                        ║    ┃
+    ┃   ║         ║ FRESNEL LENS   ║  (Magnifies & focuses║    ┃
+    ┃   ║         ║ ASSEMBLY       ║   light into beam)   ║    ┃
+    ┃   ║         ║                ║                       ║    ┃
+    ┃   ║         ║   ╔═════════╗  ║                       ║    ┃
+    ┃   ║         ║   ║▓▓▓▓▓▓▓▓▓║  ║                       ║    ┃
+    ┃   ║         ║   ║▓ LENS ▓║  ║  → BEAM STRENGTH:    ║    ┃
+    ┃   ║         ║   ║▓▓▓▓▓▓▓▓▓║  ║    **DANGEROUS**    ║    ┃
+    ┃   ║         ║   ╚═════════╝  ║    Looking directly  ║    ┃
+    ┃   ║         ║                ║    into beam will    ║    ┃
+    ┃   ║         ║   ROTATION     ║    cause immediate   ║    ┃
+    ┃   ║         ║   MECHANISM    ║    retinal damage    ║    ┃
+    ┃   ║         ║   (clockwork   ║                       ║    ┃
+    ┃   ║         ║   geared)      ║                       ║    ┃
+    ┃   ║         ║                ║                       ║    ┃
+    ┃   ║         └────────────────┘                       ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║  ROTATION PERIOD: 5.000 seconds (measured 1847)  ║    ┃
+    ┃   ║  CURRENT STATUS: Still rotating                   ║    ┃
+    ┃   ║  POWER: Original clockwork upgraded to electric   ║    ┃
+    ┃   ║  CONTROL: *CANNOT BE STOPPED*                     ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ╚════════════════════════════════════════════════════╝    ┃
+    ┃                                                              ┃
+    ┃   ╔════════════════════════════════════════════════════╗    ┃
+    ┃   ║  MAINTENANCE LOG ACCESS PANEL                      ║    ┃
+    ┃   ║  ──────────────────────────────────────────────    ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║  1847: "Beacon lit for first time. Rotation       ║    ┃
+    ┃   ║          works perfectly. 5-second precision."    ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║  1902: "Noticed strange correlations. When         ║    ┃
+    ┃   ║         beam passes south, water below moves.      ║    ┃
+    ┃   ║         Not wave action. Something else."          ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║  1920: "Attempted to stop the beacon. Clockwork   ║    ┃
+    ┃   ║         rotates despite all resistance. The       ║    ┃
+    ┃   ║         rotation is AUTOMATIC."                   ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║  1956: "Modernized to electric. Attempted to      ║    ┃
+    ┃   ║         turn off. Cannot disable. The mechanism   ║    ┃
+    ┃   ║         operates of its own will. Impossible to   ║    ┃
+    ┃   ║         understand."                              ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║  1993: "I understand now. The beacon does not     ║    ┃
+    ┃   ║         illuminate. It CALLS. Each rotation is a  ║    ┃
+    ┃   ║         pulse. A rhythm. An invitation. The light ║    ┃
+    ┃   ║         found its purpose when water first        ║    ┃
+    ┃   ║         answered. I descend willingly now."       ║    ┃
+    ┃   ║         [Entry ends. Keeper signature: blank]     ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║  ????: "The beacon still rotates. The light       ║    ┃
+    ┃   ║         still calls. The water still answers.     ║    ┃
+    ┃   ║         No one tends it anymore. No one needs to. ║    ┃
+    ┃   ║         It serves its true purpose now. We        ║    ┃
+    ┃   ║         understand. We have ALWAYS understood."   ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ╚════════════════════════════════════════════════════╝    ┃
+    ┃                                                              ┃
+    ┃   ╔════════════════════════════════════════════════════╗    ┃
+    ┃   ║  OBSERVATION DECK (8 WINDOWS - 360° VIEW)         ║    ┃
+    ┃   ║  ──────────────────────────────────────────────    ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║  Eight brass-rimmed windows looking outward to    ║    ┃
+    ┃   ║  every compass direction. You stand in the        ║    ┃
+    ┃   ║  center. The rotating beacon passes you 12        ║    ┃
+    ┃   ║  times per minute.                                ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║  When you look SOUTH (toward the deep ocean):    ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║  The beam sweeps past. The water RESPONDS.        ║    ┃
+    ┃   ║  Something rises with the light.                  ║    ┃
+    ┃   ║  Something that has been WAITING.                 ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║  For 200 years, the beacon has been calling.      ║    ┃
+    ┃   ║  For 200 years, something has been LISTENING.     ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║  Now it RISES in rhythm with the light.           ║    ┃
+    ┃   ║  5 seconds per rotation.                          ║    ┃
+    ┃   ║  5 seconds per emergence.                         ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║  The beam will sweep south again in:              ║    ┃
+    ┃   ║  [approximately 3.7 seconds]                       ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║  If you look when it does, you will see it.       ║    ┃
+    ┃   ║  You will see what the light is really for.       ║    ┃
+    ┃   ║  You will understand what calls beneath.          ║    ┃
+    ┃   ║  You will realize the keepers didn't flee.        ║    ┃
+    ┃   ║  They descended to welcome it home.               ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║  The beam is coming.                              ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║  2... 1...                                        ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ║  🔴 LOOK SOUTH. BEAR WITNESS TO THE CALLING.      ║    ┃
+    ┃   ║                                                    ║    ┃
+    ┃   ╚════════════════════════════════════════════════════╝    ┃
+    ┃                                                              ┃
+    ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 """
 
 
@@ -462,14 +584,19 @@ LIGHTHOUSE_HD_SCENES = {
 
 
 def get_scene_hd(scene_key: str) -> str:
-    """Get a high-definition scene"""
+    """Get a high-definition scene by key"""
     if scene_key in LIGHTHOUSE_HD_SCENES:
         return LIGHTHOUSE_HD_SCENES[scene_key]()
     return "Scene not found."
 
 
+def list_scenes_hd() -> dict:
+    """List all available HD scenes"""
+    return {key: key for key in LIGHTHOUSE_HD_SCENES.keys()}
+
+
 if __name__ == "__main__":
-    print("\n🏮 LIGHTHOUSE ASCII SCENES - HD EDITION\n")
+    print("\n🏮 LIGHTHOUSE ASCII SCENES - MAXIMUM PRODUCTION\n")
     for key in LIGHTHOUSE_HD_SCENES:
         print(get_scene_hd(key))
         print("\n" + "="*80 + "\n")

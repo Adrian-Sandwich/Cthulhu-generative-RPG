@@ -4,32 +4,24 @@ import './App.css'
 export default function App() {
   const [prompt, setPrompt] = useState('')
   const [width, setWidth] = useState(80)
-  const [charset, setCharset] = useState('dark')
   const [style, setStyle] = useState('lovecraftian')
-  const [enhance, setEnhance] = useState(false)
 
   const [asciiArt, setAsciiArt] = useState('')
-  const [imageBase64, setImageBase64] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [charsets, setCharsets] = useState([])
   const [styles, setStyles] = useState([])
 
   const asciiRef = useRef(null)
 
-  // Load available charsets and styles on mount
+  // Load available styles on mount
   useEffect(() => {
-    Promise.all([
-      fetch('/api/charsets').then(r => r.json()),
-      fetch('/api/styles').then(r => r.json()),
-    ]).then(([charsetsData, stylesData]) => {
-      setCharsets(charsetsData.charsets || [])
-      setStyles(stylesData.styles || [])
-    }).catch(err => {
-      console.error('Failed to load config:', err)
-      setCharsets(['dark', 'detailed', 'blocks', 'standard', 'artistic'])
-      setStyles(['lovecraftian', 'standard'])
-    })
+    fetch('/api/styles')
+      .then(r => r.json())
+      .then(data => setStyles(data.styles || []))
+      .catch(err => {
+        console.error('Failed to load styles:', err)
+        setStyles(['lovecraftian', 'cosmic-horror', 'nature', 'urban', 'fantasy', 'dark-fantasy'])
+      })
   }, [])
 
   const handleGenerate = async (e) => {
@@ -43,7 +35,6 @@ export default function App() {
     setLoading(true)
     setError('')
     setAsciiArt('')
-    setImageBase64('')
 
     try {
       const response = await fetch('/api/generate', {
@@ -54,9 +45,7 @@ export default function App() {
         body: JSON.stringify({
           prompt: prompt.trim(),
           width: parseInt(width),
-          charset,
           style,
-          enhance,
         }),
       })
 
@@ -68,7 +57,6 @@ export default function App() {
       }
 
       setAsciiArt(data.ascii_art)
-      setImageBase64(data.image_base64)
 
       // Scroll to results
       setTimeout(() => {
@@ -96,7 +84,7 @@ export default function App() {
     <div className="app">
       <header className="header">
         <h1>🎨 ASCII Art Generator</h1>
-        <p className="subtitle">Lovecraftian Horror Edition</p>
+        <p className="subtitle">Lovecraftian Horror Edition • Powered by Ollama</p>
       </header>
 
       <main className="main">
@@ -112,7 +100,7 @@ export default function App() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="Ej: A dark lighthouse on a rocky coast with fog and mysterious symbols on the ground..."
-                rows={4}
+                rows={5}
                 disabled={loading}
               />
             </div>
@@ -134,22 +122,6 @@ export default function App() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="charset">Charset:</label>
-                <select
-                  id="charset"
-                  value={charset}
-                  onChange={(e) => setCharset(e.target.value)}
-                  disabled={loading}
-                >
-                  {charsets.map(cs => (
-                    <option key={cs} value={cs}>{cs}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
                 <label htmlFor="style">Estilo:</label>
                 <select
                   id="style"
@@ -161,18 +133,6 @@ export default function App() {
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
-              </div>
-
-              <div className="form-group checkbox">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={enhance}
-                    onChange={(e) => setEnhance(e.target.checked)}
-                    disabled={loading}
-                  />
-                  Mejorar con bordes
-                </label>
               </div>
             </div>
 
@@ -190,28 +150,18 @@ export default function App() {
 
         {/* Right Panel: Results */}
         <div className="panel results-panel" ref={asciiRef}>
-          <h2>Resultados</h2>
+          <h2>Resultado</h2>
 
           {asciiArt && (
-            <>
-              {imageBase64 && (
-                <div className="image-preview">
-                  <h3>Imagen generada:</h3>
-                  <img src={imageBase64} alt="Generated scene" />
-                </div>
-              )}
-
-              <div className="ascii-container">
-                <h3>ASCII Art:</h3>
-                <pre className="ascii-art">{asciiArt}</pre>
-                <button
-                  className="btn btn-secondary"
-                  onClick={handleDownloadASCII}
-                >
-                  💾 Descargar ASCII
-                </button>
-              </div>
-            </>
+            <div className="ascii-container">
+              <pre className="ascii-art">{asciiArt}</pre>
+              <button
+                className="btn btn-secondary"
+                onClick={handleDownloadASCII}
+              >
+                💾 Descargar ASCII
+              </button>
+            </div>
           )}
 
           {!asciiArt && !loading && (
@@ -223,15 +173,15 @@ export default function App() {
           {loading && (
             <div className="loading">
               <div className="spinner"></div>
-              <p>Generando imagen y convirtiendo a ASCII...</p>
-              <p className="loading-hint">(Esto puede tomar 30-60 segundos)</p>
+              <p>Generando ASCII art con Ollama...</p>
+              <p className="loading-hint">(esto puede tomar 10-30 segundos)</p>
             </div>
           )}
         </div>
       </main>
 
       <footer className="footer">
-        <p>🖤 ASCII Art Generator • Powered by Stable Diffusion XL + HuggingFace</p>
+        <p>🖤 ASCII Art Generator • Powered by Ollama LLM</p>
       </footer>
     </div>
   )

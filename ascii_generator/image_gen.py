@@ -5,7 +5,8 @@ from io import BytesIO
 from PIL import Image
 
 HF_TOKEN = os.getenv("HF_TOKEN")
-HF_API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
+# Using Lykon/DreamShaper-8-LCM - more reliable for HF free tier
+HF_API_URL = "https://api-inference.huggingface.co/models/Lykon/DreamShaper-8-LCM"
 
 class ImageGenerationError(Exception):
     """Error during image generation"""

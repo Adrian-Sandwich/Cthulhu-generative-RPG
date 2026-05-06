@@ -1,0 +1,32 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary-dark: #0a0e27;
+  --secondary-dark: #1a1f3a;
+  --accent-gold: #d4af37;
+  --text-light: #e0e0e0;
+  --text-muted: #888;
+  --success: #4ade80;
+  --error: #ff6b6b;
+  --border: #2a3052;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--primary-dark);
+  color: var(--text-light);
+  font-family: 'Monaco', 'Courier New', monospace;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+code, pre {
+  font-family: 'Monaco', 'Courier New', monospace;
+}

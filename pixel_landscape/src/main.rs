@@ -17,41 +17,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Dark Forest - Lovecraftian palette
     {
         println!("Generating: Dark Forest (Lovecraftian)...");
-        let landscape = Landscape::generate_dark_forest(40, 30, 42);
+        let landscape = Landscape::generate_dark_forest(80, 60, 42);
         let palette = Palette::lovecraftian();
         let renderer = Renderer::new(palette, 16);
         let path = Path::new(output_dir).join("dark_forest.png");
         renderer.render(&landscape, &path)?;
-        println!("✅ Saved to: {} (640×480)\n", path.display());
+        println!("✅ Saved to: {} (1280×960)\n", path.display());
     }
 
     // Coastal Ruins - Cosmic Horror palette
     {
         println!("Generating: Coastal Ruins (Cosmic Horror)...");
-        let landscape = Landscape::generate_coastal_ruins(40, 30, 123);
+        let landscape = Landscape::generate_coastal_ruins(80, 60, 123);
         let palette = Palette::cosmic_horror();
         let renderer = Renderer::new(palette, 16);
         let path = Path::new(output_dir).join("coastal_ruins.png");
         renderer.render(&landscape, &path)?;
-        println!("✅ Saved to: {} (640×480)\n", path.display());
+        println!("✅ Saved to: {} (1280×960)\n", path.display());
     }
 
     // Swamp Cemetery - Lovecraftian palette
     {
         println!("Generating: Swamp Cemetery (Lovecraftian)...");
-        let landscape = Landscape::generate_swamp_cemetery(40, 30, 456);
+        let landscape = Landscape::generate_swamp_cemetery(80, 60, 456);
         let palette = Palette::lovecraftian();
         let renderer = Renderer::new(palette, 16);
         let path = Path::new(output_dir).join("swamp_cemetery.png");
         renderer.render(&landscape, &path)?;
-        println!("✅ Saved to: {} (640×480)\n", path.display());
+        println!("✅ Saved to: {} (1280×960)\n", path.display());
     }
 
     // Multiple seeds for variety
     {
         println!("Generating variations...");
         for seed in [789, 1011, 1213].iter() {
-            let landscape = Landscape::generate_dark_forest(40, 30, *seed);
+            let landscape = Landscape::generate_dark_forest(80, 60, *seed);
             let palette = Palette::lovecraftian();
             let renderer = Renderer::new(palette, 16);
             let path = Path::new(output_dir).join(format!("dark_forest_var_{}.png", seed));

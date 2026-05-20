@@ -3,7 +3,7 @@ import './App.css'
 
 export default function App() {
   const [prompt, setPrompt] = useState('')
-  const [width, setWidth] = useState(80)
+  const [width, setWidth] = useState(160)
   const [style, setStyle] = useState('lovecraftian')
 
   const [asciiArt, setAsciiArt] = useState('')
@@ -111,9 +111,9 @@ export default function App() {
                 <input
                   id="width"
                   type="range"
-                  min="40"
-                  max="120"
-                  step="10"
+                  min="80"
+                  max="2000"
+                  step="100"
                   value={width}
                   onChange={(e) => setWidth(e.target.value)}
                   disabled={loading}

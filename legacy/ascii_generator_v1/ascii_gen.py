@@ -47,7 +47,7 @@ Rules:
                 "stream": False,
                 "temperature": 0.7,
             },
-            timeout=120,
+            timeout=240,
         )
 
         if response.status_code != 200:

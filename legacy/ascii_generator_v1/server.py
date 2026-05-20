@@ -18,8 +18,8 @@ CORS(app)
 
 # Configuration
 FLASK_PORT = int(os.getenv("FLASK_PORT", 5001))
-MAX_ASCII_WIDTH = 120
-DEFAULT_ASCII_WIDTH = 80
+MAX_ASCII_WIDTH = 2000
+DEFAULT_ASCII_WIDTH = 160
 
 @app.route("/", methods=["GET"])
 def index():

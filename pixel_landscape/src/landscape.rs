@@ -159,15 +159,13 @@ impl Landscape {
                 let fy = y as f64;
 
                 let tile = if y < glow_height {
-                    // Thin glow layer at ceiling
-                    let glow = noise_gen.fbm(fx * 0.4, fy * 3.0, 2, 50.0);
-                    let supernatural = noise_gen.fbm(fx * 0.6, fy, 1, 80.0);
+                    // Thin glow layer at ceiling - SUBTLE
+                    let glow = noise_gen.fbm(fx * 0.3, fy * 2.0, 2, 60.0);
 
-                    if supernatural > 0.75 { 14 }            // Purple glow (some areas)
-                    else if glow > 0.68 { 13 }               // Cyan glow
-                    else if glow > 0.55 { 12 }               // Yellow-green eerie
-                    else if glow > 0.40 { 2 }                // Shadow
-                    else { 1 }                                // Deep shadow
+                    if glow > 0.72 { 14 }                    // Rare: eldritch purple
+                    else if glow > 0.60 { 13 }               // Supernatural blue (rare)
+                    else if glow > 0.45 { 12 }               // Eerie glow
+                    else { 2 }                                // Mostly shadow
                 } else if y < wall_height {
                     // Walls - MOSTLY stone with occasional moss
                     let stone_texture = noise_gen.fbm(fx, fy, 5, 20.0);

@@ -7,22 +7,22 @@ pub struct Palette {
 impl Palette {
     pub fn chamber() -> Self {
         let colors = vec![
-            Rgb([5, 5, 10]),         // 0: abyssal black
-            Rgb([30, 30, 45]),       // 1: deep shadow
-            Rgb([65, 65, 85]),       // 2: dark gray/shadow
-            Rgb([105, 105, 130]),    // 3: medium stone
-            Rgb([145, 145, 165]),    // 4: light stone
-            Rgb([185, 185, 205]),    // 5: pale stone (walls)
-            Rgb([220, 220, 240]),    // 6: bright stone (highlights)
-            Rgb([255, 255, 255]),    // 7: pure white
-            Rgb([20, 60, 20]),       // 8: very dark moss
-            Rgb([50, 110, 50]),      // 9: dark moss (crevasses)
-            Rgb([90, 150, 90]),      // 10: moss green (primary)
-            Rgb([130, 170, 110]),    // 11: moss with luminescence
-            Rgb([160, 180, 130]),    // 12: eerie glow yellow
-            Rgb([110, 150, 210]),    // 13: supernatural cyan
-            Rgb([140, 100, 180]),    // 14: eldritch purple
-            Rgb([200, 120, 160]),    // 15: unnatural magenta
+            Rgb([8, 8, 12]),         // 0: deep black/void
+            Rgb([35, 35, 50]),       // 1: dark shadow
+            Rgb([70, 70, 90]),       // 2: medium shadow
+            Rgb([110, 110, 135]),    // 3: stone base (darker)
+            Rgb([145, 145, 170]),    // 4: light stone
+            Rgb([180, 180, 200]),    // 5: pale stone
+            Rgb([220, 220, 235]),    // 6: bright stone
+            Rgb([255, 255, 255]),    // 7: white highlight
+            Rgb([15, 55, 15]),       // 8: very dark moss
+            Rgb([45, 100, 45]),      // 9: dark moss green
+            Rgb([80, 140, 80]),      // 10: moss green
+            Rgb([110, 160, 100]),    // 11: moss with glow
+            Rgb([140, 170, 120]),    // 12: eerie glow (muted)
+            Rgb([100, 140, 200]),    // 13: supernatural blue (desaturated)
+            Rgb([130, 80, 160]),     // 14: eldritch purple (darker)
+            Rgb([180, 100, 140]),    // 15: unnatural tint (less bright)
         ];
         Palette { colors }
     }

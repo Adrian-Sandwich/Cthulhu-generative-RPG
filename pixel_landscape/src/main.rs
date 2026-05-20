@@ -4,63 +4,62 @@ mod landscape;
 mod renderer;
 
 use palette::Palette;
-use landscape::Landscape;
+use landscape::{Landscape, SceneDescription};
 use renderer::Renderer;
 use std::path::Path;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🎨 Pixel Landscape Generator - Retro Horror/Adventure\n");
+    println!("🎨 Pixel Scene Generator - Cthulhu Adventure\n");
 
     let output_dir = "generated";
     std::fs::create_dir_all(output_dir)?;
 
-    // Dark Forest - Lovecraftian palette
+    // MAIN TEST: Stone Chamber with Moss
     {
-        println!("Generating: Dark Forest (Lovecraftian)...");
+        let scene = SceneDescription::stone_chamber();
+        println!("═══════════════════════════════════════════════════════");
+        println!("Generating: {}", scene.title);
+        println!("═══════════════════════════════════════════════════════");
+        println!("\n{}\n", scene.text);
+
+        let landscape = Landscape::generate_stone_chamber(80, 60, 999);
+        let palette = Palette::chamber();
+        let renderer = Renderer::new(palette, 16);
+        let path = Path::new(output_dir).join("stone_chamber.png");
+        renderer.render(&landscape, &path)?;
+        println!("✅ Saved to: {}\n", path.display());
+    }
+
+    // Additional scenes for reference
+    {
+        println!("Generating additional scenes for reference...\n");
+
+        // Dark Forest
         let landscape = Landscape::generate_dark_forest(80, 60, 42);
         let palette = Palette::lovecraftian();
         let renderer = Renderer::new(palette, 16);
         let path = Path::new(output_dir).join("dark_forest.png");
         renderer.render(&landscape, &path)?;
-        println!("✅ Saved to: {} (1280×960)\n", path.display());
-    }
+        println!("✅ Dark Forest generated");
 
-    // Coastal Ruins - Cosmic Horror palette
-    {
-        println!("Generating: Coastal Ruins (Cosmic Horror)...");
+        // Coastal Ruins
         let landscape = Landscape::generate_coastal_ruins(80, 60, 123);
         let palette = Palette::cosmic_horror();
         let renderer = Renderer::new(palette, 16);
         let path = Path::new(output_dir).join("coastal_ruins.png");
         renderer.render(&landscape, &path)?;
-        println!("✅ Saved to: {} (1280×960)\n", path.display());
-    }
+        println!("✅ Coastal Ruins generated");
 
-    // Swamp Cemetery - Lovecraftian palette
-    {
-        println!("Generating: Swamp Cemetery (Lovecraftian)...");
+        // Swamp Cemetery
         let landscape = Landscape::generate_swamp_cemetery(80, 60, 456);
         let palette = Palette::lovecraftian();
         let renderer = Renderer::new(palette, 16);
         let path = Path::new(output_dir).join("swamp_cemetery.png");
         renderer.render(&landscape, &path)?;
-        println!("✅ Saved to: {} (1280×960)\n", path.display());
+        println!("✅ Swamp Cemetery generated");
     }
 
-    // Multiple seeds for variety
-    {
-        println!("Generating variations...");
-        for seed in [789, 1011, 1213].iter() {
-            let landscape = Landscape::generate_dark_forest(80, 60, *seed);
-            let palette = Palette::lovecraftian();
-            let renderer = Renderer::new(palette, 16);
-            let path = Path::new(output_dir).join(format!("dark_forest_var_{}.png", seed));
-            renderer.render(&landscape, &path)?;
-            println!("✅ Variation {} generated", seed);
-        }
-    }
-
-    println!("\n🎨 Done! Check the '{}' directory for generated landscapes.", output_dir);
+    println!("\n🎨 Done! Check the '{}' directory for generated scenes.", output_dir);
 
     Ok(())
 }

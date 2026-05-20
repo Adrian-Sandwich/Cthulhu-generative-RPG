@@ -5,46 +5,68 @@ pub struct Palette {
 }
 
 impl Palette {
+    pub fn chamber() -> Self {
+        let colors = vec![
+            Rgb([5, 5, 10]),         // 0: abyssal black
+            Rgb([30, 30, 45]),       // 1: deep shadow
+            Rgb([65, 65, 85]),       // 2: dark gray/shadow
+            Rgb([105, 105, 130]),    // 3: medium stone
+            Rgb([145, 145, 165]),    // 4: light stone
+            Rgb([185, 185, 205]),    // 5: pale stone (walls)
+            Rgb([220, 220, 240]),    // 6: bright stone (highlights)
+            Rgb([255, 255, 255]),    // 7: pure white
+            Rgb([20, 60, 20]),       // 8: very dark moss
+            Rgb([50, 110, 50]),      // 9: dark moss (crevasses)
+            Rgb([90, 150, 90]),      // 10: moss green (primary)
+            Rgb([130, 170, 110]),    // 11: moss with luminescence
+            Rgb([160, 180, 130]),    // 12: eerie glow yellow
+            Rgb([110, 150, 210]),    // 13: supernatural cyan
+            Rgb([140, 100, 180]),    // 14: eldritch purple
+            Rgb([200, 120, 160]),    // 15: unnatural magenta
+        ];
+        Palette { colors }
+    }
+
     pub fn lovecraftian() -> Self {
         let colors = vec![
-            Rgb([20, 20, 30]),      // 0: deep black
-            Rgb([40, 35, 50]),      // 1: dark purple
-            Rgb([60, 50, 70]),      // 2: murky purple
-            Rgb([80, 70, 90]),      // 3: medium purple
-            Rgb([100, 80, 100]),    // 4: pale purple
-            Rgb([45, 45, 60]),      // 5: dark blue
-            Rgb([70, 70, 95]),      // 6: medium blue
-            Rgb([95, 95, 130]),     // 7: light blue
-            Rgb([60, 80, 60]),      // 8: dark green
-            Rgb([80, 110, 80]),     // 9: muted green
-            Rgb([100, 130, 100]),   // 10: sickly green
-            Rgb([140, 120, 80]),    // 11: brown
-            Rgb([180, 160, 120]),   // 12: light brown
-            Rgb([120, 100, 80]),    // 13: dark brown
-            Rgb([200, 180, 160]),   // 14: stone
-            Rgb([220, 210, 200]),   // 15: light stone
+            Rgb([10, 10, 15]),       // 0: abyss
+            Rgb([40, 40, 50]),       // 1: shadow
+            Rgb([80, 70, 90]),       // 2: dark purple
+            Rgb([120, 100, 140]),    // 3: medium purple
+            Rgb([30, 30, 50]),       // 4: dark blue
+            Rgb([80, 80, 120]),      // 5: medium blue
+            Rgb([140, 140, 180]),    // 6: light blue
+            Rgb([200, 200, 220]),    // 7: pale blue
+            Rgb([20, 60, 20]),       // 8: dark forest green
+            Rgb([60, 120, 60]),      // 9: forest green
+            Rgb([120, 180, 120]),    // 10: light green
+            Rgb([180, 220, 180]),    // 11: pale green
+            Rgb([80, 50, 30]),       // 12: dark brown
+            Rgb([140, 100, 60]),     // 13: medium brown
+            Rgb([180, 140, 100]),    // 14: light brown
+            Rgb([220, 180, 140]),    // 15: pale brown
         ];
         Palette { colors }
     }
 
     pub fn cosmic_horror() -> Self {
         let colors = vec![
-            Rgb([10, 5, 15]),       // 0: abyss black
-            Rgb([25, 15, 35]),      // 1: void
-            Rgb([50, 30, 70]),      // 2: deep cosmic
-            Rgb([80, 50, 120]),     // 3: cosmic purple
-            Rgb([120, 80, 180]),    // 4: bright cosmic
-            Rgb([30, 25, 50]),      // 5: dark matter
-            Rgb([60, 55, 100]),     // 6: nebula dark
-            Rgb([100, 90, 150]),    // 7: nebula light
-            Rgb([40, 60, 80]),      // 8: alien ocean
-            Rgb([70, 100, 130]),    // 9: alien ocean light
-            Rgb([150, 80, 200]),    // 10: eldritch
-            Rgb([200, 120, 255]),   // 11: eldritch light
-            Rgb([80, 40, 100]),     // 12: shadow
-            Rgb([120, 60, 150]),    // 13: shadow light
-            Rgb([160, 100, 200]),   // 14: mystical
-            Rgb([200, 150, 255]),   // 15: mystical light
+            Rgb([5, 5, 10]),         // 0: void black
+            Rgb([30, 20, 40]),       // 1: dark void
+            Rgb([70, 40, 100]),      // 2: deep cosmic
+            Rgb([120, 60, 180]),     // 3: cosmic purple
+            Rgb([20, 30, 50]),       // 4: dark water
+            Rgb([60, 80, 140]),      // 5: medium water
+            Rgb([120, 150, 200]),    // 6: light water
+            Rgb([200, 220, 255]),    // 7: foam white
+            Rgb([40, 40, 40]),       // 8: dark rock
+            Rgb([100, 80, 60]),      // 9: stone
+            Rgb([160, 140, 120]),    // 10: light stone
+            Rgb([220, 200, 180]),    // 11: pale stone
+            Rgb([150, 50, 150]),     // 12: eldritch
+            Rgb([200, 100, 200]),    // 13: bright eldritch
+            Rgb([100, 200, 200]),    // 14: eerie teal
+            Rgb([200, 100, 100]),    // 15: blood red
         ];
         Palette { colors }
     }

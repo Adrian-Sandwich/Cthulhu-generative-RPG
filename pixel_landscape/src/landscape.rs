@@ -6,6 +6,21 @@ pub struct Landscape {
     pub tiles: Vec<Vec<usize>>,
 }
 
+pub struct SceneDescription {
+    pub title: &'static str,
+    pub text: &'static str,
+}
+
+impl SceneDescription {
+    pub fn stone_chamber() -> Self {
+        SceneDescription {
+            title: "STONE CHAMBER",
+            text: "You find yourself in a decaying stone chamber. Moss creeps up ancient walls. \
+                   A faint, unnatural glow emanates from the ceiling.",
+        }
+    }
+}
+
 impl Landscape {
     pub fn generate_dark_forest(width: usize, height: usize, seed: u64) -> Self {
         let noise_gen = NoiseGenerator::new(seed);
@@ -122,6 +137,62 @@ impl Landscape {
                     else if vegetation > 0.5 && water > 0.5 { 10 }  // Murky water
                     else if water > 0.55 { 9 }         // Swamp water
                     else { 13 }                        // Mud/earth
+                };
+
+                tiles[y][x] = tile;
+            }
+        }
+
+        Landscape { width, height, tiles }
+    }
+
+    pub fn generate_stone_chamber(width: usize, height: usize, seed: u64) -> Self {
+        let noise_gen = NoiseGenerator::new(seed);
+        let mut tiles = vec![vec![0; width]; height];
+
+        let glow_height = (height as f64 * 0.12) as usize;
+        let wall_height = (height as f64 * 0.68) as usize;
+
+        for y in 0..height {
+            for x in 0..width {
+                let fx = x as f64;
+                let fy = y as f64;
+
+                let tile = if y < glow_height {
+                    // Thin glow layer at ceiling
+                    let glow = noise_gen.fbm(fx * 0.4, fy * 3.0, 2, 50.0);
+                    let supernatural = noise_gen.fbm(fx * 0.6, fy, 1, 80.0);
+
+                    if supernatural > 0.75 { 14 }            // Purple glow (some areas)
+                    else if glow > 0.68 { 13 }               // Cyan glow
+                    else if glow > 0.55 { 12 }               // Yellow-green eerie
+                    else if glow > 0.40 { 2 }                // Shadow
+                    else { 1 }                                // Deep shadow
+                } else if y < wall_height {
+                    // Walls - MOSTLY stone with occasional moss
+                    let stone_texture = noise_gen.fbm(fx, fy, 5, 20.0);
+                    let moss_growth = noise_gen.fbm(fx * 1.2, fy * 0.9, 4, 32.0);
+                    let wall_cracks = noise_gen.fbm(fx * 2.5, fy, 2, 10.0);
+
+                    // Moss is RARE (threshold high)
+                    if moss_growth > 0.80 { 10 }             // Moss patches (rare)
+                    else if moss_growth > 0.70 && wall_cracks > 0.6 { 9 }  // Dark moss in cracks
+                    else if moss_growth > 0.65 { 11 }        // Light moss edges
+                    else if stone_texture > 0.65 { 5 }       // Pale stone (common)
+                    else if stone_texture > 0.50 { 4 }       // Light stone (common)
+                    else if stone_texture > 0.35 { 3 }       // Medium stone
+                    else { 2 }                                // Dark stone/shadow
+                } else {
+                    // Ground floor - crumbling stone
+                    let floor_base = noise_gen.fbm(fx * 0.8, fy, 4, 25.0);
+                    let floor_cracks = noise_gen.fbm(fx * 3.0, fy, 3, 8.0);
+
+                    if floor_cracks > 0.75 { 0 }             // Deep cracks = abyss
+                    else if floor_cracks > 0.65 { 1 }        // Dark cracks/shadow
+                    else if floor_base > 0.70 { 5 }          // Pale stone (worn)
+                    else if floor_base > 0.55 { 4 }          // Light stone
+                    else if floor_base > 0.40 { 3 }          // Medium stone
+                    else { 2 }                                // Dark stone
                 };
 
                 tiles[y][x] = tile;

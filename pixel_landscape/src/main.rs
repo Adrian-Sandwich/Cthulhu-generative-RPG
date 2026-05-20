@@ -1,10 +1,12 @@
 mod palette;
 mod noise;
 mod landscape;
+mod scene;
 mod renderer;
 
 use palette::Palette;
-use landscape::{Landscape, SceneDescription};
+use landscape::SceneDescription;
+use scene::FirstPersonScene;
 use renderer::Renderer;
 use std::path::Path;
 
@@ -14,49 +16,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let output_dir = "generated";
     std::fs::create_dir_all(output_dir)?;
 
-    // MAIN TEST: Stone Chamber with Moss
+    // MAIN TEST: Stone Chamber (First-Person View)
     {
-        let scene = SceneDescription::stone_chamber();
+        let scene_desc = SceneDescription::stone_chamber();
         println!("═══════════════════════════════════════════════════════");
-        println!("Generating: {}", scene.title);
+        println!("Generating: {} (FIRST-PERSON)", scene_desc.title);
         println!("═══════════════════════════════════════════════════════");
-        println!("\n{}\n", scene.text);
+        println!("\n{}\n", scene_desc.text);
 
-        let landscape = Landscape::generate_stone_chamber(80, 60, 999);
+        let scene = FirstPersonScene::generate_stone_chamber(80, 60, 999);
         let palette = Palette::chamber();
         let renderer = Renderer::new(palette, 16);
-        let path = Path::new(output_dir).join("stone_chamber.png");
-        renderer.render(&landscape, &path)?;
-        println!("✅ Saved to: {}\n", path.display());
+        let path = Path::new(output_dir).join("stone_chamber_1p.png");
+        renderer.render(&scene.tiles, scene.width, scene.height, &path)?;
+        println!("✅ Saved to: {} (First-Person)\n", path.display());
     }
 
-    // Additional scenes for reference
+    // Additional first-person scenes
     {
-        println!("Generating additional scenes for reference...\n");
+        println!("Generating additional first-person scenes...\n");
 
-        // Dark Forest
-        let landscape = Landscape::generate_dark_forest(80, 60, 42);
+        // Dark Forest Entrance (1st person)
+        let scene = FirstPersonScene::generate_dark_forest_entrance(80, 60, 42);
         let palette = Palette::lovecraftian();
         let renderer = Renderer::new(palette, 16);
-        let path = Path::new(output_dir).join("dark_forest.png");
-        renderer.render(&landscape, &path)?;
-        println!("✅ Dark Forest generated");
-
-        // Coastal Ruins
-        let landscape = Landscape::generate_coastal_ruins(80, 60, 123);
-        let palette = Palette::cosmic_horror();
-        let renderer = Renderer::new(palette, 16);
-        let path = Path::new(output_dir).join("coastal_ruins.png");
-        renderer.render(&landscape, &path)?;
-        println!("✅ Coastal Ruins generated");
-
-        // Swamp Cemetery
-        let landscape = Landscape::generate_swamp_cemetery(80, 60, 456);
-        let palette = Palette::lovecraftian();
-        let renderer = Renderer::new(palette, 16);
-        let path = Path::new(output_dir).join("swamp_cemetery.png");
-        renderer.render(&landscape, &path)?;
-        println!("✅ Swamp Cemetery generated");
+        let path = Path::new(output_dir).join("dark_forest_entrance_1p.png");
+        renderer.render(&scene.tiles, scene.width, scene.height, &path)?;
+        println!("✅ Dark Forest Entrance (1st person) generated");
     }
 
     println!("\n🎨 Done! Check the '{}' directory for generated scenes.", output_dir);

@@ -1,4 +1,4 @@
-use image::{ImageBuffer, Rgb};
+use image::ImageBuffer;
 use crate::landscape::Landscape;
 use crate::palette::Palette;
 use std::path::Path;
@@ -13,13 +13,21 @@ impl Renderer {
         Renderer { palette, tile_size }
     }
 
-    pub fn render(&self, landscape: &Landscape, output_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
-        let width = (landscape.width * self.tile_size) as u32;
-        let height = (landscape.height * self.tile_size) as u32;
+    pub fn render_landscape(&self, landscape: &Landscape, output_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+        self.render_tiles(&landscape.tiles, landscape.width, landscape.height, output_path)
+    }
 
-        let mut img = ImageBuffer::new(width, height);
+    pub fn render(&self, tiles: &Vec<Vec<usize>>, width: usize, height: usize, output_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+        self.render_tiles(tiles, width, height, output_path)
+    }
 
-        for (y, row) in landscape.tiles.iter().enumerate() {
+    fn render_tiles(&self, tiles: &Vec<Vec<usize>>, width: usize, height: usize, output_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+        let pixel_width = (width * self.tile_size) as u32;
+        let pixel_height = (height * self.tile_size) as u32;
+
+        let mut img = ImageBuffer::new(pixel_width, pixel_height);
+
+        for (y, row) in tiles.iter().enumerate() {
             for (x, &tile_index) in row.iter().enumerate() {
                 let color = self.palette.get_color(tile_index);
                 let start_x = x * self.tile_size;

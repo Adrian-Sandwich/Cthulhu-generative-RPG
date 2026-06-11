@@ -8,6 +8,7 @@ Danger levels escalate, secrets unlock new content, state persists.
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 import json
+import re
 from pathlib import Path
 
 
@@ -167,10 +168,13 @@ class LocationStateManager:
         Returns:
             Location description with dynamic updates
         """
-        if key not in self.locations:
-            return "You find yourself in an unknown place."
+        loc = self.get_location(key)
+        if loc is None:
+            # Auto-register dynamically discovered locations so their
+            # state (visits, danger, contamination) is tracked too
+            slug = re.sub(r'[^a-z0-9]+', '_', key.lower()).strip('_')
+            loc = self.register_location(slug, key, "")
 
-        loc = self.locations[key]
         loc.visited_count += 1
         loc.last_visited_turn = current_turn
 
@@ -287,10 +291,10 @@ class LocationStateManager:
         Returns:
             Formatted context string
         """
-        if location_key not in self.locations:
+        loc = self.get_location(location_key)
+        if loc is None:
             return ""
 
-        loc = self.locations[location_key]
         parts = []
 
         if loc.visited_count > 0:

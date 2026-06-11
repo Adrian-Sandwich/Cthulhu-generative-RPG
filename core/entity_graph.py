@@ -79,19 +79,19 @@ class EntityGraph:
             if not session:
                 return False
 
-            meta = metadata or {}
-            query = """
-            MERGE (npc:NPC {key: $key})
-            SET npc.name = $name, npc.role = $role, npc.properties = $meta
-            RETURN npc
-            """
-            session.run(query, key=key, name=name, role=role, meta=meta)
+            with session:
+                meta = metadata or {}
+                query = """
+                MERGE (npc:NPC {key: $key})
+                SET npc.name = $name, npc.role = $role, npc.properties = $meta
+                RETURN npc
+                """
+                session.run(query, key=key, name=name, role=role, meta=meta)
 
-            # Assign to faction if provided
-            if faction_key:
-                self.add_relationship(key, "WORKS_FOR", faction_key)
+                # Assign to faction if provided
+                if faction_key:
+                    self.add_relationship(key, "WORKS_FOR", faction_key)
 
-            session.close()
             return True
         except Exception:
             return False
@@ -116,13 +116,13 @@ class EntityGraph:
             if not session:
                 return False
 
-            query = """
-            MERGE (loc:Location {key: $key})
-            SET loc.name = $name, loc.description = $description
-            RETURN loc
-            """
-            session.run(query, key=key, name=name, description=description)
-            session.close()
+            with session:
+                query = """
+                MERGE (loc:Location {key: $key})
+                SET loc.name = $name, loc.description = $description
+                RETURN loc
+                """
+                session.run(query, key=key, name=name, description=description)
             return True
         except Exception:
             return False
@@ -147,13 +147,13 @@ class EntityGraph:
             if not session:
                 return False
 
-            query = """
-            MERGE (f:Faction {key: $key})
-            SET f.name = $name, f.alignment = $alignment
-            RETURN f
-            """
-            session.run(query, key=key, name=name, alignment=alignment)
-            session.close()
+            with session:
+                query = """
+                MERGE (f:Faction {key: $key})
+                SET f.name = $name, f.alignment = $alignment
+                RETURN f
+                """
+                session.run(query, key=key, name=name, alignment=alignment)
             return True
         except Exception:
             return False
@@ -179,15 +179,15 @@ class EntityGraph:
             if not session:
                 return False
 
-            meta = metadata or {}
-            query = f"""
-            MATCH (a {{key: $from_key}}), (b {{key: $to_key}})
-            MERGE (a)-[r:{rel_type}]-(b)
-            SET r.properties = $meta
-            RETURN r
-            """
-            session.run(query, from_key=from_key, to_key=to_key, meta=meta)
-            session.close()
+            with session:
+                meta = metadata or {}
+                query = f"""
+                MATCH (a {{key: $from_key}}), (b {{key: $to_key}})
+                MERGE (a)-[r:{rel_type}]-(b)
+                SET r.properties = $meta
+                RETURN r
+                """
+                session.run(query, from_key=from_key, to_key=to_key, meta=meta)
             return True
         except Exception:
             return False
@@ -210,19 +210,19 @@ class EntityGraph:
             if not session:
                 return {}
 
-            query = """
-            MATCH (npc:NPC {key: $key})-[r]-(other)
-            RETURN type(r) as rel_type, collect(other.key) as targets
-            """
-            result = session.run(query, key=npc_key)
+            with session:
+                query = """
+                MATCH (npc:NPC {key: $key})-[r]-(other)
+                RETURN type(r) as rel_type, collect(other.key) as targets
+                """
+                result = session.run(query, key=npc_key)
 
-            relationships = {}
-            for record in result:
-                rel_type = record["rel_type"].lower()
-                targets = record["targets"]
-                relationships[rel_type] = targets
+                relationships = {}
+                for record in result:
+                    rel_type = record["rel_type"].lower()
+                    targets = record["targets"]
+                    relationships[rel_type] = targets
 
-            session.close()
             return relationships
         except Exception:
             return {}
@@ -289,25 +289,24 @@ class EntityGraph:
             if not session:
                 return None
 
-            query = f"""
-            MATCH path = shortestPath(
-                (a {{key: $from_key}})-[*1..{max_depth}]-(b {{key: $to_key}})
-            )
-            RETURN path
-            LIMIT 1
-            """
-            result = session.run(query, from_key=from_key, to_key=to_key)
+            with session:
+                query = f"""
+                MATCH path = shortestPath(
+                    (a {{key: $from_key}})-[*1..{max_depth}]-(b {{key: $to_key}})
+                )
+                RETURN path
+                LIMIT 1
+                """
+                result = session.run(query, from_key=from_key, to_key=to_key)
 
-            for record in result:
-                path = record["path"]
-                # Convert path to list of steps
-                steps = []
-                for rel in path.relationships:
-                    steps.append((rel.start_node["key"], type(rel).__name__))
-                session.close()
-                return steps
+                for record in result:
+                    path = record["path"]
+                    # Convert path to list of steps
+                    steps = []
+                    for rel in path.relationships:
+                        steps.append((rel.start_node["key"], type(rel).__name__))
+                    return steps
 
-            session.close()
             return None
         except Exception:
             return None
@@ -330,17 +329,16 @@ class EntityGraph:
             if not session:
                 return []
 
-            query = """
-            MATCH (npc:NPC)-[:WORKS_FOR]-(f:Faction {key: $faction_key})
-            RETURN collect(npc.key) as members
-            """
-            result = session.run(query, faction_key=faction_key)
+            with session:
+                query = """
+                MATCH (npc:NPC)-[:WORKS_FOR]-(f:Faction {key: $faction_key})
+                RETURN collect(npc.key) as members
+                """
+                result = session.run(query, faction_key=faction_key)
 
-            for record in result:
-                session.close()
-                return record["members"] or []
+                for record in result:
+                    return record["members"] or []
 
-            session.close()
             return []
         except Exception:
             return []
@@ -360,21 +358,21 @@ class EntityGraph:
             if not session:
                 return {"enabled": False}
 
-            query = """
-            MATCH (n)
-            RETURN
-              COUNT(DISTINCT n {.*}) as nodes,
-              SIZE(relationships(n)) as relationships
-            LIMIT 1
-            """
-            result = session.run(query)
+            with session:
+                query = """
+                MATCH (n)
+                RETURN
+                  COUNT(DISTINCT n {.*}) as nodes,
+                  SIZE(relationships(n)) as relationships
+                LIMIT 1
+                """
+                result = session.run(query)
 
-            stats = {"enabled": True}
-            for record in result:
-                stats["nodes"] = record["nodes"]
-                stats["relationships"] = record["relationships"]
+                stats = {"enabled": True}
+                for record in result:
+                    stats["nodes"] = record["nodes"]
+                    stats["relationships"] = record["relationships"]
 
-            session.close()
             return stats
         except Exception:
             return {"enabled": False}
@@ -394,8 +392,8 @@ class EntityGraph:
             if not session:
                 return False
 
-            session.run("MATCH (n) DETACH DELETE n")
-            session.close()
+            with session:
+                session.run("MATCH (n) DETACH DELETE n")
             return True
         except Exception:
             return False

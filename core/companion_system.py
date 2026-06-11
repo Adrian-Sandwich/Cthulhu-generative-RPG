@@ -24,6 +24,7 @@ class Companion:
 
     skills: Dict[str, int] = field(default_factory=dict)  # Companion skills
     wounds: int = 0  # Current HP damage
+    max_wounds: int = 3  # Wounds survivable before death
     status: str = "healthy"  # healthy, wounded, traumatized, broken
 
     is_alive: bool = True
@@ -118,6 +119,7 @@ class Companion:
             "fear": self.fear,
             "skills": self.skills,
             "wounds": self.wounds,
+            "max_wounds": self.max_wounds,
             "status": self.status,
             "is_alive": self.is_alive,
             "discovered_secrets": self.discovered_secrets
@@ -136,6 +138,7 @@ class Companion:
             fear=data.get("fear", 0),
             skills=data.get("skills", {}),
             wounds=data.get("wounds", 0),
+            max_wounds=data.get("max_wounds", 3),
             status=data.get("status", "healthy"),
             is_alive=data.get("is_alive", True),
             discovered_secrets=data.get("discovered_secrets", [])
@@ -240,7 +243,7 @@ class CompanionManager:
                 self.remove_companion(companion.key, "abandoned")
 
             # Mortal wounds → death
-            if companion.wounds > companion.role.count('t'):  # Hack; real system would track HP
+            if companion.wounds > companion.max_wounds:
                 events.append(
                     f"{companion.name} succumbs to their injuries."
                 )

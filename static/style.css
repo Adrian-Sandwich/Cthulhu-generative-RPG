@@ -339,6 +339,17 @@ html, body {
     flex-shrink: 0;
 }
 
+.scene-image {
+    display: block;
+    width: 100%;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.scene-image.hidden {
+    display: none;
+}
+
 .scene-display pre {
     font-family: var(--mono-font);
     color: var(--text-mono);

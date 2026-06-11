@@ -43,6 +43,7 @@ async function startGame(event) {
 
             // Show initial scene
             showScene();
+            refreshGameState();
 
             statusEl.textContent = data.message;
         } else {
@@ -82,6 +83,28 @@ function updateStats(stats) {
     const luckPercent = (stats.Luck / maxLuck) * 100;
     document.getElementById('luck-bar').style.width = luckPercent + '%';
     document.getElementById('luck-value').textContent = stats.Luck + '/' + maxLuck;
+}
+
+// Refresh game state from server (location image, etc.)
+// Note: the server may generate the image on demand, so this can take a while.
+async function refreshGameState() {
+    if (!gameStarted) return;
+
+    try {
+        const response = await fetch('/api/game/state');
+        if (!response.ok) return;
+        const data = await response.json();
+
+        const img = document.getElementById('scene-image');
+        if (data.image_url) {
+            img.src = data.image_url;
+            img.classList.remove('hidden');
+        } else {
+            img.classList.add('hidden');
+        }
+    } catch (error) {
+        console.error('Error refreshing game state:', error);
+    }
 }
 
 // Fetch Scenes (for preloading)
@@ -162,6 +185,9 @@ async function submitAction(event) {
             // Scroll to bottom of narrative
             const narrativeContent = document.getElementById('narrative-content');
             narrativeContent.scrollTop = narrativeContent.scrollHeight;
+
+            // Update location image (may trigger generation server-side)
+            refreshGameState();
         } else {
             statusEl.textContent = '❌ ' + (data.error || 'Action failed');
         }
@@ -264,6 +290,7 @@ function resetGame() {
 
     // Clear content
     document.getElementById('narrative-content').innerHTML = '';
+    document.getElementById('scene-image').classList.add('hidden');
     document.getElementById('investigator-name').value = '';
     document.getElementById('character-info').classList.add('hidden');
 

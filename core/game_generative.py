@@ -410,6 +410,7 @@ class GenerativeGameEngine:
         # Initialize location state system
         if self.location_state:
             self._initialize_cthulhu_locations()
+            self.location_state.visit_location(self.state.location, self.state.turn)
 
         return self.state
 
@@ -1013,7 +1014,10 @@ Respond with the IMMEDIATE narrative outcome of this action. Stay in location.
                 dm_response = self._call_ollama(dm_prompt, on_chunk=on_chunk)
 
                 # Parse tag-based response
-                rolls_requested = re.findall(r'\[ROLL: (\w+)/(\w+)\]', dm_response)
+                rolls_requested = [
+                    (skill.strip(), difficulty.strip())
+                    for skill, difficulty in re.findall(r'\[ROLL: ([^/\]]+)/([^\]]+)\]', dm_response)
+                ]
                 sanity_checks = re.findall(r'\[SANITY_CHECK: (\d+)\]', dm_response)
                 items_found = re.findall(r'\[ITEM_FOUND: (\w+)\]', dm_response)
                 hp_damage = re.findall(r'\[HP_DAMAGE: (\d+)\]', dm_response)
@@ -1034,7 +1038,10 @@ Respond with the IMMEDIATE narrative outcome of this action. Stay in location.
             dm_response = self._call_ollama(dm_prompt, on_chunk=on_chunk)
 
             # Parse all tag types
-            rolls_requested = re.findall(r'\[ROLL: (\w+)/(\w+)\]', dm_response)
+            rolls_requested = [
+                    (skill.strip(), difficulty.strip())
+                    for skill, difficulty in re.findall(r'\[ROLL: ([^/\]]+)/([^\]]+)\]', dm_response)
+                ]
             sanity_checks = re.findall(r'\[SANITY_CHECK: (\d+)\]', dm_response)
             items_found = re.findall(r'\[ITEM_FOUND: (\w+)\]', dm_response)
             hp_damage = re.findall(r'\[HP_DAMAGE: (\d+)\]', dm_response)
@@ -1100,6 +1107,8 @@ Respond with the IMMEDIATE narrative outcome of this action. Stay in location.
         for keyword, new_location in location_map.items():
             if keyword in narrative_lower and new_location != self.state.location:
                 self.state.location = new_location
+                if self.location_state:
+                    self.location_state.visit_location(new_location, self.state.turn)
                 break
 
         # If a new roll is requested, clear the previous roll record

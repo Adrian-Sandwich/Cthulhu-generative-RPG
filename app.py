@@ -7,6 +7,8 @@ Flask backend for the generative RPG
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
 import json
+import threading
+from functools import wraps
 from pathlib import Path
 from legacy.graphics_engine_v1.ascii_scenes_hd import get_scene_hd, list_scenes_hd
 from core.game_generative import GenerativeGameEngine, InvestigatorState
@@ -25,9 +27,20 @@ def serve_generated_image(filename):
     return send_from_directory(GENERATED_IMAGES_DIR, filename)
 
 
-# Global game instance
+# Global game instance. Flask serves requests from multiple threads;
+# the lock serializes access so concurrent requests can't corrupt state.
 game_engine = None
 current_investigator = None
+state_lock = threading.Lock()
+
+
+def synchronized(f):
+    """Serialize handler execution around the shared game state."""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        with state_lock:
+            return f(*args, **kwargs)
+    return wrapper
 
 
 @app.route('/')
@@ -57,6 +70,7 @@ def get_scene(scene_key):
 
 
 @app.route('/api/game/start', methods=['POST'])
+@synchronized
 def start_game():
     """Start a new game"""
     global game_engine, current_investigator
@@ -109,6 +123,7 @@ def start_game():
 
 
 @app.route('/api/game/state', methods=['GET'])
+@synchronized
 def get_game_state():
     """Get current game state"""
     if not game_engine or not current_investigator:
@@ -147,6 +162,7 @@ def get_game_state():
 
 
 @app.route('/api/game/action', methods=['POST'])
+@synchronized
 def process_action():
     """Process player action"""
     if not game_engine or not current_investigator:
@@ -178,6 +194,7 @@ def process_action():
 
 
 @app.route('/api/game/reset', methods=['POST'])
+@synchronized
 def reset_game():
     """Reset game to start"""
     global game_engine, current_investigator

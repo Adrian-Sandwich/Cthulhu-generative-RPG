@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Rust build artifacts
+legacy/pixel_landscape/target/
+
+# Game saves and session data
+saves/
+
+# Generated image output
+game/generated/
+game/test_generated/

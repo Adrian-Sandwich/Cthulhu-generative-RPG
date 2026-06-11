@@ -140,6 +140,22 @@ class LocationStateManager:
         self.unlocked_locations.add(key)
         return loc
 
+    def get_location(self, key_or_name: str) -> Optional["LocationState"]:
+        """
+        Resolve a location by key or display name.
+
+        The game engine tracks the current location by display name
+        (e.g. "Point Black Lighthouse - Exterior") while this manager
+        is keyed by identifiers (e.g. "lighthouse_exterior").
+        """
+        if key_or_name in self.locations:
+            return self.locations[key_or_name]
+        target = key_or_name.strip().lower()
+        for loc in self.locations.values():
+            if loc.name.lower() == target:
+                return loc
+        return None
+
     def visit_location(self, key: str, current_turn: int = 0) -> str:
         """
         Handle location visit - update state and get description.

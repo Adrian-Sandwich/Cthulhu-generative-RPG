@@ -115,7 +115,9 @@ def get_game_state():
         return jsonify({"error": "Game not started"}), 400
 
     # Get location state and generate image if available
-    location_state = game_engine.state.location_state
+    location_state = None
+    if game_engine.location_state:
+        location_state = game_engine.location_state.get_location(game_engine.state.location)
     image_url = None
     if location_state and not location_state.generated_image_path:
         # Try to generate image for this location

@@ -1195,10 +1195,8 @@ Respond with the IMMEDIATE narrative outcome of this action. Stay in location.
                     f"[PERMANENT DISORDER: {disorder.type} - affecting investigator indefinitely]"
                 )
 
-        return result
-
         # Check for madness ending
-        if result['sanity'] == 0:
+        if result["sanity_remaining"] == 0:
             self.state.ending_reached = "madness"
 
         return result

@@ -1,0 +1,45 @@
+{
+  "game_title": "Point Black Lighthouse - Alone Against the Dark",
+  "global_style": "dark retro pixel art Lovecraftian horror",
+  "resolution": "4:3 aspect ratio (640x480 minimum)",
+  "visual_era": "1920s New England, decayed and corrupted",
+  "camera_rules": "first-person perspective, wide room view, player looking forward at scene, no HUD elements",
+  "palette_rules": "desaturated stone grays, sickly moss greens, unnatural cyan/purple glows, deep blacks, minimal bright colors",
+  "lighting_philosophy": "sources are unnatural or constrained; no bright daylight unless outdoor beach scene",
+  "forbidden": [
+    "modern objects (cars, phones, electricity beyond oil lamps)",
+    "photorealism or smooth gradients",
+    "people, faces, or humanoid figures",
+    "text or UI overlays",
+    "bright rainbow colors",
+    "cartoon style",
+    "anime or manga aesthetics",
+    "contemporary clothing or technology",
+    "clear safety equipment",
+    "intact pristine architecture (only decay)"
+  ],
+  "required_motifs": [
+    "wet cracked stone or wood",
+    "creeping moss or fungi",
+    "unnatural glows or bioluminescence",
+    "eldritch carvings or symbols",
+    "collapsed or corrupted architecture",
+    "shadows with depth and dimension",
+    "sense of scale (vastness or confinement)",
+    "signs of abandonment or decay"
+  ],
+  "contamination_visual_rules": {
+    "0_25": "Subtle wrongness. Faint cracks, slight color shifts, barely perceptible.",
+    "25_50": "Visible corruption. Symbols appear, colors warp slightly, geometry feels off.",
+    "50_75": "Heavy corruption. Unnatural angles, bioluminescent growths, reality bends.",
+    "75_100": "Overwhelming. Reality breaks down, impossible geometry, non-euclidean space."
+  },
+  "danger_visual_rules": {
+    "1": "Safe, calm, mundane. Some decay but stable.",
+    "2": "Unsettling. Subtle wrong details, increasing decay.",
+    "3": "Threatening. Obvious supernatural signs, danger implied.",
+    "4": "Imminent danger. Hostile presence visible, reality failing.",
+    "5": "Lethal. Immediate threat, entity present, survival uncertain."
+  },
+  "prompt_template_base": "Retro pixel-art horror game background, Lovecraftian 1920s New England, [location_description], first-person perspective, wide composition, 4:3 aspect ratio, cohesive dark palette, oppressive atmosphere, game asset quality, no characters no UI no text, readable and playable."
+}

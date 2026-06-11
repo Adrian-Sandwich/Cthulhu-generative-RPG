@@ -4,14 +4,26 @@ Cthulhu Lighthouse Game - Web Interface
 Flask backend for the generative RPG
 """
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
 import json
-from graphics_engine.ascii_scenes_hd import get_scene_hd, list_scenes_hd
+from pathlib import Path
+from legacy.graphics_engine_v1.ascii_scenes_hd import get_scene_hd, list_scenes_hd
 from core.game_generative import GenerativeGameEngine, InvestigatorState
+from game.game_image_integration import generate_for_location
 
 app = Flask(__name__)
 CORS(app)
+
+# Generated location images
+GENERATED_IMAGES_DIR = Path(__file__).parent / 'game' / 'generated'
+
+
+@app.route('/images/<path:filename>')
+def serve_generated_image(filename):
+    """Serve generated location images"""
+    return send_from_directory(GENERATED_IMAGES_DIR, filename)
+
 
 # Global game instance
 game_engine = None
@@ -102,9 +114,25 @@ def get_game_state():
     if not game_engine or not current_investigator:
         return jsonify({"error": "Game not started"}), 400
 
+    # Get location state and generate image if available
+    location_state = game_engine.state.location_state
+    image_url = None
+    if location_state and not location_state.generated_image_path:
+        # Try to generate image for this location
+        try:
+            generate_for_location(location_state)
+        except Exception as e:
+            print(f"Warning: Could not generate image: {e}")
+
+    # Convert image path to URL
+    if location_state and location_state.generated_image_path:
+        image_path = Path(location_state.generated_image_path)
+        image_url = f"/images/{image_path.name}"
+
     return jsonify({
         "location": game_engine.state.location,
         "turn": game_engine.state.turn,
+        "image_url": image_url,  # NEW: Image URL for frontend
         "investigator": {
             "name": current_investigator.name,
             "archetype": current_investigator.occupation,

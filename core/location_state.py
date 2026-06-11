@@ -25,6 +25,7 @@ class LocationState:
     contamination: int = 0  # Supernatural corruption (0-100)
     events_triggered: List[str] = field(default_factory=list)  # Events that occurred
     last_visited_turn: int = 0  # When last visited
+    generated_image_path: Optional[str] = None  # Path to generated background image
 
     def get_current_description(self) -> str:
         """Generate description based on current state"""
@@ -69,7 +70,8 @@ class LocationState:
             "danger_level": self.danger_level,
             "contamination": self.contamination,
             "events_triggered": self.events_triggered,
-            "last_visited_turn": self.last_visited_turn
+            "last_visited_turn": self.last_visited_turn,
+            "generated_image_path": self.generated_image_path
         }
 
     @classmethod
@@ -84,7 +86,8 @@ class LocationState:
             danger_level=data.get("danger_level", 1),
             contamination=data.get("contamination", 0),
             events_triggered=data.get("events_triggered", []),
-            last_visited_turn=data.get("last_visited_turn", 0)
+            last_visited_turn=data.get("last_visited_turn", 0),
+            generated_image_path=data.get("generated_image_path")
         )
 
 

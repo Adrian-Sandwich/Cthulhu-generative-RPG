@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "location_key": {
+      "type": "string",
+      "description": "Unique identifier for location (e.g., lighthouse_exterior)"
+    },
+    "location_type": {
+      "type": "string",
+      "enum": [
+        "decaying_chamber",
+        "forest_entrance",
+        "altar_room",
+        "lighthouse_exterior",
+        "lighthouse_interior",
+        "underground_cavern",
+        "ritual_chamber",
+        "keeper_quarters",
+        "spiral_staircase"
+      ]
+    },
+    "mood": {
+      "type": "string",
+      "enum": [
+        "oppressive_horror",
+        "creeping_dread",
+        "otherworldly",
+        "sanity_breaking",
+        "eerie_quiet",
+        "alien_wrongness",
+        "cosmic_scale"
+      ]
+    },
+    "lighting": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "Where light comes from"
+        },
+        "color": {
+          "type": "string",
+          "description": "Primary light color"
+        },
+        "intensity": {
+          "enum": ["pitch_black", "dim", "low", "moderate", "unnatural", "pulsing"]
+        }
+      },
+      "required": ["source", "color", "intensity"]
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "What the object is"
+          },
+          "position": {
+            "type": "string",
+            "enum": [
+              "left_foreground",
+              "center_foreground",
+              "right_foreground",
+              "left_midground",
+              "center_midground",
+              "right_midground",
+              "left_background",
+              "center_background",
+              "right_background",
+              "floor",
+              "ceiling"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "description": "Condition of object (pristine, weathered, broken, corrupted, animated)"
+          }
+        },
+        "required": ["type", "position"]
+      }
+    },
+    "palette": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Dominant colors in the scene"
+    },
+    "camera": {
+      "type": "string",
+      "enum": [
+        "wide_eye_level",
+        "low_floor_perspective",
+        "high_ceiling_perspective",
+        "narrow_corridor",
+        "tall_chamber"
+      ]
+    },
+    "danger_level": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "1=safe, 5=lethal"
+    },
+    "contamination": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Supernatural corruption intensity"
+    },
+    "forbidden": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Things that should NOT appear"
+    }
+  },
+  "required": [
+    "location_key",
+    "location_type",
+    "mood",
+    "lighting",
+    "camera",
+    "palette"
+  ]
+}

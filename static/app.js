@@ -1,14 +1,9 @@
-// Cthulhu Lighthouse Game - Client Logic
+// THE LIGHTHOUSE - Client Logic
 
 let gameStarted = false;
-let currentScene = null;
 let gameHistory = [];
-
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('Game initialized');
-    fetchScenes();
-});
+let maxHP = 14; // Replaced with the investigator's starting HP on game start
+let imagePollTimer = null;
 
 // Start Game
 async function startGame(event) {
@@ -16,9 +11,6 @@ async function startGame(event) {
 
     const name = document.getElementById('investigator-name').value;
     const archetype = document.getElementById('investigator-archetype').value;
-
-    const statusEl = document.getElementById('action-status');
-    statusEl.textContent = 'Initializing...';
 
     try {
         const response = await fetch('/api/game/start', {
@@ -32,63 +24,39 @@ async function startGame(event) {
         if (data.success) {
             gameStarted = true;
             gameHistory = [];
+            maxHP = data.investigator.HP; // Starting HP is the max
 
-            // Hide startup, show game screen
             document.getElementById('startup-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
-            document.getElementById('action-input-area').classList.remove('hidden');
 
-            // Update character info
-            updateCharacterInfo(data.investigator);
-
-            // Show initial scene
-            showScene();
+            updateStats(data.investigator);
             refreshGameState();
-
-            statusEl.textContent = data.message;
+            setStatus(data.message);
+            document.getElementById('action-input').focus();
         } else {
-            statusEl.textContent = '❌ Error: ' + (data.error || 'Unknown error');
+            setStatus('Error: ' + (data.error || 'unknown'), true);
         }
     } catch (error) {
-        statusEl.textContent = '❌ Connection error: ' + error.message;
+        setStatus('Connection error: ' + error.message, true);
     }
 }
 
-// Update Character Info
-function updateCharacterInfo(investigator) {
-    document.getElementById('character-info').classList.remove('hidden');
-    document.getElementById('char-name').textContent = investigator.name;
-    document.getElementById('char-archetype').textContent = investigator.archetype.toUpperCase();
-
-    updateStats(investigator);
+// Status line under the input
+function setStatus(message, isError = false) {
+    const el = document.getElementById('action-status');
+    el.textContent = message || '';
+    el.classList.toggle('error', isError);
 }
 
-// Update Stats Bars
+// Update Stats
 function updateStats(stats) {
-    const maxHP = 14; // Standard Call of Cthulhu
-    const maxSAN = 99;
-    const maxLuck = 100;
-
-    // HP
-    const hpPercent = (stats.HP / maxHP) * 100;
-    document.getElementById('hp-bar').style.width = hpPercent + '%';
     document.getElementById('hp-value').textContent = stats.HP + '/' + maxHP;
-
-    // SAN
-    const sanPercent = (stats.SAN / maxSAN) * 100;
-    document.getElementById('san-bar').style.width = sanPercent + '%';
-    document.getElementById('san-value').textContent = stats.SAN + '/' + maxSAN;
-
-    // Luck
-    const luckPercent = (stats.Luck / maxLuck) * 100;
-    document.getElementById('luck-bar').style.width = luckPercent + '%';
-    document.getElementById('luck-value').textContent = stats.Luck + '/' + maxLuck;
+    document.getElementById('san-value').textContent = stats.SAN + '/99';
+    document.getElementById('luck-value').textContent = stats.Luck;
 }
 
-// Refresh game state from server (location image, etc.)
+// Refresh game state from server (location, scene image).
 // Image generation runs server-side in the background; poll until ready.
-let imagePollTimer = null;
-
 async function refreshGameState() {
     if (!gameStarted) return;
 
@@ -99,54 +67,24 @@ async function refreshGameState() {
         if (!response.ok) return;
         const data = await response.json();
 
+        document.getElementById('location-display').textContent = data.location;
+        document.getElementById('turn-counter').textContent = data.turn;
+
         const img = document.getElementById('scene-image');
+        const placeholder = document.getElementById('scene-placeholder');
         if (data.image_url) {
             img.src = data.image_url;
             img.classList.remove('hidden');
+            placeholder.classList.add('hidden');
         } else {
             img.classList.add('hidden');
+            placeholder.classList.remove('hidden');
             if (data.image_generating) {
                 imagePollTimer = setTimeout(refreshGameState, 5000);
             }
         }
     } catch (error) {
         console.error('Error refreshing game state:', error);
-    }
-}
-
-// Fetch Scenes (for preloading)
-async function fetchScenes() {
-    try {
-        const response = await fetch('/api/scenes');
-        const data = await response.json();
-        console.log('Available scenes:', data.scenes);
-    } catch (error) {
-        console.error('Error fetching scenes:', error);
-    }
-}
-
-// Show Scene
-async function showScene() {
-    if (!gameStarted) return;
-
-    const statusEl = document.getElementById('action-status');
-    statusEl.textContent = 'Loading scene...';
-
-    try {
-        // For now, show exterior_storm as example
-        // In future, this will be determined by game state
-        const sceneKey = 'exterior_storm';
-
-        const response = await fetch(`/api/scene/${sceneKey}`);
-        const data = await response.json();
-
-        if (data.content) {
-            document.getElementById('scene-content').textContent = data.content;
-            currentScene = sceneKey;
-            statusEl.textContent = '';
-        }
-    } catch (error) {
-        statusEl.textContent = '❌ Error loading scene: ' + error.message;
     }
 }
 
@@ -159,8 +97,7 @@ async function submitAction(event) {
 
     if (!action) return;
 
-    const statusEl = document.getElementById('action-status');
-    statusEl.textContent = 'Processing action...';
+    setStatus('...');
     actionInput.disabled = true;
 
     try {
@@ -173,33 +110,24 @@ async function submitAction(event) {
         const data = await response.json();
 
         if (data.success) {
-            // Add to narrative
             addNarrativeTurn(data.turn, action, data.narrative);
-
-            // Update stats
             updateStats(data.state);
-
-            // Update turn counter
             document.getElementById('turn-counter').textContent = data.turn;
-
-            // Update location
             document.getElementById('location-display').textContent = data.location;
 
-            // Clear input
             actionInput.value = '';
-            statusEl.textContent = '';
+            setStatus('');
 
-            // Scroll to bottom of narrative
             const narrativeContent = document.getElementById('narrative-content');
             narrativeContent.scrollTop = narrativeContent.scrollHeight;
 
             // Update location image (may trigger generation server-side)
             refreshGameState();
         } else {
-            statusEl.textContent = '❌ ' + (data.error || 'Action failed');
+            setStatus(data.error || 'Action failed', true);
         }
     } catch (error) {
-        statusEl.textContent = '❌ ' + error.message;
+        setStatus(error.message, true);
     } finally {
         actionInput.disabled = false;
         actionInput.focus();
@@ -213,29 +141,22 @@ function addNarrativeTurn(turn, playerAction, dmResponse) {
     const turnEl = document.createElement('div');
     turnEl.className = 'narrative-turn';
 
-    const turnLabel = document.createElement('div');
-    turnLabel.className = 'turn-label';
-    turnLabel.textContent = `⏱️ Turn ${turn}`;
-    turnEl.appendChild(turnLabel);
-
     const playerEl = document.createElement('div');
     playerEl.className = 'player-action';
-    playerEl.textContent = `You: ${playerAction}`;
+    playerEl.textContent = `> ${playerAction}`;
     turnEl.appendChild(playerEl);
 
     const dmEl = document.createElement('div');
     dmEl.className = 'dm-response';
-    dmEl.textContent = dmResponse || '(The keeper considers your words...)';
+    dmEl.textContent = (dmResponse || '(The keeper considers your words...)').trim();
     turnEl.appendChild(dmEl);
 
     narrativeContent.appendChild(turnEl);
 
-    // Add to history
-    gameHistory.push({
-        turn,
-        playerAction,
-        dmResponse
-    });
+    const display = document.getElementById('narrative-display');
+    display.scrollTop = display.scrollHeight;
+
+    gameHistory.push({ turn, playerAction, dmResponse });
 }
 
 // Show History
@@ -247,7 +168,7 @@ function showHistory() {
     historyContent.innerHTML = '';
 
     if (gameHistory.length === 0) {
-        historyContent.innerHTML = '<p style="color: var(--text-secondary);">No history yet.</p>';
+        historyContent.textContent = 'No history yet.';
         return;
     }
 
@@ -255,19 +176,14 @@ function showHistory() {
         const entryEl = document.createElement('div');
         entryEl.className = 'narrative-turn';
 
-        const turnLabel = document.createElement('div');
-        turnLabel.className = 'turn-label';
-        turnLabel.textContent = `⏱️ Turn ${entry.turn}`;
-        entryEl.appendChild(turnLabel);
-
         const playerEl = document.createElement('div');
         playerEl.className = 'player-action';
-        playerEl.textContent = `You: ${entry.playerAction}`;
+        playerEl.textContent = `[${entry.turn}] > ${entry.playerAction}`;
         entryEl.appendChild(playerEl);
 
         const dmEl = document.createElement('div');
         dmEl.className = 'dm-response';
-        dmEl.textContent = entry.dmResponse;
+        dmEl.textContent = (entry.dmResponse || '').trim();
         entryEl.appendChild(dmEl);
 
         historyContent.appendChild(entryEl);
@@ -286,35 +202,27 @@ function resetGame() {
 
     gameStarted = false;
     gameHistory = [];
-    currentScene = null;
     clearTimeout(imagePollTimer);
 
-    // Show startup, hide game
     document.getElementById('startup-screen').classList.remove('hidden');
     document.getElementById('game-screen').classList.add('hidden');
-    document.getElementById('action-input-area').classList.add('hidden');
     document.getElementById('history-display').classList.add('hidden');
     document.getElementById('narrative-display').classList.remove('hidden');
 
-    // Clear content
     document.getElementById('narrative-content').innerHTML = '';
-    document.getElementById('scene-image').classList.add('hidden');
     document.getElementById('investigator-name').value = '';
-    document.getElementById('character-info').classList.add('hidden');
-
-    // Reset display
+    document.getElementById('scene-image').classList.add('hidden');
+    document.getElementById('scene-placeholder').classList.remove('hidden');
     document.getElementById('turn-counter').textContent = '0';
     document.getElementById('location-display').textContent = 'Exterior - Rocky Shore';
+    setStatus('');
 
-    // Call reset API
     fetch('/api/game/reset', { method: 'POST' });
 }
 
-// Keyboard shortcuts
+// Focus action input on any letter
 document.addEventListener('keydown', (e) => {
     if (!gameStarted) return;
-
-    // Focus action input on any letter
     if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
         const actionInput = document.getElementById('action-input');
         if (document.activeElement !== actionInput) {

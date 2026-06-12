@@ -11,7 +11,6 @@ import os
 import threading
 from functools import wraps
 from pathlib import Path
-from legacy.graphics_engine_v1.ascii_scenes_hd import get_scene_hd, list_scenes_hd
 from core.game_generative import GenerativeGameEngine, InvestigatorState
 from game.game_image_integration import generate_for_location
 
@@ -24,7 +23,6 @@ if _cors_origins:
 
 # Generated location images
 GENERATED_IMAGES_DIR = Path(__file__).parent / 'game' / 'generated'
-
 
 @app.route('/images/<path:filename>')
 def serve_generated_image(filename):
@@ -78,26 +76,6 @@ def request_image_generation(location_state):
 def index():
     """Main game interface"""
     return render_template('index.html')
-
-
-@app.route('/api/scenes', methods=['GET'])
-def get_scenes():
-    """Get list of available scenes"""
-    scenes = list_scenes_hd()
-    return jsonify({"scenes": list(scenes.keys())})
-
-
-@app.route('/api/scene/<scene_key>', methods=['GET'])
-def get_scene(scene_key):
-    """Get a specific scene by key"""
-    scene_content = get_scene_hd(scene_key)
-    if scene_content == "Scene not found.":
-        return jsonify({"error": "Scene not found"}), 404
-
-    return jsonify({
-        "key": scene_key,
-        "content": scene_content
-    })
 
 
 @app.route('/api/game/start', methods=['POST'])

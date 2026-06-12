@@ -158,12 +158,30 @@ def get_game_state():
     })
 
 
+# Roll waiting for the player to throw the die (skill, difficulty, target).
+# Mutated only under state_lock via @synchronized handlers.
+pending_roll = None
+
+
+def _investigator_stats():
+    return {
+        "HP": current_investigator.characteristics['HP'],
+        "SAN": current_investigator.characteristics['SAN'],
+        "Luck": current_investigator.characteristics['Luck']
+    }
+
+
 @app.route('/api/game/action', methods=['POST'])
 @synchronized
 def process_action():
     """Process player action"""
+    global pending_roll
+
     if not game_engine or not current_investigator:
         return jsonify({"error": "Game not started"}), 400
+
+    if pending_roll:
+        return jsonify({"error": "Resolve the pending roll first"}), 409
 
     data = request.json
     player_input = data.get('action', '')
@@ -175,16 +193,68 @@ def process_action():
         # Process the action
         result = game_engine.process_player_action(player_input)
 
+        # Apply immediate consequences the DM declared inline
+        for damage in result.get("hp_damage", []):
+            game_engine.apply_hp_damage(int(damage))
+        for damage in result.get("sanity_checks", []):
+            game_engine.apply_sanity_check(int(damage))
+
+        # If the DM requested a roll, hand the die to the player
+        # instead of resolving it silently
+        rolls = result.get("rolls_requested", [])
+        if rolls:
+            skill, difficulty = rolls[0]
+            pending_roll = game_engine.prepare_skill_check(skill, difficulty)
+
         return jsonify({
             "success": True,
             "turn": game_engine.state.turn,
             "location": game_engine.state.location,
             "narrative": result.get("narrative", ""),
-            "state": {
-                "HP": current_investigator.characteristics['HP'],
-                "SAN": current_investigator.characteristics['SAN'],
-                "Luck": current_investigator.characteristics['Luck']
-            }
+            "pending_roll": pending_roll,
+            "state": _investigator_stats()
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/game/roll', methods=['POST'])
+@synchronized
+def execute_roll():
+    """Player throws the die for the pending skill check"""
+    global pending_roll
+
+    if not game_engine or not current_investigator:
+        return jsonify({"error": "Game not started"}), 400
+
+    if not pending_roll:
+        return jsonify({"error": "No pending roll"}), 400
+
+    try:
+        roll = pending_roll
+        pending_roll = None
+
+        # Server rolls the actual die (the client animation is theater)
+        result = game_engine.execute_skill_check(roll["skill"], roll["difficulty"])
+
+        # DM narrates the outcome immediately
+        consequence = game_engine.resolve_roll_consequences()
+        narrative = ""
+        if isinstance(consequence, dict):
+            narrative = consequence.get("narrative", "")
+
+        return jsonify({
+            "success": True,
+            "skill": roll["skill"],
+            "difficulty": roll["difficulty"],
+            "roll": result["roll"],
+            "target": result["target"],
+            "roll_success": result["success"],
+            "message": result["message"],
+            "narrative": narrative,
+            "turn": game_engine.state.turn,
+            "location": game_engine.state.location,
+            "state": _investigator_stats()
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -194,9 +264,10 @@ def process_action():
 @synchronized
 def reset_game():
     """Reset game to start"""
-    global game_engine, current_investigator
+    global game_engine, current_investigator, pending_roll
     game_engine = None
     current_investigator = None
+    pending_roll = None
 
     return jsonify({"success": True, "message": "Game reset"})
 

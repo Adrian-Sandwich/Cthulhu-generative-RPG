@@ -83,6 +83,12 @@
                 <div id="sheet-content" class="sheet"></div>
             </div>
 
+            <div id="dice-area" class="hidden">
+                <span id="dice-label">ROLL: Dodge (Hard) — target 20</span>
+                <div id="pixel-die" onclick="rollDice()">?</div>
+                <span id="dice-result"></span>
+            </div>
+
             <form id="action-form" onsubmit="submitAction(event)">
                 <span class="prompt">&gt;</span>
                 <input type="text" id="action-input" placeholder="what do you do?" autocomplete="off">

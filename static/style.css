@@ -221,6 +221,67 @@ input:focus, select:focus {
     margin: -10px -8px 10px -8px;
 }
 
+/* ---- Dice roll ---- */
+
+#dice-area {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 8px;
+    border-top: 1px solid var(--text-dim);
+}
+
+#dice-label {
+    color: var(--accent);
+}
+
+/* Chunky pixel d100: stepped corners faked with box-shadow */
+#pixel-die {
+    width: 52px;
+    height: 52px;
+    background: var(--text);
+    color: var(--bg);
+    font-weight: bold;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    box-shadow:
+        4px 0 0 var(--bg) inset, -4px 0 0 var(--bg) inset,
+        0 4px 0 var(--bg) inset, 0 -4px 0 var(--bg) inset,
+        4px 4px 0 var(--text) inset, -4px -4px 0 var(--text) inset,
+        -4px 4px 0 var(--text) inset, 4px -4px 0 var(--text) inset;
+}
+
+#pixel-die:hover {
+    background: var(--accent);
+}
+
+#pixel-die.rolling {
+    animation: die-shake 0.12s infinite;
+    cursor: default;
+}
+
+#pixel-die.success { background: #55ff55; }
+#pixel-die.failure { background: var(--danger); color: var(--bg); }
+
+@keyframes die-shake {
+    0%   { transform: translate(0, 0) rotate(0deg); }
+    25%  { transform: translate(-3px, 2px) rotate(-6deg); }
+    50%  { transform: translate(2px, -3px) rotate(5deg); }
+    75%  { transform: translate(-2px, -2px) rotate(-4deg); }
+    100% { transform: translate(3px, 2px) rotate(6deg); }
+}
+
+#dice-result {
+    color: var(--text);
+}
+
+#dice-result.success { color: #55ff55; }
+#dice-result.failure { color: var(--danger); }
+
 /* ---- Action input ---- */
 
 #action-form {

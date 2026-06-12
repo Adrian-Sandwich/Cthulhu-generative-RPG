@@ -5,6 +5,8 @@ let gameHistory = [];
 let maxHP = 14; // Replaced with the investigator's starting HP on game start
 let imagePollTimer = null;
 let archetypes = {};
+let pendingRoll = null;
+let rolling = false;
 
 // Load archetype stat blocks and show the initial preview
 document.addEventListener('DOMContentLoaded', async () => {
@@ -186,8 +188,10 @@ async function submitAction(event) {
             actionInput.value = '';
             setStatus('');
 
-            const narrativeContent = document.getElementById('narrative-content');
-            narrativeContent.scrollTop = narrativeContent.scrollHeight;
+            // DM asked for a roll: hand the die to the player
+            if (data.pending_roll) {
+                showDiceArea(data.pending_roll);
+            }
 
             // Update location image (may trigger generation server-side)
             refreshGameState();
@@ -197,8 +201,99 @@ async function submitAction(event) {
     } catch (error) {
         setStatus(error.message, true);
     } finally {
-        actionInput.disabled = false;
-        actionInput.focus();
+        if (!pendingRoll) {
+            actionInput.disabled = false;
+            actionInput.focus();
+        }
+    }
+}
+
+// ---- Dice rolling ----
+
+function showDiceArea(roll) {
+    pendingRoll = roll;
+    document.getElementById('action-input').disabled = true;
+
+    const die = document.getElementById('pixel-die');
+    die.textContent = '?';
+    die.className = '';
+
+    document.getElementById('dice-label').textContent =
+        `ROLL: ${roll.skill} (${roll.difficulty}) — target ${roll.target}`;
+    const result = document.getElementById('dice-result');
+    result.textContent = '';
+    result.className = '';
+
+    document.getElementById('dice-area').classList.remove('hidden');
+}
+
+function hideDiceArea() {
+    pendingRoll = null;
+    document.getElementById('dice-area').classList.add('hidden');
+    const actionInput = document.getElementById('action-input');
+    actionInput.disabled = false;
+    actionInput.focus();
+}
+
+async function rollDice() {
+    if (!pendingRoll || rolling) return;
+    rolling = true;
+
+    const die = document.getElementById('pixel-die');
+    const resultEl = document.getElementById('dice-result');
+    die.classList.add('rolling');
+
+    // Pixel die tumbles with random faces while the server rolls
+    const tumble = setInterval(() => {
+        die.textContent = 1 + Math.floor(Math.random() * 100);
+    }, 70);
+    const minSpin = new Promise(resolve => setTimeout(resolve, 900));
+
+    try {
+        const [response] = await Promise.all([
+            fetch('/api/game/roll', { method: 'POST' }),
+            minSpin
+        ]);
+        const data = await response.json();
+
+        clearInterval(tumble);
+        die.classList.remove('rolling');
+
+        if (!data.success) {
+            setStatus(data.error || 'Roll failed', true);
+            hideDiceArea();
+            return;
+        }
+
+        // Settle on the server's number
+        die.textContent = data.roll;
+        const cls = data.roll_success ? 'success' : 'failure';
+        die.classList.add(cls);
+        resultEl.classList.add(cls);
+        resultEl.textContent =
+            `${data.roll} vs ${data.target} — ${data.roll_success ? 'SUCCESS' : 'FAILURE'}`;
+
+        updateStats(data.state);
+        document.getElementById('turn-counter').textContent = data.turn;
+        document.getElementById('location-display').textContent = data.location;
+
+        // Let the result sink in, then show the DM's consequence
+        setTimeout(() => {
+            addNarrativeTurn(
+                data.turn,
+                `roll ${data.skill} (${data.difficulty}): ${data.roll} vs ${data.target}`,
+                data.narrative
+            );
+            hideDiceArea();
+            refreshGameState();
+        }, 1200);
+    } catch (error) {
+        clearInterval(tumble);
+        die.classList.remove('rolling');
+        setStatus(error.message, true);
+        hideDiceArea();
+    } finally {
+        rolling = false;
     }
 }
 
@@ -272,7 +367,10 @@ function resetGame() {
 
     gameStarted = false;
     gameHistory = [];
+    pendingRoll = null;
     clearTimeout(imagePollTimer);
+    document.getElementById('dice-area').classList.add('hidden');
+    document.getElementById('action-input').disabled = false;
 
     document.getElementById('startup-screen').classList.remove('hidden');
     document.getElementById('game-screen').classList.add('hidden');
@@ -294,6 +392,13 @@ function resetGame() {
 // Focus action input on any letter
 document.addEventListener('keydown', (e) => {
     if (!gameStarted) return;
+    // Space/enter throws the pending die
+    if (pendingRoll && (e.key === ' ' || e.key === 'Enter')) {
+        e.preventDefault();
+        rollDice();
+        return;
+    }
+    if (pendingRoll) return;
     if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
         const actionInput = document.getElementById('action-input');
         if (document.activeElement !== actionInput) {

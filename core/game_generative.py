@@ -1039,11 +1039,8 @@ Respond with the IMMEDIATE narrative outcome of this action. Stay in location.
             "state": asdict(self.state)
         }
 
-    def execute_skill_check(self, skill: str, difficulty: str = "Normal") -> Dict:
-        """Execute a requested skill check"""
-        if not self.state:
-            return {"error": "No active game"}
-
+    def _skill_check_values(self, skill: str) -> Tuple[int, int]:
+        """Resolve (skill_value, characteristic_value) for a skill name"""
         inv = self.state.investigator
 
         # Normalize skill name (lowercase, replace spaces with underscores)
@@ -1057,6 +1054,33 @@ Respond with the IMMEDIATE narrative outcome of this action. Stay in location.
         # Get characteristic to use
         char_key = self.rules.SKILL_TO_CHARACTERISTIC.get(normalized_skill, "INT")
         char_value = inv.characteristics.get(char_key, 50)
+
+        return skill_value, char_value
+
+    def prepare_skill_check(self, skill: str, difficulty: str = "Normal") -> Dict:
+        """
+        Compute the target number for a requested check WITHOUT rolling,
+        so the player can be shown the stakes and roll the die themselves.
+        """
+        if not self.state:
+            return {"error": "No active game"}
+
+        skill_value, char_value = self._skill_check_values(skill)
+        base = skill_value if skill_value > 0 else char_value
+        mod = self.rules.DIFFICULTY_MODS.get(difficulty, 1.0)
+
+        return {
+            "skill": skill,
+            "difficulty": difficulty,
+            "target": int(base * mod)
+        }
+
+    def execute_skill_check(self, skill: str, difficulty: str = "Normal") -> Dict:
+        """Execute a requested skill check"""
+        if not self.state:
+            return {"error": "No active game"}
+
+        skill_value, char_value = self._skill_check_values(skill)
 
         # Resolve check
         result = self.rules.resolve_skill_check(skill, skill_value, char_value, difficulty)

@@ -157,12 +157,46 @@ input:focus, select:focus {
 
 /* ---- Narrative ---- */
 
-#narrative-display, #history-display {
+#narrative-display, #history-display, #sheet-display {
     flex: 1;
     overflow-y: auto;
     min-height: 220px;
     max-height: 45vh;
     padding: 10px 8px;
+}
+
+/* ---- Character sheet ---- */
+
+.sheet-desc {
+    color: var(--text-dim);
+    margin-bottom: 10px;
+}
+
+.sheet-chars, .sheet-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    margin-bottom: 10px;
+}
+
+.sheet-chars span, .skill {
+    color: var(--text-dim);
+}
+
+.sheet-chars b, .skill b, .sheet-derived b {
+    color: var(--text);
+    font-weight: normal;
+}
+
+.sheet-derived {
+    color: var(--accent);
+    margin-bottom: 10px;
+}
+
+#archetype-preview {
+    margin-top: 24px;
+    border-top: 1px solid var(--text-dim);
+    padding-top: 14px;
 }
 
 .narrative-turn {

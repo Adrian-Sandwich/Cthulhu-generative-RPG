@@ -11,7 +11,8 @@ import os
 import threading
 from functools import wraps
 from pathlib import Path
-from core.game_generative import GenerativeGameEngine, InvestigatorState
+from core.game_generative import GenerativeGameEngine
+from core.archetypes import get_archetype_sheets, create_investigator
 from game.game_image_integration import generate_for_location
 
 app = Flask(__name__)
@@ -78,6 +79,12 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/api/archetypes', methods=['GET'])
+def get_archetypes():
+    """Archetype stat blocks for the character sheet preview"""
+    return jsonify({"archetypes": get_archetype_sheets()})
+
+
 @app.route('/api/game/start', methods=['POST'])
 @synchronized
 def start_game():
@@ -89,28 +96,7 @@ def start_game():
     occupation = data.get('archetype', 'scholar')  # Called 'occupation' in game engine
 
     try:
-        # Initialize investigator
-        current_investigator = InvestigatorState(
-            name=investigator_name,
-            occupation=occupation,
-            characteristics={
-                'STR': 50,
-                'CON': 50,
-                'SIZ': 50,
-                'DEX': 50,
-                'APP': 50,
-                'INT': 70 if occupation == 'scholar' else 60,
-                'POW': 60,
-                'EDU': 75 if occupation == 'scholar' else 65,
-                'HP': 7,
-                'SAN': 70,
-                'Luck': 50
-            },
-            skills={},
-            inventory=[],
-            visited_locations=[],
-            sanity_breaks=[]
-        )
+        current_investigator = create_investigator(investigator_name, occupation)
 
         # Initialize game engine
         game_engine = GenerativeGameEngine(use_memory=False)
@@ -163,7 +149,10 @@ def get_game_state():
             "archetype": current_investigator.occupation,
             "HP": current_investigator.characteristics['HP'],
             "SAN": current_investigator.characteristics['SAN'],
-            "Luck": current_investigator.characteristics['Luck']
+            "Luck": current_investigator.characteristics['Luck'],
+            "characteristics": current_investigator.characteristics,
+            "skills": current_investigator.skills,
+            "inventory": current_investigator.inventory
         },
         "narrative": game_engine.state.narrative[-5:] if game_engine.state.narrative else []
     })

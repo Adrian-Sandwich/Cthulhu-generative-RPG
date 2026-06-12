@@ -27,7 +27,7 @@
                     <input type="text" id="investigator-name" placeholder="your name" required maxlength="50" autocomplete="off">
                 </div>
                 <div class="form-row">
-                    <select id="investigator-archetype">
+                    <select id="investigator-archetype" onchange="previewArchetype()">
                         <option value="scholar">Scholar</option>
                         <option value="detective">Detective</option>
                         <option value="occultist">Occultist</option>
@@ -36,6 +36,7 @@
                     <button type="submit" class="start-btn">BEGIN</button>
                 </div>
             </form>
+            <div id="archetype-preview" class="sheet"></div>
         </div>
 
         <!-- Game -->
@@ -56,6 +57,7 @@
                 <span>SAN <span id="san-value">—</span></span>
                 <span>LUCK <span id="luck-value">—</span></span>
                 <span class="menu-keys">
+                    <a onclick="showSheet()">[sheet]</a>
                     <a onclick="showHistory()">[history]</a>
                     <a onclick="resetGame()">[new game]</a>
                 </span>
@@ -71,6 +73,14 @@
                     <a onclick="showNarrative()">[close]</a>
                 </div>
                 <div id="history-content"></div>
+            </div>
+
+            <div id="sheet-display" class="hidden">
+                <div class="history-header">
+                    <span>INVESTIGATOR SHEET</span>
+                    <a onclick="showNarrative()">[close]</a>
+                </div>
+                <div id="sheet-content" class="sheet"></div>
             </div>
 
             <form id="action-form" onsubmit="submitAction(event)">

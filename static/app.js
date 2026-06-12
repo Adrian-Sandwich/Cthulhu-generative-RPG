@@ -4,6 +4,74 @@ let gameStarted = false;
 let gameHistory = [];
 let maxHP = 14; // Replaced with the investigator's starting HP on game start
 let imagePollTimer = null;
+let archetypes = {};
+
+// Load archetype stat blocks and show the initial preview
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('/api/archetypes');
+        archetypes = (await response.json()).archetypes;
+        previewArchetype();
+    } catch (error) {
+        console.error('Error loading archetypes:', error);
+    }
+});
+
+// Character sheet markup shared by the preview and the in-game sheet
+function renderSheet(container, sheet) {
+    const chars = sheet.characteristics;
+    const charOrder = ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU'];
+
+    const skills = Object.entries(sheet.skills)
+        .sort((a, b) => b[1] - a[1])
+        .map(([name, value]) => {
+            const label = name.replace(/_/g, ' ');
+            return `<span class="skill">${label} <b>${value}</b></span>`;
+        })
+        .join('');
+
+    container.innerHTML = `
+        ${sheet.description ? `<p class="sheet-desc">${sheet.description}</p>` : ''}
+        <div class="sheet-chars">
+            ${charOrder.map(c => `<span>${c} <b>${chars[c]}</b></span>`).join('')}
+        </div>
+        <div class="sheet-derived">
+            HP <b>${sheet.derived.HP}</b> &nbsp; SAN <b>${sheet.derived.SAN}</b> &nbsp; LUCK <b>${sheet.derived.Luck}</b>
+        </div>
+        <div class="sheet-skills">${skills}</div>
+    `;
+}
+
+// Preview the selected archetype's sheet on the startup screen
+function previewArchetype() {
+    const key = document.getElementById('investigator-archetype').value;
+    const sheet = archetypes[key];
+    if (sheet) {
+        renderSheet(document.getElementById('archetype-preview'), sheet);
+    }
+}
+
+// Show the investigator sheet during play
+async function showSheet() {
+    try {
+        const response = await fetch('/api/game/state');
+        if (!response.ok) return;
+        const inv = (await response.json()).investigator;
+
+        renderSheet(document.getElementById('sheet-content'), {
+            description: null,
+            characteristics: inv.characteristics,
+            derived: { HP: inv.HP, SAN: inv.SAN, Luck: inv.Luck },
+            skills: inv.skills
+        });
+
+        document.getElementById('narrative-display').classList.add('hidden');
+        document.getElementById('history-display').classList.add('hidden');
+        document.getElementById('sheet-display').classList.remove('hidden');
+    } catch (error) {
+        console.error('Error loading sheet:', error);
+    }
+}
 
 // Start Game
 async function startGame(event) {
@@ -162,6 +230,7 @@ function addNarrativeTurn(turn, playerAction, dmResponse) {
 // Show History
 function showHistory() {
     document.getElementById('narrative-display').classList.add('hidden');
+    document.getElementById('sheet-display').classList.add('hidden');
     document.getElementById('history-display').classList.remove('hidden');
 
     const historyContent = document.getElementById('history-content');
@@ -190,10 +259,11 @@ function showHistory() {
     });
 }
 
-// Show Narrative (back from history)
+// Show Narrative (back from history/sheet)
 function showNarrative() {
     document.getElementById('narrative-display').classList.remove('hidden');
     document.getElementById('history-display').classList.add('hidden');
+    document.getElementById('sheet-display').classList.add('hidden');
 }
 
 // Reset Game
@@ -207,6 +277,7 @@ function resetGame() {
     document.getElementById('startup-screen').classList.remove('hidden');
     document.getElementById('game-screen').classList.add('hidden');
     document.getElementById('history-display').classList.add('hidden');
+    document.getElementById('sheet-display').classList.add('hidden');
     document.getElementById('narrative-display').classList.remove('hidden');
 
     document.getElementById('narrative-content').innerHTML = '';

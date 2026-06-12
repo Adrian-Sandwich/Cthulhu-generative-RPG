@@ -43,6 +43,24 @@ _STRIP_PATTERN = re.compile(
     r'\[(?:ROLL|SANITY_CHECK|ITEM_FOUND|HP_DAMAGE|COMBAT_START|NPC_DIALOGUE): .*?\]'
 )
 
+# Models decorate narrative with markdown despite instructions;
+# the game renders plain text, so emphasis markers are stripped.
+_MARKDOWN_PATTERNS = [
+    (re.compile(r'\*\*\*(.+?)\*\*\*', re.DOTALL), r'\1'),  # bold italic
+    (re.compile(r'\*\*(.+?)\*\*', re.DOTALL), r'\1'),      # bold
+    (re.compile(r'\*(.+?)\*', re.DOTALL), r'\1'),          # italic
+    (re.compile(r'__(.+?)__', re.DOTALL), r'\1'),          # bold (underscore)
+    (re.compile(r'`(.+?)`', re.DOTALL), r'\1'),            # code
+    (re.compile(r'^#{1,6} ', re.MULTILINE), ''),           # headers
+]
+
+
+def strip_markdown(text: str) -> str:
+    """Remove markdown emphasis the LLM adds to narrative text"""
+    for pattern, replacement in _MARKDOWN_PATTERNS:
+        text = pattern.sub(replacement, text)
+    return text
+
 
 def parse_dm_response(dm_response: str) -> Dict:
     """
@@ -72,7 +90,7 @@ def parse_dm_response(dm_response: str) -> Dict:
         ],
         "combat_start": re.findall(_TAG_PATTERNS["COMBAT_START"], dm_response),
         "npc_dialogue": re.findall(_TAG_PATTERNS["NPC_DIALOGUE"], dm_response),
-        "clean_response": strip_tags(dm_response),
+        "clean_response": strip_markdown(strip_tags(dm_response)),
     }
 
 

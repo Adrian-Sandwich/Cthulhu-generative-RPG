@@ -9,7 +9,9 @@ import random
 import re
 from dataclasses import dataclass, asdict
 from typing import Optional, Dict, List, Tuple
-import requests
+
+from .llm_client import OllamaClient
+from .tag_parser import parse_dm_response
 
 
 # Phase 2e: Fix C — Roll synthesis mapping (keyword → (skill, difficulty))
@@ -343,6 +345,7 @@ class GenerativeGameEngine:
 
         self.ollama_endpoint = ollama_endpoint
         self.model = model
+        self.llm = OllamaClient(endpoint=ollama_endpoint, model=model)
         self.session_id = session_id or f"session_{int(time.time())}"
         self.state: Optional[GameState] = None
         self.rules = CoC7eRulesEngine()
@@ -497,84 +500,35 @@ class GenerativeGameEngine:
 
     def _call_ollama(self, prompt: str, max_tokens: int = 200, on_chunk=None) -> str:
         """
-        Call Ollama using /api/chat with message history (not stateless generate).
-        This maintains conversation context for better narrative coherence.
-
-        Improvements:
-        - Temperature 0.5 (less hallucination than 0.7)
-        - Max tokens reduced to 180 (avoid rambling)
-        - Uses /api/chat for true conversation history
-        - Retry logic on failure
+        Call Ollama with adventure context and conversation history.
+        Delegates transport, retries and fallbacks to OllamaClient.
         """
         from .adventure_context import AdventureContext
 
-        for attempt in range(2):  # Try twice
-            try:
-                # Build messages with adventure context + history
-                system_prompt = AdventureContext.build_system_prompt(
-                    location=self.state.location,
-                    game_phase=self.state.game_phase
-                )
+        system_prompt = AdventureContext.build_system_prompt(
+            location=self.state.location,
+            game_phase=self.state.game_phase
+        )
 
-                # Build message history from narrative (alternating user/assistant)
-                message_history = AdventureContext.build_message_history(
-                    self.state.narrative,
-                    max_messages=15  # Keep sliding window of last 15 turns
-                )
+        # Build message history from narrative (alternating user/assistant)
+        message_history = AdventureContext.build_message_history(
+            self.state.narrative,
+            max_messages=15  # Keep sliding window of last 15 turns
+        )
 
-                # Add current action as user message
-                message_history.append({
-                    "role": "user",
-                    "content": prompt
-                })
+        # Add current action as user message
+        message_history.append({
+            "role": "user",
+            "content": prompt
+        })
 
-                # Call /api/chat with message history
-                response = requests.post(
-                    f"{self.ollama_endpoint}/api/chat",
-                    json={
-                        "model": self.model,
-                        "system": system_prompt,
-                        "messages": message_history,
-                        "stream": True,
-                        "temperature": 0.5,  # IMPROVEMENT: Reduced from 0.7
-                        "num_predict": max_tokens  # Uses 180 default instead of 200
-                    },
-                    timeout=120,
-                    stream=True
-                )
-                response.raise_for_status()
-
-                full_response = ""
-                for line in response.iter_lines():
-                    if line:
-                        try:
-                            chunk = json.loads(line)
-                            text = chunk.get("message", {}).get("content", "")
-                            full_response += text
-
-                            # Call callback to stream text to UI
-                            if on_chunk and text:
-                                on_chunk(text)
-                        except json.JSONDecodeError:
-                            continue
-
-                return full_response.strip() if full_response.strip() else "You pause, thinking..."
-
-            except (requests.Timeout, requests.ConnectionError) as e:
-                if attempt == 0:
-                    # First failure - retry
-                    import time
-                    time.sleep(0.5)
-                    continue
-                # Second failure - fallback narrative
-                return "The world around you seems to pause. You take a moment to collect yourself and continue your investigation."
-            except Exception as e:
-                if attempt == 0:
-                    continue
-                # Generic error fallback
-                return "Something feels wrong. You steady yourself and push forward."
-
-        return "You take a deep breath and continue."
+        return self.llm.chat(
+            messages=message_history,
+            system_prompt=system_prompt,
+            max_tokens=max_tokens,
+            temperature=0.5,
+            on_chunk=on_chunk
+        )
 
     def _format_last_roll_info(self) -> str:
         """Format last roll information for DM prompt"""
@@ -873,32 +827,7 @@ Respond with the IMMEDIATE narrative outcome of this action. Stay in location.
             }
         ]
 
-        try:
-            response = requests.post(
-                f"{self.ollama_endpoint}/api/chat",
-                json={
-                    "model": self.model,
-                    "messages": messages,
-                    "tools": CTHULHU_TOOLS,
-                    "stream": False,
-                    "options": {
-                        "temperature": 0.7,
-                        "num_predict": 300
-                    }
-                },
-                timeout=120
-            )
-            response.raise_for_status()
-            data = response.json()
-            message = data.get("message", {})
-
-            return {
-                "narrative": message.get("content", ""),
-                "tool_calls": message.get("tool_calls", [])
-            }
-        except Exception as e:
-            # Fallback to tag-based system on any tool calling failure
-            return {"narrative": "", "tool_calls": [], "fallback": True}
+        return self.llm.chat_with_tools(messages, CTHULHU_TOOLS)
 
     def _execute_tool_calls(self, tool_calls: list) -> Dict:
         """
@@ -1013,48 +942,27 @@ Respond with the IMMEDIATE narrative outcome of this action. Stay in location.
                 dm_prompt = self._build_dm_prompt(player_input)
                 dm_response = self._call_ollama(dm_prompt, on_chunk=on_chunk)
 
-                # Parse tag-based response
-                rolls_requested = [
-                    (skill.strip(), difficulty.strip())
-                    for skill, difficulty in re.findall(r'\[ROLL: ([^/\]]+)/([^\]]+)\]', dm_response)
-                ]
-                sanity_checks = re.findall(r'\[SANITY_CHECK: (\d+)\]', dm_response)
-                items_found = re.findall(r'\[ITEM_FOUND: (\w+)\]', dm_response)
-                hp_damage = re.findall(r'\[HP_DAMAGE: (\d+)\]', dm_response)
-                combat_start = re.findall(r'\[COMBAT_START: (\w+)\]', dm_response)
-                npc_dialogue = re.findall(r'\[NPC_DIALOGUE: (\w+)\]', dm_response)
-
-                # Clean response
-                clean_response = re.sub(r'\[ROLL: .*?\]', '', dm_response)
-                clean_response = re.sub(r'\[SANITY_CHECK: .*?\]', '', clean_response)
-                clean_response = re.sub(r'\[ITEM_FOUND: .*?\]', '', clean_response)
-                clean_response = re.sub(r'\[HP_DAMAGE: .*?\]', '', clean_response)
-                clean_response = re.sub(r'\[COMBAT_START: .*?\]', '', clean_response)
-                clean_response = re.sub(r'\[NPC_DIALOGUE: .*?\]', '', clean_response)
+                parsed = parse_dm_response(dm_response)
+                rolls_requested = parsed["rolls_requested"]
+                sanity_checks = parsed["sanity_checks"]
+                items_found = parsed["items_found"]
+                hp_damage = parsed["hp_damage"]
+                combat_start = parsed["combat_start"]
+                npc_dialogue = parsed["npc_dialogue"]
+                clean_response = parsed["clean_response"]
         else:
             # Model doesn't support tool calling - use tag-based system
-            # Get DM response with optional streaming
             dm_prompt = self._build_dm_prompt(player_input)
             dm_response = self._call_ollama(dm_prompt, on_chunk=on_chunk)
 
-            # Parse all tag types
-            rolls_requested = [
-                    (skill.strip(), difficulty.strip())
-                    for skill, difficulty in re.findall(r'\[ROLL: ([^/\]]+)/([^\]]+)\]', dm_response)
-                ]
-            sanity_checks = re.findall(r'\[SANITY_CHECK: (\d+)\]', dm_response)
-            items_found = re.findall(r'\[ITEM_FOUND: (\w+)\]', dm_response)
-            hp_damage = re.findall(r'\[HP_DAMAGE: (\d+)\]', dm_response)
-            combat_start = re.findall(r'\[COMBAT_START: (\w+)\]', dm_response)
-            npc_dialogue = re.findall(r'\[NPC_DIALOGUE: (\w+)\]', dm_response)
-
-            # Clean response (remove all tags)
-            clean_response = re.sub(r'\[ROLL: .*?\]', '', dm_response)
-            clean_response = re.sub(r'\[SANITY_CHECK: .*?\]', '', clean_response)
-            clean_response = re.sub(r'\[ITEM_FOUND: .*?\]', '', clean_response)
-            clean_response = re.sub(r'\[HP_DAMAGE: .*?\]', '', clean_response)
-            clean_response = re.sub(r'\[COMBAT_START: .*?\]', '', clean_response)
-            clean_response = re.sub(r'\[NPC_DIALOGUE: .*?\]', '', clean_response)
+            parsed = parse_dm_response(dm_response)
+            rolls_requested = parsed["rolls_requested"]
+            sanity_checks = parsed["sanity_checks"]
+            items_found = parsed["items_found"]
+            hp_damage = parsed["hp_damage"]
+            combat_start = parsed["combat_start"]
+            npc_dialogue = parsed["npc_dialogue"]
+            clean_response = parsed["clean_response"]
 
         # Phase 2e Fix C: Synthesize roll if LLM omitted one for a physical action
         if not rolls_requested and not combat_start and not sanity_checks:
@@ -1407,12 +1315,10 @@ NO NEW ROLLS. Just the outcome."""
         consequence_response = self._call_ollama(consequence_prompt, max_tokens=100, on_chunk=on_chunk)
 
         # Parse any tags that might be in the consequence
-        hp_damage = re.findall(r'\[HP_DAMAGE: (\d+)\]', consequence_response)
-        sanity_checks = re.findall(r'\[SANITY_CHECK: (\d+)\]', consequence_response)
-
-        # Clean the response
-        clean_response = re.sub(r'\[HP_DAMAGE: .*?\]', '', consequence_response)
-        clean_response = re.sub(r'\[SANITY_CHECK: .*?\]', '', clean_response)
+        parsed = parse_dm_response(consequence_response)
+        hp_damage = parsed["hp_damage"]
+        sanity_checks = parsed["sanity_checks"]
+        clean_response = parsed["clean_response"]
 
         # Update narrative
         self.state.narrative.append(f"DM: {clean_response}")

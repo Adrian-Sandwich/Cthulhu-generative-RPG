@@ -9,20 +9,35 @@ mechanics inline, e.g.:
     [HP_DAMAGE: 2] [COMBAT_START: deep_one] [NPC_DIALOGUE: warner]
 """
 
+import random
 import re
 from typing import Dict
 
 
 # Tag name -> capture pattern. ROLL allows multi-word skills and
-# difficulties ("spot hidden/Hard"); the rest are single tokens/numbers.
+# difficulties ("spot hidden/Hard"). Damage values accept dice
+# notation ("1d6") because models write it despite instructions;
+# dice are rolled at parse time so consumers always get plain ints.
 _TAG_PATTERNS = {
     "ROLL": r'\[ROLL: ([^/\]]+)/([^\]]+)\]',
-    "SANITY_CHECK": r'\[SANITY_CHECK: (\d+)\]',
+    "SANITY_CHECK": r'\[SANITY_CHECK: (\d+(?:[dD]\d+)?)\]',
     "ITEM_FOUND": r'\[ITEM_FOUND: (\w+)\]',
-    "HP_DAMAGE": r'\[HP_DAMAGE: (\d+)\]',
+    "HP_DAMAGE": r'\[HP_DAMAGE: (\d+(?:[dD]\d+)?)\]',
     "COMBAT_START": r'\[COMBAT_START: (\w+)\]',
     "NPC_DIALOGUE": r'\[NPC_DIALOGUE: (\w+)\]',
 }
+
+
+def _resolve_amount(expr: str) -> str:
+    """Resolve a damage expression to a plain integer string.
+
+    Accepts "3" or dice notation "1d6" / "2D4".
+    """
+    if 'd' in expr.lower():
+        count, sides = re.split('[dD]', expr)
+        total = sum(random.randint(1, int(sides)) for _ in range(int(count)))
+        return str(total)
+    return expr
 
 _STRIP_PATTERN = re.compile(
     r'\[(?:ROLL|SANITY_CHECK|ITEM_FOUND|HP_DAMAGE|COMBAT_START|NPC_DIALOGUE): .*?\]'
@@ -48,9 +63,13 @@ def parse_dm_response(dm_response: str) -> Dict:
             (skill.strip(), difficulty.strip())
             for skill, difficulty in re.findall(_TAG_PATTERNS["ROLL"], dm_response)
         ],
-        "sanity_checks": re.findall(_TAG_PATTERNS["SANITY_CHECK"], dm_response),
+        "sanity_checks": [
+            _resolve_amount(v) for v in re.findall(_TAG_PATTERNS["SANITY_CHECK"], dm_response)
+        ],
         "items_found": re.findall(_TAG_PATTERNS["ITEM_FOUND"], dm_response),
-        "hp_damage": re.findall(_TAG_PATTERNS["HP_DAMAGE"], dm_response),
+        "hp_damage": [
+            _resolve_amount(v) for v in re.findall(_TAG_PATTERNS["HP_DAMAGE"], dm_response)
+        ],
         "combat_start": re.findall(_TAG_PATTERNS["COMBAT_START"], dm_response),
         "npc_dialogue": re.findall(_TAG_PATTERNS["NPC_DIALOGUE"], dm_response),
         "clean_response": strip_tags(dm_response),

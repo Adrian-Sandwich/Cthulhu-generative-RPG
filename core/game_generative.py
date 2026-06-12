@@ -921,20 +921,24 @@ Respond with the IMMEDIATE narrative outcome of this action. Stay in location.
             tool_response = self._call_ollama_with_tools(narrative_context, player_input)
 
             if not tool_response.get("fallback"):
-                # Tool calling succeeded - get narrative and execute tools
-                clean_response = tool_response.get("narrative", "")
+                # Tool calling succeeded - execute tools, but ALSO parse the
+                # narrative: models often write literal tags in the text
+                # instead of (or besides) calling tools, and those must not
+                # leak to the player
+                tool_results = self._execute_tool_calls(tool_response.get("tool_calls", []))
+                parsed = parse_dm_response(tool_response.get("narrative", ""))
+
+                rolls_requested = tool_results.get("rolls_requested", []) + parsed["rolls_requested"]
+                sanity_checks = tool_results.get("sanity_checks", []) + parsed["sanity_checks"]
+                items_found = tool_results.get("items_found", []) + parsed["items_found"]
+                hp_damage = tool_results.get("hp_damage", []) + parsed["hp_damage"]
+                combat_start = tool_results.get("combat_start", []) + parsed["combat_start"]
+                npc_dialogue = parsed["npc_dialogue"]
+                clean_response = parsed["clean_response"]
 
                 # Print narrative if streaming callback is provided
                 if on_chunk and clean_response:
                     on_chunk(clean_response)
-
-                # Execute tool calls
-                tool_results = self._execute_tool_calls(tool_response.get("tool_calls", []))
-                rolls_requested = tool_results.get("rolls_requested", [])
-                sanity_checks = tool_results.get("sanity_checks", [])
-                items_found = tool_results.get("items_found", [])
-                hp_damage = tool_results.get("hp_damage", [])
-                combat_start = tool_results.get("combat_start", [])
 
                 # Tool calling complete - proceed to state update
             else:

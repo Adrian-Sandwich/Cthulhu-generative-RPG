@@ -26,8 +26,14 @@ def _visual_len(s: str) -> int:
 
 def _getch() -> str:
     """Read one keypress in raw mode (no echo). Returns char or arrow escape sequence."""
-    fd = sys.stdin.fileno()
-    old = termios.tcgetattr(fd)
+    try:
+        fd = sys.stdin.fileno()
+        old = termios.tcgetattr(fd)
+    except (termios.error, OSError, ValueError):
+        # stdin is not a real TTY (pipe, CI, tests): fall back to
+        # line-buffered input instead of crashing in raw mode
+        line = sys.stdin.readline()
+        return line[:1] if line else 'q'
     try:
         tty.setraw(fd)
         ch = sys.stdin.read(1)

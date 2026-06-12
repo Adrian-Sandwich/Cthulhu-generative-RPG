@@ -7,6 +7,7 @@ Flask backend for the generative RPG
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
 import json
+import os
 import threading
 from functools import wraps
 from pathlib import Path
@@ -15,7 +16,11 @@ from core.game_generative import GenerativeGameEngine, InvestigatorState
 from game.game_image_integration import generate_for_location
 
 app = Flask(__name__)
-CORS(app)
+# Frontend is served by this same app; CORS only needed for external
+# origins, configurable via comma-separated CORS_ORIGINS env var.
+_cors_origins = [o for o in os.environ.get('CORS_ORIGINS', '').split(',') if o]
+if _cors_origins:
+    CORS(app, origins=_cors_origins)
 
 # Generated location images
 GENERATED_IMAGES_DIR = Path(__file__).parent / 'game' / 'generated'
@@ -41,6 +46,32 @@ def synchronized(f):
         with state_lock:
             return f(*args, **kwargs)
     return wrapper
+
+
+# Image generation runs in a background thread: SDXL inference takes
+# 30s+ and must not block request handlers (which hold state_lock).
+_generating_locations = set()
+_generating_lock = threading.Lock()
+
+
+def request_image_generation(location_state):
+    """Kick off background image generation for a location (idempotent)."""
+    key = location_state.key
+    with _generating_lock:
+        if key in _generating_locations:
+            return
+        _generating_locations.add(key)
+
+    def work():
+        try:
+            generate_for_location(location_state)
+        except Exception as e:
+            print(f"Warning: Could not generate image for {key}: {e}")
+        finally:
+            with _generating_lock:
+                _generating_locations.discard(key)
+
+    threading.Thread(target=work, daemon=True, name=f"imagegen-{key}").start()
 
 
 @app.route('/')
@@ -129,17 +160,15 @@ def get_game_state():
     if not game_engine or not current_investigator:
         return jsonify({"error": "Game not started"}), 400
 
-    # Get location state and generate image if available
+    # Get location state and request image generation if missing
     location_state = None
     if game_engine.location_state:
         location_state = game_engine.location_state.get_location(game_engine.state.location)
     image_url = None
+    image_generating = False
     if location_state and not location_state.generated_image_path:
-        # Try to generate image for this location
-        try:
-            generate_for_location(location_state)
-        except Exception as e:
-            print(f"Warning: Could not generate image: {e}")
+        request_image_generation(location_state)
+        image_generating = True
 
     # Convert image path to URL
     if location_state and location_state.generated_image_path:
@@ -149,7 +178,8 @@ def get_game_state():
     return jsonify({
         "location": game_engine.state.location,
         "turn": game_engine.state.turn,
-        "image_url": image_url,  # NEW: Image URL for frontend
+        "image_url": image_url,
+        "image_generating": image_generating,
         "investigator": {
             "name": current_investigator.name,
             "archetype": current_investigator.occupation,
@@ -205,4 +235,6 @@ def reset_game():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    debug = os.environ.get('FLASK_DEBUG', '0') == '1'
+    port = int(os.environ.get('PORT', '5000'))
+    app.run(debug=debug, port=port)

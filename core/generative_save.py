@@ -35,7 +35,7 @@ class GenerativeSave:
             session_id: Unique session identifier
             model: LLM model used in this session
             location_state: Optional LocationStateManager for dynamic world state
-            sanity_system: Optional SanitySystem (reconstructed from state on load)
+            sanity_system: Optional SanitySystem (disorders, breaking points)
 
         Returns:
             Path to the saved file
@@ -46,6 +46,11 @@ class GenerativeSave:
         location_state_data = None
         if location_state:
             location_state_data = location_state.to_dict()
+
+        # Serialize sanity state if available
+        sanity_state_data = None
+        if sanity_system:
+            sanity_state_data = sanity_system.to_dict()
 
         save_data = {
             "metadata": {
@@ -60,7 +65,8 @@ class GenerativeSave:
                 "play_duration": len(state.narrative)  # Rough estimate of gameplay length
             },
             "game_state": asdict(state),
-            "location_state": location_state_data
+            "location_state": location_state_data,
+            "sanity_state": sanity_state_data
         }
 
         path = GenerativeSave._save_path(session_id)
@@ -70,7 +76,7 @@ class GenerativeSave:
         return str(path)
 
     @staticmethod
-    def load(session_id: str) -> Tuple[Dict, Dict, Optional[Dict]]:
+    def load(session_id: str) -> Tuple[Dict, Dict, Optional[Dict], Optional[Dict]]:
         """
         Load saved game from disk.
 
@@ -78,7 +84,8 @@ class GenerativeSave:
             session_id: Unique session identifier
 
         Returns:
-            Tuple of (metadata_dict, game_state_dict, location_state_dict or None)
+            Tuple of (metadata_dict, game_state_dict,
+            location_state_dict or None, sanity_state_dict or None)
 
         Raises:
             FileNotFoundError: If save file doesn't exist
@@ -93,7 +100,8 @@ class GenerativeSave:
         return (
             data["metadata"],
             data["game_state"],
-            data.get("location_state")
+            data.get("location_state"),
+            data.get("sanity_state")
         )
 
     @staticmethod
@@ -130,7 +138,7 @@ class GenerativeSave:
             Dict with session summary, or None if not found
         """
         try:
-            metadata, state_dict, _ = GenerativeSave.load(session_id)
+            metadata, state_dict, _, _ = GenerativeSave.load(session_id)
 
             inv = state_dict.get("investigator", {})
             sanity = inv.get("characteristics", {}).get("SAN", 75)

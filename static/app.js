@@ -86,9 +86,13 @@ function updateStats(stats) {
 }
 
 // Refresh game state from server (location image, etc.)
-// Note: the server may generate the image on demand, so this can take a while.
+// Image generation runs server-side in the background; poll until ready.
+let imagePollTimer = null;
+
 async function refreshGameState() {
     if (!gameStarted) return;
+
+    clearTimeout(imagePollTimer);
 
     try {
         const response = await fetch('/api/game/state');
@@ -101,6 +105,9 @@ async function refreshGameState() {
             img.classList.remove('hidden');
         } else {
             img.classList.add('hidden');
+            if (data.image_generating) {
+                imagePollTimer = setTimeout(refreshGameState, 5000);
+            }
         }
     } catch (error) {
         console.error('Error refreshing game state:', error);
@@ -280,6 +287,7 @@ function resetGame() {
     gameStarted = false;
     gameHistory = [];
     currentScene = null;
+    clearTimeout(imagePollTimer);
 
     // Show startup, hide game
     document.getElementById('startup-screen').classList.remove('hidden');

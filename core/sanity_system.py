@@ -5,7 +5,7 @@ Implements breaking points, temporary insanity, permanent disorders,
 and sanity recovery mechanics.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Optional
 import random
 
@@ -66,6 +66,27 @@ class SanitySystem:
         self.mental_disorders: List[MentalDisorder] = []  # Current disorders
         self.breaking_points: int = 0  # Number of times broken
         self.in_sanity_spiral: bool = False  # Currently in spiral?
+
+    def to_dict(self) -> Dict:
+        """Serialize sanity state (investigator is serialized separately)"""
+        return {
+            "sanity_loss_history": self.sanity_loss_history,
+            "mental_disorders": [asdict(d) for d in self.mental_disorders],
+            "breaking_points": self.breaking_points,
+            "in_sanity_spiral": self.in_sanity_spiral
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict, investigator_state) -> "SanitySystem":
+        """Restore sanity state from a save"""
+        system = cls(investigator_state)
+        system.sanity_loss_history = data.get("sanity_loss_history", [])
+        system.mental_disorders = [
+            MentalDisorder(**d) for d in data.get("mental_disorders", [])
+        ]
+        system.breaking_points = data.get("breaking_points", 0)
+        system.in_sanity_spiral = data.get("in_sanity_spiral", False)
+        return system
 
     def apply_sanity_damage(self, damage: int, source: str = "unknown") -> Dict:
         """

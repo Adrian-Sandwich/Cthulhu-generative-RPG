@@ -1630,7 +1630,7 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
         from .location_state import LocationStateManager
         from .sanity_system import SanitySystem
 
-        metadata, state_dict, location_state_data = GenerativeSave.load(session_id)
+        metadata, state_dict, location_state_data, sanity_state_data = GenerativeSave.load(session_id)
 
         # Reconstruct InvestigatorState from dictionary
         inv_dict = state_dict["investigator"]
@@ -1679,10 +1679,13 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             except Exception:
                 pass  # Location state restoration failed, continue with default
 
-        # Reinitialize sanity system from loaded state
+        # Restore sanity system (disorders, breaking points) from save
         try:
-            engine.sanity_system = SanitySystem(investigator)
+            if sanity_state_data:
+                engine.sanity_system = SanitySystem.from_dict(sanity_state_data, investigator)
+            else:
+                engine.sanity_system = SanitySystem(investigator)
         except Exception:
-            pass  # Sanity system restoration failed
+            engine.sanity_system = SanitySystem(investigator)
 
         return engine

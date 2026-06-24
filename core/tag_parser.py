@@ -43,6 +43,23 @@ _STRIP_PATTERN = re.compile(
     r'\[(?:ROLL|SANITY_CHECK|ITEM_FOUND|HP_DAMAGE|COMBAT_START|NPC_DIALOGUE): .*?\]'
 )
 
+# Beyond the known mechanic tags, models invent their own ([NAVIGATE],
+# [LOCATION: x], [COMBAT]) and echo the conversation format they see in
+# context (speaker prefixes, roll results). None of it should reach the
+# player. These patterns scrub the leftovers from the narrative.
+_LEAK_PATTERNS = [
+    # any uppercase bracket directive: [NAVIGATE], [LOCATION: top], [COMBAT]
+    re.compile(r'\[[A-Z][A-Z0-9_ ]*(?::[^\]]*)?\]'),
+    # speaker prefixes the model mimics from history (DM:/Player:/Keeper:/GM:)
+    re.compile(r'(?:^|\s)(?:DM|Player|Keeper|GM):\s*', re.MULTILINE),
+    # roll-result echoes: "Roll: 74 (success)", "(Difficulty: Hard)"
+    re.compile(r'\bRoll:\s*\d+\s*\((?:success|failure)\)', re.IGNORECASE),
+    re.compile(r'\(Difficulty:\s*\w+\)', re.IGNORECASE),
+]
+
+# Sentence terminators used to trim a response that overran the token budget
+_SENTENCE_END = re.compile(r'[.!?…"»]')
+
 # Models decorate narrative with markdown despite instructions;
 # the game renders plain text, so emphasis markers are stripped.
 _MARKDOWN_PATTERNS = [
@@ -60,6 +77,36 @@ def strip_markdown(text: str) -> str:
     for pattern, replacement in _MARKDOWN_PATTERNS:
         text = pattern.sub(replacement, text)
     return text
+
+
+def strip_leaks(text: str) -> str:
+    """Remove invented tags, speaker prefixes and roll-result echoes"""
+    for pattern in _LEAK_PATTERNS:
+        text = pattern.sub(' ', text)
+    # collapse the whitespace the substitutions leave behind
+    text = re.sub(r'[ \t]{2,}', ' ', text)
+    text = re.sub(r' *\n *', '\n', text)
+    return text
+
+
+def trim_to_last_sentence(text: str) -> str:
+    """
+    Trim a response that was cut off mid-sentence by the token budget.
+
+    Drops a trailing partial sentence so the narrative ends cleanly. If
+    there is no sentence terminator at all, the text is returned as-is
+    (a partial paragraph beats an empty one).
+    """
+    text = text.rstrip()
+    if not text:
+        return text
+    # already ends on a terminator -> nothing to trim
+    if _SENTENCE_END.match(text[-1]):
+        return text
+    matches = list(_SENTENCE_END.finditer(text))
+    if not matches:
+        return text
+    return text[:matches[-1].end()].rstrip()
 
 
 def parse_dm_response(dm_response: str) -> Dict:
@@ -90,7 +137,9 @@ def parse_dm_response(dm_response: str) -> Dict:
         ],
         "combat_start": re.findall(_TAG_PATTERNS["COMBAT_START"], dm_response),
         "npc_dialogue": re.findall(_TAG_PATTERNS["NPC_DIALOGUE"], dm_response),
-        "clean_response": strip_markdown(strip_tags(dm_response)),
+        "clean_response": trim_to_last_sentence(
+            strip_leaks(strip_markdown(strip_tags(dm_response)))
+        ).strip(),
     }
 
 

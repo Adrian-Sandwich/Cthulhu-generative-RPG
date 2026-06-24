@@ -38,7 +38,7 @@ class OllamaClient:
         self,
         messages: List[Dict],
         system_prompt: Optional[str] = None,
-        max_tokens: int = 200,
+        max_tokens: int = 400,
         temperature: float = 0.5,
         on_chunk: Optional[Callable[[str], None]] = None,
     ) -> str:
@@ -104,7 +104,7 @@ class OllamaClient:
         messages: List[Dict],
         tools: List[Dict],
         temperature: float = 0.7,
-        max_tokens: int = 300,
+        max_tokens: int = 400,
     ) -> Dict:
         """
         Non-streaming chat call with tool calling support.

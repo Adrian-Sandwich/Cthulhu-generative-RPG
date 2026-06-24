@@ -797,6 +797,8 @@ Recent narrative:
 {player_action}
 
 Respond with the IMMEDIATE narrative outcome of this action. Stay in location.
+Write 2-4 complete sentences and always finish your final sentence.
+Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
 """
         return prompt
 
@@ -1340,7 +1342,7 @@ For mental failure (occult, investigation), add: [SANITY_CHECK: 1-2]
 NO NEW ROLLS. Just the outcome."""
 
         # Get DM response for the consequence
-        consequence_response = self._call_ollama(consequence_prompt, max_tokens=100, on_chunk=on_chunk)
+        consequence_response = self._call_ollama(consequence_prompt, max_tokens=200, on_chunk=on_chunk)
 
         # Parse any tags that might be in the consequence
         parsed = parse_dm_response(consequence_response)
@@ -1420,7 +1422,7 @@ The player asks: "{player_question}"
 Respond in character, in 2-3 sentences. Be dramatic, mysterious, and atmospheric. Reference what you know if relevant. Let your attitude shape how much you reveal."""
 
         # Get NPC response
-        response = self._call_ollama(prompt, max_tokens=100)
+        response = self._call_ollama(prompt, max_tokens=200)
 
         # Update reputation: friendly/helpful interaction = +5, neutral = no change
         # This is a simple heuristic - in a fuller system we'd parse the response

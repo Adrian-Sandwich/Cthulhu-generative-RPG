@@ -69,6 +69,25 @@ a {
     margin-bottom: 14px;
 }
 
+.how-to {
+    border: 1px solid var(--text-dim);
+    padding: 12px 14px;
+    margin-bottom: 18px;
+}
+
+.how-to-title {
+    color: var(--accent);
+    margin-bottom: 10px !important;
+}
+
+.how-to p:last-child {
+    margin-bottom: 0;
+}
+
+.eg {
+    color: var(--accent);
+}
+
 .form-row {
     display: flex;
     align-items: center;
@@ -157,12 +176,29 @@ input:focus, select:focus {
 
 /* ---- Narrative ---- */
 
-#narrative-display, #history-display, #sheet-display {
+#narrative-display, #history-display, #sheet-display, #help-display {
     flex: 1;
     overflow-y: auto;
     min-height: 220px;
     max-height: 45vh;
     padding: 10px 8px;
+}
+
+#help-content p {
+    margin-bottom: 12px;
+}
+
+#help-content ul {
+    margin: 0 0 12px 20px;
+}
+
+#help-content li {
+    margin-bottom: 4px;
+}
+
+#help-content b {
+    color: var(--accent);
+    font-weight: normal;
 }
 
 /* ---- Character sheet ---- */
@@ -205,6 +241,16 @@ input:focus, select:focus {
 
 .player-action {
     color: var(--accent);
+}
+
+.narrative-turn.intro {
+    white-space: pre-line;
+    margin-bottom: 14px;
+}
+
+.narrative-turn.hint {
+    color: var(--text-dim);
+    font-style: italic;
 }
 
 .dm-response {

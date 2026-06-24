@@ -22,8 +22,11 @@ _cors_origins = [o for o in os.environ.get('CORS_ORIGINS', '').split(',') if o]
 if _cors_origins:
     CORS(app, origins=_cors_origins)
 
-# Generated location images
+# Generated location images. SDXL scene generation is gated behind a
+# flag (off by default) — the procedural art was more confusing than
+# helpful, so the game runs text-only unless ENABLE_IMAGES=1.
 GENERATED_IMAGES_DIR = Path(__file__).parent / 'game' / 'generated'
+IMAGES_ENABLED = os.environ.get('ENABLE_IMAGES', '0') == '1'
 
 @app.route('/images/<path:filename>')
 def serve_generated_image(filename):
@@ -102,9 +105,15 @@ def start_game():
         game_engine = GenerativeGameEngine(use_memory=False)
         game_engine.create_game(current_investigator)
 
+        # Opening narrative so the player knows the situation and that
+        # they drive the story with free-text actions
+        intro = game_engine.STORY_SEED.strip()
+
         return jsonify({
             "success": True,
             "message": f"Game started! Welcome, {investigator_name}",
+            "intro": intro,
+            "location": game_engine.state.location,
             "investigator": {
                 "name": current_investigator.name,
                 "archetype": current_investigator.occupation,
@@ -130,14 +139,13 @@ def get_game_state():
         location_state = game_engine.location_state.get_location(game_engine.state.location)
     image_url = None
     image_generating = False
-    if location_state and not location_state.generated_image_path:
-        request_image_generation(location_state)
-        image_generating = True
-
-    # Convert image path to URL
-    if location_state and location_state.generated_image_path:
-        image_path = Path(location_state.generated_image_path)
-        image_url = f"/images/{image_path.name}"
+    if IMAGES_ENABLED and location_state:
+        if not location_state.generated_image_path:
+            request_image_generation(location_state)
+            image_generating = True
+        else:
+            image_path = Path(location_state.generated_image_path)
+            image_url = f"/images/{image_path.name}"
 
     return jsonify({
         "location": game_engine.state.location,

@@ -67,12 +67,23 @@ async function showSheet() {
             skills: inv.skills
         });
 
-        document.getElementById('narrative-display').classList.add('hidden');
-        document.getElementById('history-display').classList.add('hidden');
+        hidePanels();
         document.getElementById('sheet-display').classList.remove('hidden');
     } catch (error) {
         console.error('Error loading sheet:', error);
     }
+}
+
+// Show the how-to-play panel
+function showHelp() {
+    hidePanels();
+    document.getElementById('help-display').classList.remove('hidden');
+}
+
+// Hide every overlay panel (narrative stays as the base layer)
+function hidePanels() {
+    ['narrative-display', 'history-display', 'sheet-display', 'help-display']
+        .forEach(id => document.getElementById(id).classList.add('hidden'));
 }
 
 // Start Game
@@ -100,8 +111,27 @@ async function startGame(event) {
             document.getElementById('game-screen').classList.remove('hidden');
 
             updateStats(data.investigator);
+            if (data.location) {
+                document.getElementById('location-display').textContent = data.location;
+            }
+
+            // Opening narrative so the player knows the setup. Render it
+            // as the DM's first beat with a hint to act in free text.
+            const intro = document.getElementById('narrative-content');
+            intro.innerHTML = '';
+            if (data.intro) {
+                const introEl = document.createElement('div');
+                introEl.className = 'narrative-turn dm-response intro';
+                introEl.textContent = data.intro;
+                intro.appendChild(introEl);
+            }
+            const hintEl = document.createElement('div');
+            hintEl.className = 'narrative-turn hint';
+            hintEl.textContent = 'Type what you do below — look around, examine the logs, head inside…';
+            intro.appendChild(hintEl);
+
             refreshGameState();
-            setStatus(data.message);
+            setStatus('');
             document.getElementById('action-input').focus();
         } else {
             setStatus('Error: ' + (data.error || 'unknown'), true);
@@ -140,18 +170,23 @@ async function refreshGameState() {
         document.getElementById('location-display').textContent = data.location;
         document.getElementById('turn-counter').textContent = data.turn;
 
+        // Scene frame only appears when an image is present or being made;
+        // text-only mode (images disabled) hides it entirely
+        const frame = document.getElementById('scene-frame');
         const img = document.getElementById('scene-image');
         const placeholder = document.getElementById('scene-placeholder');
         if (data.image_url) {
             img.src = data.image_url;
             img.classList.remove('hidden');
             placeholder.classList.add('hidden');
-        } else {
+            frame.classList.remove('hidden');
+        } else if (data.image_generating) {
             img.classList.add('hidden');
             placeholder.classList.remove('hidden');
-            if (data.image_generating) {
-                imagePollTimer = setTimeout(refreshGameState, 5000);
-            }
+            frame.classList.remove('hidden');
+            imagePollTimer = setTimeout(refreshGameState, 5000);
+        } else {
+            frame.classList.add('hidden');
         }
     } catch (error) {
         console.error('Error refreshing game state:', error);
@@ -325,7 +360,7 @@ function addNarrativeTurn(turn, playerAction, dmResponse) {
 // Show History
 function showHistory() {
     document.getElementById('narrative-display').classList.add('hidden');
-    document.getElementById('sheet-display').classList.add('hidden');
+    hidePanels();
     document.getElementById('history-display').classList.remove('hidden');
 
     const historyContent = document.getElementById('history-content');
@@ -354,11 +389,10 @@ function showHistory() {
     });
 }
 
-// Show Narrative (back from history/sheet)
+// Show Narrative (back from any panel)
 function showNarrative() {
+    hidePanels();
     document.getElementById('narrative-display').classList.remove('hidden');
-    document.getElementById('history-display').classList.add('hidden');
-    document.getElementById('sheet-display').classList.add('hidden');
 }
 
 // Reset Game
@@ -374,8 +408,7 @@ function resetGame() {
 
     document.getElementById('startup-screen').classList.remove('hidden');
     document.getElementById('game-screen').classList.add('hidden');
-    document.getElementById('history-display').classList.add('hidden');
-    document.getElementById('sheet-display').classList.add('hidden');
+    hidePanels();
     document.getElementById('narrative-display').classList.remove('hidden');
 
     document.getElementById('narrative-content').innerHTML = '';

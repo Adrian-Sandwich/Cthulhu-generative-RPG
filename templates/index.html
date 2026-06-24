@@ -20,6 +20,21 @@
             </pre>
             <p>An ancient lighthouse on a rocky shore. The beam rotates
                endlessly, calling to something in the deep.</p>
+
+            <div class="how-to">
+                <p class="how-to-title">HOW TO PLAY</p>
+                <p>A text adventure. You type what your investigator does
+                   in plain words — <span class="eg">look around</span>,
+                   <span class="eg">read the keeper's log</span>,
+                   <span class="eg">go inside</span> — and the Keeper
+                   narrates what happens.</p>
+                <p>When an action is risky, you'll roll dice. Roll under
+                   your skill to succeed. Horror erodes your SAN; injury
+                   drains HP. Reach zero and your story ends.</p>
+                <p>Pick an archetype below — its stats and skills shape what
+                   you're good at. Then name your investigator and begin.</p>
+            </div>
+
             <p>What is your name, investigator?</p>
             <form id="character-form" onsubmit="startGame(event)">
                 <div class="form-row">
@@ -57,6 +72,7 @@
                 <span>SAN <span id="san-value">—</span></span>
                 <span>LUCK <span id="luck-value">—</span></span>
                 <span class="menu-keys">
+                    <a onclick="showHelp()">[help]</a>
                     <a onclick="showSheet()">[sheet]</a>
                     <a onclick="showHistory()">[history]</a>
                     <a onclick="resetGame()">[new game]</a>
@@ -81,6 +97,48 @@
                     <a onclick="showNarrative()">[close]</a>
                 </div>
                 <div id="sheet-content" class="sheet"></div>
+            </div>
+
+            <div id="help-display" class="hidden">
+                <div class="history-header">
+                    <span>HOW TO PLAY</span>
+                    <a onclick="showNarrative()">[close]</a>
+                </div>
+                <div id="help-content">
+                    <p><b>The goal.</b> Investigate the lighthouse, survive, and
+                       uncover what happened to its keeper. Every playthrough is
+                       different — the Keeper (an AI) narrates your story.</p>
+
+                    <p><b>Playing.</b> Type what you do in the
+                       <span class="eg">&gt; what do you do?</span> box in plain
+                       language. Examples:</p>
+                    <ul>
+                        <li><span class="eg">examine the door</span></li>
+                        <li><span class="eg">climb the stairs to the top</span></li>
+                        <li><span class="eg">talk to the lieutenant about the logs</span></li>
+                    </ul>
+
+                    <p><b>Dice.</b> Risky actions trigger a roll. A pixel die
+                       appears with a target number — click it (or press
+                       <b>space</b>) to throw. Roll <b>under</b> the target to
+                       succeed. The Keeper then narrates the outcome.</p>
+
+                    <p><b>Your investigator.</b></p>
+                    <ul>
+                        <li><b>HP</b> — health. Hits zero, you die.</li>
+                        <li><b>SAN</b> — sanity. Cosmic horror chips away at it;
+                            low SAN brings madness.</li>
+                        <li><b>LUCK</b> — fortune that can swing close calls.</li>
+                    </ul>
+
+                    <p><b>Buttons.</b></p>
+                    <ul>
+                        <li><b>[help]</b> — this screen.</li>
+                        <li><b>[sheet]</b> — full stats and skills.</li>
+                        <li><b>[history]</b> — replay everything so far.</li>
+                        <li><b>[new game]</b> — start over with a new investigator.</li>
+                    </ul>
+                </div>
             </div>
 
             <div id="dice-area" class="hidden">

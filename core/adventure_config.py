@@ -36,6 +36,8 @@ class AdventureConfig:
     relationships: List[Dict] = field(default_factory=list)     # {from, rel, to}
     # keyword -> [skill, difficulty]; None means "use the engine's default map".
     roll_keywords: Optional[Dict[str, List[str]]] = None
+    # finite stakes: {"ammo": int, "time_limit": int (turn doom arrives, 0=off)}
+    resources: Dict = field(default_factory=dict)
 
     @classmethod
     def from_name(cls, name: str) -> "AdventureConfig":
@@ -79,4 +81,5 @@ class AdventureConfig:
             factions=data.get("factions", []) or [],
             relationships=data.get("relationships", []) or [],
             roll_keywords=data.get("roll_keywords"),
+            resources=data.get("resources", {}) or {},
         )

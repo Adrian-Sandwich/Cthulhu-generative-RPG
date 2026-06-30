@@ -125,6 +125,8 @@ class GameState:
     npcs_talked_to: Dict[str, List[str]] = None  # NPC key -> topics discussed
     last_roll: Optional[Dict] = None  # Track last roll result (skill, difficulty, success)
     npc_reputation: Dict[str, int] = None  # NPC key -> reputation score (-100 to +100)
+    ammo: int = 0          # rounds left for the firearm; 0 = empty
+    time_limit: int = 0    # turn at which doom arrives (0 = no clock)
 
 
 class CoC7eRulesEngine:
@@ -457,7 +459,9 @@ class GenerativeGameEngine:
             active_combat=None,
             npcs_talked_to={},
             last_roll=None,
-            npc_reputation={}
+            npc_reputation={},
+            ammo=int(self.adventure_config.resources.get("ammo", 0)),
+            time_limit=int(self.adventure_config.resources.get("time_limit", 0)),
         )
 
         # Initialize entity relationships if graph is available
@@ -1025,6 +1029,12 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
 
         self.state.turn += 1
 
+        # Doom clock: once time runs out, the presence arrives and the dread
+        # bleeds sanity every turn — time itself is now a threat.
+        if self.state.time_limit and self.state.turn > self.state.time_limit:
+            self.apply_sanity_check(2, source="the presence draws nearer")
+            self.state.narrative.append("[The presence draws nearer. There is no more time.]")
+
         # Update sanity system (reduce disorder durations, etc.)
         self.update_sanity_system()
 
@@ -1059,6 +1069,8 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
             "combat_start": combat_start,
             "npc_dialogue": npc_dialogue,
             "npc_status": npc_status,
+            "ammo": self.state.ammo,
+            "time_remaining": self.resources_status()["time_remaining"],
             "state": asdict(self.state)
         }
 
@@ -1103,10 +1115,30 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
         if not self.state:
             return {"error": "No active game"}
 
+        # Firearms cost ammunition. An empty gun can't roll — it just clicks.
+        is_firearm = "firearm" in skill.lower()
+        if is_firearm and self.state.ammo <= 0:
+            self.state.last_roll = {
+                "skill": skill, "difficulty": difficulty, "success": False,
+                "roll": 100, "target": 0, "message": "*click* — the chamber is empty",
+                "empty": True,
+            }
+            self.state.narrative.append("[ROLL: *click* — out of ammunition]")
+            return {
+                "skill": skill, "difficulty": difficulty, "success": False,
+                "roll": 100, "target": 0, "ammo": 0, "empty": True,
+                "message": "*click* — out of ammunition",
+            }
+
         skill_value, char_value = self._skill_check_values(skill)
 
         # Resolve check
         result = self.rules.resolve_skill_check(skill, skill_value, char_value, difficulty)
+
+        # Spend a round on any firearm attempt (hit or miss).
+        if is_firearm:
+            self.state.ammo = max(0, self.state.ammo - 1)
+            result["ammo"] = self.state.ammo
 
         # Track this roll for next DM turn (so it can apply consequences)
         self.state.last_roll = {
@@ -1463,6 +1495,14 @@ The player SUCCEEDED at: {roll['skill']} (rolled {roll['roll']} vs {roll['target
 Describe in 2-3 sentences what the player accomplished. What does success look like?
 Be vivid and advance the story.
 NO NEW ROLLS. NO TAGS. Just the outcome."""
+        elif roll.get("empty"):
+            # Out of ammo — no combat bite, just the dread of a dead trigger.
+            consequence_prompt = f"""You are the Dungeon Master.
+
+The player pulled the trigger but the weapon was EMPTY (out of ammunition).
+
+Describe in 2-3 sentences the click of the empty chamber and the danger that
+follows. No damage from the gun itself. NO NEW ROLLS. NO TAGS."""
         else:
             # Engine decides + applies the cost before the DM narrates it.
             consequence = self._failure_consequence(roll)
@@ -1692,6 +1732,19 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
 
         return self.get_npc_status()
 
+    def resources_status(self) -> Dict:
+        """Finite stakes for the HUD: rounds left and turns until doom."""
+        if not self.state:
+            return {"ammo": 0, "time_remaining": 0, "time_limit": 0}
+        remaining = -1
+        if self.state.time_limit:
+            remaining = max(0, self.state.time_limit - self.state.turn)
+        return {
+            "ammo": self.state.ammo,
+            "time_remaining": remaining,   # -1 means no clock
+            "time_limit": self.state.time_limit,
+        }
+
     def get_npc_status(self):
         """Dossier of NPCs the player has met: who they are and how they regard you."""
         status = []
@@ -1797,7 +1850,9 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             active_combat=state_dict.get("active_combat"),
             npcs_talked_to=state_dict.get("npcs_talked_to", {}),
             npc_reputation=state_dict.get("npc_reputation", {}),
-            last_roll=state_dict.get("last_roll")
+            last_roll=state_dict.get("last_roll"),
+            ammo=state_dict.get("ammo", 0),
+            time_limit=state_dict.get("time_limit", 0)
         )
 
         # Create engine instance with same model, session, and adventure.

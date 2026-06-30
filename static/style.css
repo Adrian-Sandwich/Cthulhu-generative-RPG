@@ -390,6 +390,9 @@ input:focus, select:focus {
 #dice-result.success { color: #55ff55; }
 #dice-result.failure { color: var(--danger); }
 
+/* Depleted finite resources (empty gun, doom clock near zero) pulse red */
+.depleted { color: var(--danger); font-weight: bold; }
+
 /* ---- NPC dossier (persistent relationships) ---- */
 #npc-dossier {
     border-top: 1px solid var(--text-dim);

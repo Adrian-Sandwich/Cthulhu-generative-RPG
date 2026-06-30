@@ -219,6 +219,28 @@ function updateStats(stats) {
     document.getElementById('luck-value').textContent = stats.Luck;
 }
 
+// Show finite stakes (ammo, doom clock) in the HUD.
+function renderResources(res) {
+    if (!res) return;
+    const ammoStat = document.getElementById('ammo-stat');
+    const ammoVal = document.getElementById('ammo-value');
+    const timeStat = document.getElementById('time-stat');
+    const timeVal = document.getElementById('time-value');
+
+    // Ammo: show whenever the adventure tracks it.
+    if (res.ammo !== undefined) {
+        ammoVal.textContent = res.ammo;
+        ammoVal.classList.toggle('depleted', res.ammo === 0);
+        ammoStat.classList.remove('hidden');
+    }
+    // Doom clock: time_remaining = -1 means no clock.
+    if (res.time_remaining !== undefined && res.time_remaining >= 0) {
+        timeVal.textContent = res.time_remaining;
+        timeVal.classList.toggle('depleted', res.time_remaining <= 3);
+        timeStat.classList.remove('hidden');
+    }
+}
+
 // Render the dossier of NPCs the player has met, with how they regard you.
 function renderNpcs(npcs) {
     const dossier = document.getElementById('npc-dossier');
@@ -269,6 +291,7 @@ async function refreshGameState() {
         document.getElementById('location-display').textContent = data.location;
         document.getElementById('turn-counter').textContent = data.turn;
         renderNpcs(data.npcs);
+        renderResources(data.resources);
         applySanityFx(data.sanity_corruption || 0);
 
         // Scene frame only appears when an image is present or being made;
@@ -319,6 +342,7 @@ async function submitAction(event) {
             addNarrativeTurn(data.turn, action, data.narrative);
             updateStats(data.state);
             renderNpcs(data.npcs);
+            renderResources(data.resources);
             applySanityFx(data.sanity_corruption || 0);
             document.getElementById('turn-counter').textContent = data.turn;
             document.getElementById('location-display').textContent = data.location;
@@ -413,21 +437,27 @@ async function rollDice() {
         }
 
         // Lock the result onto every face, then play the landing bounce
-        setDieFaces(die, data.roll);
+        setDieFaces(die, data.empty ? '—' : data.roll);
         die.classList.remove('rolling');
         const cls = data.roll_success ? 'success' : 'failure';
         die.classList.add('settle', cls);
         resultEl.classList.add(cls);
         sfxLand(data.roll_success, data.consequence && data.consequence.fumble);
-        let line = `${data.roll} vs ${data.target} — ${data.roll_success ? 'SUCCESS' : 'FAILURE'}`;
-        // Surface the mechanical bite of a failure (e.g. "−3 HP", "FUMBLE")
-        if (data.consequence && data.consequence.label) {
-            const c = data.consequence;
-            line += `  [${c.fumble ? 'FUMBLE! ' : ''}${c.label}]`;
+        let line;
+        if (data.empty) {
+            line = '*click* — OUT OF AMMO';
+        } else {
+            line = `${data.roll} vs ${data.target} — ${data.roll_success ? 'SUCCESS' : 'FAILURE'}`;
+            // Surface the mechanical bite of a failure (e.g. "−3 HP", "FUMBLE")
+            if (data.consequence && data.consequence.label) {
+                const c = data.consequence;
+                line += `  [${c.fumble ? 'FUMBLE! ' : ''}${c.label}]`;
+            }
         }
         resultEl.textContent = line;
 
         updateStats(data.state);
+        renderResources(data.resources);
         document.getElementById('turn-counter').textContent = data.turn;
         document.getElementById('location-display').textContent = data.location;
 

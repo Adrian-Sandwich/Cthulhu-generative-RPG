@@ -331,6 +331,7 @@ def get_game_state(gs):
         "pending_roll": gs.pending_roll,
         "npcs": gs.engine.get_npc_status(),
         "sanity_corruption": gs.engine.sanity_corruption_level(),
+        "resources": gs.engine.resources_status(),
         "investigator": {
             "name": inv.name,
             "archetype": inv.occupation,
@@ -387,6 +388,7 @@ def process_action(gs):
             "narrative": result.get("narrative", ""),
             "sanity_corruption": result.get("sanity_corruption", 0),
             "npcs": result.get("npc_status", []),
+            "resources": gs.engine.resources_status(),
             "pending_roll": gs.pending_roll,
             "state": _investigator_stats(gs.investigator)
         })
@@ -432,6 +434,8 @@ def execute_roll(gs):
             "message": result["message"],
             "narrative": narrative,
             "consequence": consequence,  # mechanical bite on failure (kind/amount/label/fumble)
+            "empty": result.get("empty", False),
+            "resources": gs.engine.resources_status(),
             "turn": gs.engine.state.turn,
             "location": gs.engine.state.location,
             "state": _investigator_stats(gs.investigator)

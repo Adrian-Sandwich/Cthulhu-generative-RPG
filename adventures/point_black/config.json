@@ -2,6 +2,10 @@
   "name": "point_black",
   "story_seed": "\n    ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.\n    ",
   "start_location": "Point Black Lighthouse - Exterior",
+  "resources": {
+    "ammo": 6,
+    "time_limit": 18
+  },
   "location_keywords": {
     "keeper": "Keeper's Quarters",
     "chamber": "Hidden Chamber",

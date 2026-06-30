@@ -377,7 +377,8 @@ class GenerativeGameEngine:
 
     def __init__(self, ollama_endpoint: str = "http://localhost:11434", model: str = "mistral",
                  session_id: Optional[str] = None, use_memory: bool = True,
-                 use_entity_graph: Optional[bool] = None, adventure: str = "point_black"):
+                 use_entity_graph: Optional[bool] = None, adventure: str = "point_black",
+                 language: str = "en"):
         """
         Initialize game engine.
 
@@ -397,6 +398,7 @@ class GenerativeGameEngine:
         self.model = model
         self.llm = OllamaClient(endpoint=ollama_endpoint, model=model)
         self.session_id = session_id or f"session_{int(time.time())}"
+        self.language = language
         self.state: Optional[GameState] = None
         self.rules = CoC7eRulesEngine()
 
@@ -557,6 +559,54 @@ class GenerativeGameEngine:
             # Gracefully handle location initialization errors
             logger.warning("location initialization failed", exc_info=True)
 
+    # Language the DM narrates in. The LLM does the translation; everything the
+    # player reads (narration, NPC dialogue, consequences) follows this.
+    _LANG_NAMES = {"en": "English", "es": "Spanish", "fr": "French",
+                   "de": "German", "pt": "Portuguese", "it": "Italian"}
+
+    # Forceful, in-language directives — weak local models ignore a soft English
+    # "respond in X", so we lead with the target language itself.
+    _LANG_DIRECTIVE = {
+        "es": ("RESPONDE SIEMPRE EN ESPAÑOL. Toda la narración, diálogos y mensajes "
+               "al jugador deben estar en español, nunca en inglés. Mantén las "
+               "etiquetas de mecánica (p. ej. [ROLL: climb/Hard]) tal cual."),
+        "fr": ("RÉPONDS TOUJOURS EN FRANÇAIS. Toute la narration et les dialogues "
+               "doivent être en français. Garde les balises (ex. [ROLL: climb/Hard]) telles quelles."),
+        "de": ("ANTWORTE IMMER AUF DEUTSCH. Die gesamte Erzählung muss auf Deutsch sein. "
+               "Behalte Mechanik-Tags (z. B. [ROLL: climb/Hard]) unverändert."),
+        "pt": ("RESPONDA SEMPRE EM PORTUGUÊS. Toda a narração deve estar em português. "
+               "Mantenha as tags (ex. [ROLL: climb/Hard]) inalteradas."),
+        "it": ("RISPONDI SEMPRE IN ITALIANO. Tutta la narrazione deve essere in italiano. "
+               "Mantieni i tag (es. [ROLL: climb/Hard]) invariati."),
+    }
+
+    def _lang_instruction(self) -> str:
+        """System-prompt prefix forcing the narration language (empty for English)."""
+        if self.language == "en":
+            return ""
+        directive = self._LANG_DIRECTIVE.get(
+            self.language,
+            f"ALWAYS respond ONLY in {self._LANG_NAMES.get(self.language, self.language)}. "
+            f"Keep mechanic tags unchanged.")
+        return f"\n\n=== IDIOMA / LANGUAGE (CRITICAL) ===\n{directive}"
+
+    def localized_intro(self) -> str:
+        """The opening story seed, translated to the narration language."""
+        seed = self.STORY_SEED.strip()
+        if self.language == "en":
+            return seed
+        name = self._LANG_NAMES.get(self.language, self.language)
+        directive = self._LANG_DIRECTIVE.get(self.language, f"Respond only in {name}.")
+        translated = self.llm.chat(
+            messages=[{"role": "user",
+                       "content": f"{directive}\n\nTraduce / translate this text:\n\n{seed}"}],
+            system_prompt=(f"{directive} You are a translator. Output ONLY the translation "
+                           f"in {name}, preserving the eerie tone. No preamble."),
+            max_tokens=400,
+            temperature=0.3,
+        )
+        return translated or seed
+
     def _call_ollama(self, prompt: str, max_tokens: int = 200, on_chunk=None) -> str:
         """
         Call Ollama with adventure context and conversation history.
@@ -564,7 +614,7 @@ class GenerativeGameEngine:
         """
         from .adventure_context import AdventureContext
 
-        system_prompt = AdventureContext.build_system_prompt(
+        system_prompt = self._lang_instruction() + AdventureContext.build_system_prompt(
             location=self.state.location,
             game_phase=self.state.game_phase
         )
@@ -575,10 +625,12 @@ class GenerativeGameEngine:
             max_messages=15  # Keep sliding window of last 15 turns
         )
 
-        # Add current action as user message
+        # Add current action as user message. Repeat the language directive here
+        # too — weak models otherwise follow the (English) instructions embedded
+        # in engine-built prompts (consequences, NPC dialogue, endings).
         message_history.append({
             "role": "user",
-            "content": prompt
+            "content": prompt + self._lang_instruction()
         })
 
         return self.llm.chat(
@@ -903,7 +955,7 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
         """
         from .cthulhu_tools import CTHULHU_TOOLS
 
-        system_prompt = self._build_dm_system_prompt()
+        system_prompt = self._lang_instruction() + self._build_dm_system_prompt()
 
         messages = [
             {
@@ -912,7 +964,8 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
             },
             {
                 "role": "user",
-                "content": f"Recent story:\n{narrative_context}\n\n=== PLAYER ACTION ===\n{player_action}"
+                "content": (f"Recent story:\n{narrative_context}\n\n=== PLAYER ACTION ===\n"
+                            f"{player_action}{self._lang_instruction()}")
             }
         ]
 
@@ -1970,6 +2023,7 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             sanity_system=self.sanity_system,
             app_state=app_state,
             adventure=getattr(self, "adventure_name", None),
+            language=getattr(self, "language", "en"),
         )
 
         # Also persist ChromaDB memory if available
@@ -2038,7 +2092,8 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             model=metadata["model"],
             session_id=session_id,
             use_memory=True,
-            adventure=metadata.get("adventure") or "point_black"
+            adventure=metadata.get("adventure") or "point_black",
+            language=metadata.get("language") or "en"
         )
 
         # Inject the loaded state

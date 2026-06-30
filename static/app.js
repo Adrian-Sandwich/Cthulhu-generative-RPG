@@ -156,12 +156,13 @@ async function startGame(event) {
 
     const name = document.getElementById('investigator-name').value;
     const archetype = document.getElementById('investigator-archetype').value;
+    const language = document.getElementById('game-language').value;
 
     try {
         const response = await fetch('/api/game/start', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, archetype })
+            body: JSON.stringify({ name, archetype, language })
         });
 
         const data = await response.json();

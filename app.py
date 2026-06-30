@@ -238,6 +238,9 @@ def start_game(gs):
     data = request.get_json(silent=True) or {}
     investigator_name = data.get('name', 'Unknown Investigator')
     occupation = data.get('archetype', 'scholar')  # Called 'occupation' in game engine
+    language = data.get('language', 'en')
+    if language not in ('en', 'es', 'fr', 'de', 'pt', 'it'):
+        language = 'en'
 
     try:
         # Starting a new game discards any prior engine on this session.
@@ -248,12 +251,12 @@ def start_game(gs):
         gs.investigator = create_investigator(investigator_name, occupation)
 
         # Engine session id == cookie sid, so the autosave file is per-player.
-        gs.engine = GenerativeGameEngine(use_memory=False, session_id=gs.sid)
+        gs.engine = GenerativeGameEngine(use_memory=False, session_id=gs.sid, language=language)
         gs.engine.create_game(gs.investigator)
 
         # Opening narrative so the player knows the situation and that
-        # they drive the story with free-text actions
-        intro = gs.engine.STORY_SEED.strip()
+        # they drive the story with free-text actions (in the chosen language)
+        intro = gs.engine.localized_intro()
 
         _autosave(gs)
 

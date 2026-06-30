@@ -52,7 +52,8 @@ class GenerativeSave:
 
     @staticmethod
     def save(state, session_id: str, model: str, location_state=None, sanity_system=None,
-             app_state: Optional[Dict] = None, adventure: Optional[str] = None) -> str:
+             app_state: Optional[Dict] = None, adventure: Optional[str] = None,
+             language: str = "en") -> str:
         """
         Serialize game state to JSON file.
 
@@ -89,6 +90,7 @@ class GenerativeSave:
                 "sanity": state.investigator.characteristics.get("SAN", 75),
                 "phase": state.game_phase,
                 "adventure": adventure,  # which adventure config to rebuild with on load
+                "language": language,    # narration language to resume in
                 "play_duration": len(state.narrative)  # Rough estimate of gameplay length
             },
             "game_state": asdict(state),

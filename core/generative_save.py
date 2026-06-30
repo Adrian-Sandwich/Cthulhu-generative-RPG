@@ -5,6 +5,7 @@ Handles serialization and recovery of complete game sessions
 """
 
 import json
+import re
 from pathlib import Path
 from datetime import datetime
 from typing import Tuple, Dict, List, Optional
@@ -12,6 +13,8 @@ from dataclasses import asdict
 
 
 SAVES_DIR = Path("saves/generative")
+_SAFE_ID_RE = re.compile(r"[^A-Za-z0-9_-]")
+_MAX_ID_LEN = 128
 
 
 class GenerativeSave:
@@ -21,12 +24,35 @@ class GenerativeSave:
     """
 
     @staticmethod
-    def _save_path(session_id: str) -> Path:
-        """Get the file path for a save"""
-        return SAVES_DIR / f"{session_id}.json"
+    def _safe_id(session_id: str) -> str:
+        """
+        Sanitize a session id for use as a filename.
+
+        Strips anything outside [A-Za-z0-9_-] (defeating path traversal like
+        ``../../etc``) and bounds the length. Raises ValueError if nothing
+        usable remains.
+        """
+        if not session_id:
+            raise ValueError("session_id is empty")
+        cleaned = _SAFE_ID_RE.sub("", str(session_id))[:_MAX_ID_LEN]
+        if not cleaned:
+            raise ValueError(f"session_id has no filename-safe characters: {session_id!r}")
+        return cleaned
 
     @staticmethod
-    def save(state, session_id: str, model: str, location_state=None, sanity_system=None) -> str:
+    def _save_path(session_id: str) -> Path:
+        """Get the file path for a save, sanitized and confined to SAVES_DIR."""
+        path = (SAVES_DIR / f"{GenerativeSave._safe_id(session_id)}.json")
+        # Defense in depth: ensure the resolved path stays inside SAVES_DIR.
+        resolved = path.resolve()
+        root = SAVES_DIR.resolve()
+        if not (resolved == root / resolved.name and resolved.parent == root):
+            raise ValueError(f"save path escapes SAVES_DIR: {resolved}")
+        return path
+
+    @staticmethod
+    def save(state, session_id: str, model: str, location_state=None, sanity_system=None,
+             app_state: Optional[Dict] = None, adventure: Optional[str] = None) -> str:
         """
         Serialize game state to JSON file.
 
@@ -62,11 +88,13 @@ class GenerativeSave:
                 "location": state.location,
                 "sanity": state.investigator.characteristics.get("SAN", 75),
                 "phase": state.game_phase,
+                "adventure": adventure,  # which adventure config to rebuild with on load
                 "play_duration": len(state.narrative)  # Rough estimate of gameplay length
             },
             "game_state": asdict(state),
             "location_state": location_state_data,
-            "sanity_state": sanity_state_data
+            "sanity_state": sanity_state_data,
+            "app_state": app_state  # app-layer state (e.g. web pending_roll) not in GameState
         }
 
         path = GenerativeSave._save_path(session_id)
@@ -103,6 +131,30 @@ class GenerativeSave:
             data.get("location_state"),
             data.get("sanity_state")
         )
+
+    @staticmethod
+    def load_app_state(session_id: str) -> Optional[Dict]:
+        """
+        Return the app-layer state stored alongside a save (e.g. the web
+        pending_roll), or None if the save or the field is absent.
+        """
+        path = GenerativeSave._save_path(session_id)
+        if not path.exists():
+            return None
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return data.get("app_state")
+        except Exception:
+            return None
+
+    @staticmethod
+    def exists(session_id: str) -> bool:
+        """True if a save file exists for this session id."""
+        try:
+            return GenerativeSave._save_path(session_id).exists()
+        except ValueError:
+            return False
 
     @staticmethod
     def list_saves() -> List[Dict]:

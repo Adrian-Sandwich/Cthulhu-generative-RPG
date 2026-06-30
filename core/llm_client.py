@@ -5,10 +5,13 @@ Single place for endpoint handling, streaming, retries and fallbacks.
 """
 
 import json
+import logging
 import time
 from typing import Callable, Dict, List, Optional
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 
 class OllamaClient:
@@ -88,11 +91,13 @@ class OllamaClient:
                 return full_response.strip() if full_response.strip() else self.EMPTY_FALLBACK
 
             except (requests.Timeout, requests.ConnectionError):
+                logger.warning("Ollama chat network error (attempt %d)", attempt, exc_info=True)
                 if attempt == 0:
                     time.sleep(0.5)
                     continue
                 return self.NETWORK_FALLBACK
             except Exception:
+                logger.warning("Ollama chat unexpected error (attempt %d)", attempt, exc_info=True)
                 if attempt == 0:
                     continue
                 return self.GENERIC_FALLBACK
@@ -139,11 +144,13 @@ class OllamaClient:
                     "tool_calls": message.get("tool_calls", []),
                 }
             except (requests.Timeout, requests.ConnectionError):
+                logger.warning("Ollama tool-call network error (attempt %d)", attempt, exc_info=True)
                 if attempt == 0:
                     time.sleep(0.5)
                     continue
                 break
             except Exception:
+                logger.warning("Ollama tool-call unexpected error (attempt %d)", attempt, exc_info=True)
                 if attempt == 0:
                     continue
                 break

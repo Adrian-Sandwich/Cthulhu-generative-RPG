@@ -1,0 +1,74 @@
+{
+  "name": "point_black",
+  "story_seed": "\n    ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.\n    ",
+  "start_location": "Point Black Lighthouse - Exterior",
+  "location_keywords": {
+    "keeper": "Keeper's Quarters",
+    "chamber": "Hidden Chamber",
+    "basement": "Basement",
+    "roof": "Lighthouse Top",
+    "stairs": "Lighthouse Stairs",
+    "lantern room": "Lantern Room",
+    "ground floor": "Ground Floor",
+    "upper level": "Upper Level",
+    "interior": "Lighthouse Interior",
+    "inside": "Lighthouse Interior"
+  },
+  "locations": [
+    {
+      "key": "lighthouse_exterior",
+      "name": "Point Black Lighthouse - Exterior",
+      "description": "A weathered lighthouse stands on rocky black stone, its paint peeling from decades of exposure to salt spray and Atlantic winds. The structure is perhaps thirty feet tall, surrounded by a low stone wall. The keeper's cottage sits nearby, its windows dark and empty."
+    },
+    {
+      "key": "keeper_quarters",
+      "name": "Keeper's Quarters",
+      "description": "The keeper's sparse living space: a cot, a table with a single chair, shelves of maritime equipment. Everything is covered in dust. Through the single window, you can see the lighthouse. There's a faint smell of decay and something else—something chemical."
+    },
+    {
+      "key": "lighthouse_interior",
+      "name": "Lighthouse Interior",
+      "description": "The interior of the lighthouse is a spiral of iron stairs ascending into darkness. The air is thick and stale. Each step groans under your weight. The walls are covered in moisture and a strange luminescent fungus that glows faintly green in the darkness."
+    },
+    {
+      "key": "keeper_room_top",
+      "name": "Keeper's Room - Lighthouse Top",
+      "description": "At the top of the lighthouse, a small room contains a cot, desk, and the great lamp mechanism. Papers are scattered everywhere—logbooks, journals, sketches of impossible symbols. The light mechanism hasn't been lit in weeks. Through the windows, you can see the entire rocky coast and far out to sea."
+    }
+  ],
+  "factions": [
+    { "key": "coast_guard", "name": "U.S. Coast Guard", "alignment": "neutral" },
+    { "key": "miskatonic", "name": "Miskatonic University", "alignment": "neutral" },
+    { "key": "cultists", "name": "Deep One Cultists", "alignment": "hostile" }
+  ],
+  "npcs": {
+    "warner": {
+      "name": "Lt. William Warner",
+      "role": "Coast Guard Officer",
+      "knows": ["keeper vanished", "lighthouse abandoned 2 weeks", "strange sounds at night"],
+      "knows_secret": [
+        "I saw something in the water two months ago. Unnatural. Not a whale, not a fish.",
+        "The keeper's name was Marinus Weld. He was afraid of something specific... kept muttering about 'the deep'."
+      ],
+      "personality": "professional but visibly shaken, trying to maintain composure",
+      "available_turns": [1, 10]
+    },
+    "armitage": {
+      "name": "Dr. Henry Armitage",
+      "role": "Miskatonic University Professor",
+      "knows": ["symbols are pre-human", "fissure predates lighthouse", "ritual to seal it"],
+      "knows_secret": [
+        "I've decoded part of the inscription. It's a warning, not a seal. The seal was never completed.",
+        "The lighthouse wasn't built to protect anything from us. It was built to contain something beneath the ocean. To keep it sleeping."
+      ],
+      "personality": "academic, grave, speaks in measured tones",
+      "available_turns": [3, 10]
+    }
+  },
+  "relationships": [
+    { "from": "warner", "rel": "WORKS_FOR", "to": "coast_guard" },
+    { "from": "armitage", "rel": "WORKS_FOR", "to": "miskatonic" },
+    { "from": "warner", "rel": "KNOWS", "to": "armitage" },
+    { "from": "warner", "rel": "PROTECTS", "to": "lighthouse_exterior" }
+  ]
+}

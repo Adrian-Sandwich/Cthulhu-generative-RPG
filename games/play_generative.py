@@ -602,7 +602,10 @@ def main():
         engine, model = resume_result
         print(f"\n✓ Resuming session (Turn {engine.state.turn})")
         input("Press ENTER to continue your investigation...")
-        _run_game_loop(engine, model)
+        try:
+            _run_game_loop(engine, model)
+        finally:
+            engine.close()
         return
 
     # New game flow
@@ -636,7 +639,10 @@ def main():
     input("Press ENTER to start your investigation...")
 
     # Run game loop
-    _run_game_loop(engine, model)
+    try:
+        _run_game_loop(engine, model)
+    finally:
+        engine.close()
 
 
 if __name__ == '__main__':

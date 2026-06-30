@@ -5,6 +5,8 @@ Combines fixed story seeds with open-ended LLM narration + CoC mechanics
 """
 
 import json
+import logging
+import os
 import random
 import re
 from dataclasses import dataclass, asdict
@@ -12,6 +14,8 @@ from typing import Optional, Dict, List, Tuple
 
 from .llm_client import OllamaClient
 from .tag_parser import parse_dm_response
+
+logger = logging.getLogger(__name__)
 
 
 # Phase 2e: Fix C — Roll synthesis mapping (keyword → (skill, difficulty))
@@ -327,7 +331,8 @@ class GenerativeGameEngine:
     }
 
     def __init__(self, ollama_endpoint: str = "http://localhost:11434", model: str = "mistral",
-                 session_id: Optional[str] = None, use_memory: bool = True):
+                 session_id: Optional[str] = None, use_memory: bool = True,
+                 use_entity_graph: Optional[bool] = None, adventure: str = "point_black"):
         """
         Initialize game engine.
 
@@ -350,6 +355,21 @@ class GenerativeGameEngine:
         self.state: Optional[GameState] = None
         self.rules = CoC7eRulesEngine()
 
+        # Load adventure content from data (story seed, locations, NPCs,
+        # factions, relationships, keywords) instead of engine constants.
+        from .adventure_config import AdventureConfig
+        self.adventure_name = adventure
+        self.adventure_config = AdventureConfig.from_name(adventure)
+        # Instance attrs shadow the legacy class constants so existing
+        # references (self.STORY_SEED, self.NPC_DEFINITIONS) keep working.
+        self.STORY_SEED = self.adventure_config.story_seed
+        self.NPC_DEFINITIONS = self.adventure_config.npcs
+        # Resolve roll-synthesis keywords: per-adventure override or engine default.
+        if self.adventure_config.roll_keywords:
+            self._roll_keywords = {k: tuple(v) for k, v in self.adventure_config.roll_keywords.items()}
+        else:
+            self._roll_keywords = ROLL_KEYWORDS
+
         # Initialize semantic memory if available and enabled
         self.memory = None
         if use_memory:
@@ -359,13 +379,20 @@ class GenerativeGameEngine:
             except ImportError:
                 pass  # ChromaDB not installed - degrade gracefully
 
-        # Initialize entity relationship graph (Neo4j)
+        # Initialize entity relationship graph (Neo4j). Off by default: it is
+        # opt-in because construction forces a live connect (a stall when Neo4j
+        # is down) and the web path never reads the graph. Enable via the
+        # use_entity_graph arg or the ENABLE_ENTITY_GRAPH=1 env var.
         self.entity_graph = None
-        try:
-            from .entity_graph import EntityGraph
-            self.entity_graph = EntityGraph()
-        except Exception:
-            pass  # Neo4j not available - degrade gracefully
+        if use_entity_graph is None:
+            use_entity_graph = os.environ.get("ENABLE_ENTITY_GRAPH", "0") == "1"
+        if use_entity_graph:
+            try:
+                from .entity_graph import EntityGraph
+                self.entity_graph = EntityGraph(session_id=self.session_id)
+            except Exception:
+                logger.warning("EntityGraph init failed - continuing without it", exc_info=True)
+                self.entity_graph = None
 
         # Sanity system will be initialized in create_game()
         self.sanity_system = None
@@ -384,11 +411,30 @@ class GenerativeGameEngine:
         except ImportError:
             self.companions = None
 
+    def close(self):
+        """
+        Release external resources held by this engine.
+
+        Closes the Neo4j driver (if any) and flushes semantic memory. Safe to
+        call multiple times and safe when subsystems are disabled. Call this on
+        game reset and on process exit so drivers/connections don't leak.
+        """
+        if getattr(self, "entity_graph", None):
+            try:
+                self.entity_graph.close()
+            except Exception:
+                logger.warning("entity_graph.close() failed", exc_info=True)
+        if getattr(self, "memory", None) and getattr(self.memory, "enabled", False):
+            try:
+                self.memory.persist()
+            except Exception:
+                logger.warning("memory.persist() failed", exc_info=True)
+
     def create_game(self, investigator: InvestigatorState) -> GameState:
         """Initialize a new game"""
         self.state = GameState(
             turn=1,
-            location="Point Black Lighthouse - Exterior",
+            location=self.adventure_config.start_location,
             narrative=[self.STORY_SEED],
             investigator=investigator,
             recent_actions=[],
@@ -423,45 +469,30 @@ class GenerativeGameEngine:
             return
 
         try:
-            # Clear previous data
+            cfg = self.adventure_config
+
+            # Clear only THIS session's prior nodes (scoped, not the whole DB).
             self.entity_graph.clear()
 
             # Add factions
-            self.entity_graph.add_faction("coast_guard", "U.S. Coast Guard", "neutral")
-            self.entity_graph.add_faction("miskatonic", "Miskatonic University", "neutral")
-            self.entity_graph.add_faction("cultists", "Deep One Cultists", "hostile")
+            for f in cfg.factions:
+                self.entity_graph.add_faction(f["key"], f["name"], f.get("alignment", "neutral"))
 
-            # Add NPCs (from NPC_DEFINITIONS)
-            for npc_key, npc_data in self.NPC_DEFINITIONS.items():
-                self.entity_graph.add_npc(
-                    npc_key,
-                    npc_data["name"],
-                    npc_data["role"]
-                )
+            # Add NPCs
+            for npc_key, npc_data in cfg.npcs.items():
+                self.entity_graph.add_npc(npc_key, npc_data["name"], npc_data["role"])
 
-            # Add specific relationships
-            self.entity_graph.add_relationship("warner", "WORKS_FOR", "coast_guard")
-            self.entity_graph.add_relationship("armitage", "WORKS_FOR", "miskatonic")
-            self.entity_graph.add_relationship("warner", "KNOWS", "armitage")
+            # Add locations (use full descriptions from config)
+            for loc in cfg.locations:
+                self.entity_graph.add_location(loc["key"], loc["name"], loc.get("description", ""))
 
-            # Add locations
-            self.entity_graph.add_location(
-                "lighthouse_exterior",
-                "Point Black Lighthouse - Exterior",
-                "A weathered lighthouse stands on black rock..."
-            )
-            self.entity_graph.add_location(
-                "keeper_quarters",
-                "Keeper's Quarters",
-                "The keeper's sparse living space..."
-            )
+            # Add relationships (rel types validated by EntityGraph whitelist)
+            for rel in cfg.relationships:
+                self.entity_graph.add_relationship(rel["from"], rel["rel"], rel["to"])
 
-            # Add protections
-            self.entity_graph.add_relationship("warner", "PROTECTS", "lighthouse_exterior")
-
-        except Exception as e:
+        except Exception:
             # Gracefully handle entity initialization errors
-            pass
+            logger.warning("entity initialization failed", exc_info=True)
 
     def _initialize_cthulhu_locations(self):
         """Bootstrap Cthulhu-specific locations with descriptions"""
@@ -469,34 +500,15 @@ class GenerativeGameEngine:
             return
 
         try:
-            # Register main locations
-            self.location_state.register_location(
-                "lighthouse_exterior",
-                "Point Black Lighthouse - Exterior",
-                "A weathered lighthouse stands on rocky black stone, its paint peeling from decades of exposure to salt spray and Atlantic winds. The structure is perhaps thirty feet tall, surrounded by a low stone wall. The keeper's cottage sits nearby, its windows dark and empty."
-            )
-
-            self.location_state.register_location(
-                "keeper_quarters",
-                "Keeper's Quarters",
-                "The keeper's sparse living space: a cot, a table with a single chair, shelves of maritime equipment. Everything is covered in dust. Through the single window, you can see the lighthouse. There's a faint smell of decay and something else—something chemical."
-            )
-
-            self.location_state.register_location(
-                "lighthouse_interior",
-                "Lighthouse Interior",
-                "The interior of the lighthouse is a spiral of iron stairs ascending into darkness. The air is thick and stale. Each step groans under your weight. The walls are covered in moisture and a strange luminescent fungus that glows faintly green in the darkness."
-            )
-
-            self.location_state.register_location(
-                "keeper_room_top",
-                "Keeper's Room - Lighthouse Top",
-                "At the top of the lighthouse, a small room contains a cot, desk, and the great lamp mechanism. Papers are scattered everywhere—logbooks, journals, sketches of impossible symbols. The light mechanism hasn't been lit in weeks. Through the windows, you can see the entire rocky coast and far out to sea."
-            )
+            # Register locations from the adventure config
+            for loc in self.adventure_config.locations:
+                self.location_state.register_location(
+                    loc["key"], loc["name"], loc.get("description", "")
+                )
 
         except Exception:
             # Gracefully handle location initialization errors
-            pass
+            logger.warning("location initialization failed", exc_info=True)
 
     def _call_ollama(self, prompt: str, max_tokens: int = 200, on_chunk=None) -> str:
         """
@@ -973,7 +985,7 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
         # Phase 2e Fix C: Synthesize roll if LLM omitted one for a physical action
         if not rolls_requested and not combat_start and not sanity_checks:
             action_lower = player_input.lower()
-            for keyword, (skill, difficulty) in ROLL_KEYWORDS.items():
+            for keyword, (skill, difficulty) in self._roll_keywords.items():
                 if keyword in action_lower:
                     # LLM should have requested a roll — inject one
                     rolls_requested.append((skill, difficulty))
@@ -1004,20 +1016,9 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
         # Update sanity system (reduce disorder durations, etc.)
         self.update_sanity_system()
 
-        # Auto-detect location changes from narrative
+        # Auto-detect location changes from narrative (keywords from adventure config)
         narrative_lower = clean_response.lower()
-        location_map = {
-            'keeper': 'Keeper\'s Quarters',
-            'chamber': 'Hidden Chamber',
-            'basement': 'Basement',
-            'roof': 'Lighthouse Top',
-            'stairs': 'Lighthouse Stairs',
-            'lantern room': 'Lantern Room',
-            'ground floor': 'Ground Floor',
-            'upper level': 'Upper Level',
-            'interior': 'Lighthouse Interior',
-            'inside': 'Lighthouse Interior',
-        }
+        location_map = self.adventure_config.location_keywords
         for keyword, new_location in location_map.items():
             if keyword in narrative_lower and new_location != self.state.location:
                 self.state.location = new_location
@@ -1523,9 +1524,14 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
 
         return None
 
-    def save_game(self) -> str:
+    def save_game(self, app_state: Optional[Dict] = None) -> str:
         """
         Save current game session to disk with all state.
+
+        Args:
+            app_state: Optional app-layer state to persist alongside the game
+                (e.g. the web layer's pending_roll), restored via
+                GenerativeSave.load_app_state.
 
         Returns:
             Path to saved file
@@ -1537,7 +1543,9 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             self.session_id,
             self.model,
             location_state=self.location_state,
-            sanity_system=self.sanity_system
+            sanity_system=self.sanity_system,
+            app_state=app_state,
+            adventure=getattr(self, "adventure_name", None),
         )
 
         # Also persist ChromaDB memory if available
@@ -1597,12 +1605,14 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             last_roll=state_dict.get("last_roll")
         )
 
-        # Create engine instance with same model and session
+        # Create engine instance with same model, session, and adventure.
+        # Older saves predate the adventure field — default to point_black.
         engine = cls(
             ollama_endpoint=ollama_endpoint,
             model=metadata["model"],
             session_id=session_id,
-            use_memory=True
+            use_memory=True,
+            adventure=metadata.get("adventure") or "point_black"
         )
 
         # Inject the loaded state

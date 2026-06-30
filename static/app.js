@@ -317,27 +317,118 @@ async function refreshGameState() {
     }
 }
 
-// Submit Player Action
+// Begin a live narrative turn we can stream the DM's words into.
+function beginTurn(action) {
+    const turnEl = document.createElement('div');
+    turnEl.className = 'narrative-turn';
+    const playerEl = document.createElement('div');
+    playerEl.className = 'player-action';
+    playerEl.textContent = `> ${action}`;
+    const dmEl = document.createElement('div');
+    dmEl.className = 'dm-response';
+    turnEl.appendChild(playerEl);
+    turnEl.appendChild(dmEl);
+    document.getElementById('narrative-content').appendChild(turnEl);
+    scrollNarrative();
+    return { turnEl, dmEl };
+}
+
+function scrollNarrative() {
+    const d = document.getElementById('narrative-display');
+    d.scrollTop = d.scrollHeight;
+}
+
+// Parse one SSE frame into {event, data}.
+function parseSSE(frame) {
+    let ev = 'message', data = '';
+    frame.split('\n').forEach(line => {
+        if (line.startsWith('event:')) ev = line.slice(6).trim();
+        else if (line.startsWith('data:')) data += line.slice(5).trim();
+    });
+    return { event: ev, data };
+}
+
+function finishTurnUI(done, action, dmEl) {
+    dmEl.textContent = (done.narrative || dmEl.textContent || '...').trim();
+    gameHistory.push({ turn: done.turn, playerAction: action, dmResponse: done.narrative });
+    updateStats(done.state);
+    renderNpcs(done.npcs);
+    renderResources(done.resources);
+    applySanityFx(done.sanity_corruption || 0);
+    document.getElementById('turn-counter').textContent = done.turn;
+    document.getElementById('location-display').textContent = done.location;
+    if (done.pending_roll) showDiceArea(done.pending_roll);
+    refreshGameState();
+}
+
+// Submit Player Action — streams the DM narration over SSE, falls back to the
+// plain JSON endpoint if streaming isn't available.
 async function submitAction(event) {
     event.preventDefault();
 
     const actionInput = document.getElementById('action-input');
     const action = actionInput.value.trim();
-
     if (!action) return;
 
     setStatus('...');
     actionInput.disabled = true;
+    const { turnEl, dmEl } = beginTurn(action);
 
+    try {
+        const resp = await fetch('/api/game/action/stream', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action })
+        });
+        if (!resp.ok || !resp.body) throw new Error('stream unavailable');
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = '', streamed = '', done = null, errMsg = null;
+
+        while (true) {
+            const { value, done: rdone } = await reader.read();
+            if (rdone) break;
+            buf += decoder.decode(value, { stream: true });
+            let i;
+            while ((i = buf.indexOf('\n\n')) >= 0) {
+                const ev = parseSSE(buf.slice(0, i));
+                buf = buf.slice(i + 2);
+                if (ev.event === 'done') {
+                    done = JSON.parse(ev.data);
+                } else if (ev.event === 'error') {
+                    errMsg = JSON.parse(ev.data).error;
+                } else if (ev.data) {
+                    streamed += (JSON.parse(ev.data).chunk || '');
+                    dmEl.textContent = streamed;
+                    scrollNarrative();
+                }
+            }
+        }
+
+        if (errMsg) { turnEl.remove(); setStatus(errMsg, true); return; }
+        if (done) { finishTurnUI(done, action, dmEl); actionInput.value = ''; setStatus(''); }
+        else { turnEl.remove(); throw new Error('stream ended early'); }
+    } catch (error) {
+        turnEl.remove();
+        await submitActionFallback(action);
+    } finally {
+        if (!pendingRoll) {
+            actionInput.disabled = false;
+            actionInput.focus();
+        }
+    }
+}
+
+// Non-streaming fallback (original JSON endpoint).
+async function submitActionFallback(action) {
     try {
         const response = await fetch('/api/game/action', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action })
         });
-
         const data = await response.json();
-
         if (data.success) {
             addNarrativeTurn(data.turn, action, data.narrative);
             updateStats(data.state);
@@ -346,27 +437,15 @@ async function submitAction(event) {
             applySanityFx(data.sanity_corruption || 0);
             document.getElementById('turn-counter').textContent = data.turn;
             document.getElementById('location-display').textContent = data.location;
-
-            actionInput.value = '';
+            document.getElementById('action-input').value = '';
             setStatus('');
-
-            // DM asked for a roll: hand the die to the player
-            if (data.pending_roll) {
-                showDiceArea(data.pending_roll);
-            }
-
-            // Update location image (may trigger generation server-side)
+            if (data.pending_roll) showDiceArea(data.pending_roll);
             refreshGameState();
         } else {
             setStatus(data.error || 'Action failed', true);
         }
     } catch (error) {
         setStatus(error.message, true);
-    } finally {
-        if (!pendingRoll) {
-            actionInput.disabled = false;
-            actionInput.focus();
-        }
     }
 }
 

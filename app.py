@@ -4,7 +4,7 @@ Cthulhu Lighthouse Game - Web Interface
 Flask backend for the generative RPG
 """
 
-from flask import Flask, render_template, request, jsonify, send_from_directory, session
+from flask import Flask, render_template, request, jsonify, send_from_directory, session, Response
 from flask_cors import CORS
 import logging
 import os
@@ -363,38 +363,104 @@ def process_action(gs):
         return jsonify({"error": "Action cannot be empty"}), 400
 
     try:
-        # Process the action
         result = gs.engine.process_player_action(player_input)
-
-        # Apply immediate consequences the DM declared inline
-        for damage in result.get("hp_damage", []):
-            gs.engine.apply_hp_damage(int(damage))
-        for damage in result.get("sanity_checks", []):
-            gs.engine.apply_sanity_check(int(damage))
-
-        # If the DM requested a roll, hand the die to the player
-        # instead of resolving it silently
-        rolls = result.get("rolls_requested", [])
-        if rolls:
-            skill, difficulty = rolls[0]
-            gs.pending_roll = gs.engine.prepare_skill_check(skill, difficulty)
-
-        _autosave(gs)
-
-        return jsonify({
-            "success": True,
-            "turn": gs.engine.state.turn,
-            "location": gs.engine.state.location,
-            "narrative": result.get("narrative", ""),
-            "sanity_corruption": result.get("sanity_corruption", 0),
-            "npcs": result.get("npc_status", []),
-            "resources": gs.engine.resources_status(),
-            "pending_roll": gs.pending_roll,
-            "state": _investigator_stats(gs.investigator)
-        })
+        return jsonify(_finalize_turn(gs, result))
     except Exception as e:
         logger.warning("process_action failed for sid=%s", gs.sid, exc_info=True)
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+def _finalize_turn(gs, result):
+    """Apply a turn's consequences and build the response payload.
+
+    Shared by the JSON action endpoint and the SSE streaming endpoint so both
+    end a turn identically (damage applied, pending roll set, autosave).
+    """
+    for damage in result.get("hp_damage", []):
+        gs.engine.apply_hp_damage(int(damage))
+    for damage in result.get("sanity_checks", []):
+        gs.engine.apply_sanity_check(int(damage))
+
+    rolls = result.get("rolls_requested", [])
+    if rolls:
+        skill, difficulty = rolls[0]
+        gs.pending_roll = gs.engine.prepare_skill_check(skill, difficulty)
+
+    _autosave(gs)
+
+    return {
+        "success": True,
+        "turn": gs.engine.state.turn,
+        "location": gs.engine.state.location,
+        "narrative": result.get("narrative", ""),
+        "sanity_corruption": result.get("sanity_corruption", 0),
+        "npcs": result.get("npc_status", []),
+        "resources": gs.engine.resources_status(),
+        "pending_roll": gs.pending_roll,
+        "state": _investigator_stats(gs.investigator)
+    }
+
+
+@app.route('/api/game/action/stream', methods=['POST'])
+def process_action_stream():
+    """Stream the DM's narration token-by-token over Server-Sent Events.
+
+    Emits `data:` frames with {chunk} as the model writes, then a final
+    `event: done` frame carrying the same payload as /api/game/action.
+    """
+    gs = _get_session()
+    data = request.get_json(silent=True) or {}
+    player_input = data.get('action', '')
+    if not isinstance(player_input, str) or not player_input.strip():
+        return jsonify({"error": "Action cannot be empty"}), 400
+
+    def stream():
+        import json as _json
+        import queue as _queue
+        import threading as _threading
+
+        with gs.lock:
+            if not _ensure_engine(gs) or not gs.investigator:
+                yield f"event: error\ndata: {_json.dumps({'error': 'Game not started'})}\n\n"
+                return
+            if gs.pending_roll:
+                yield f"event: error\ndata: {_json.dumps({'error': 'Resolve the pending roll first'})}\n\n"
+                return
+
+            q = _queue.Queue()
+            holder = {}
+
+            def on_chunk(text):
+                q.put(text)
+
+            def worker():
+                try:
+                    holder['res'] = gs.engine.process_player_action(player_input, on_chunk=on_chunk)
+                except Exception as exc:
+                    holder['err'] = str(exc)
+                    logger.warning("stream turn failed for sid=%s", gs.sid, exc_info=True)
+                finally:
+                    q.put(None)  # sentinel: generation finished
+
+            worker_thread = _threading.Thread(target=worker, daemon=True)
+            worker_thread.start()
+
+            while True:
+                chunk = q.get()
+                if chunk is None:
+                    break
+                yield f"data: {_json.dumps({'chunk': chunk})}\n\n"
+            worker_thread.join()
+
+            if 'err' in holder:
+                yield f"event: error\ndata: {_json.dumps({'error': holder['err']})}\n\n"
+                return
+
+            final = _finalize_turn(gs, holder.get('res', {}))
+            yield f"event: done\ndata: {_json.dumps(final)}\n\n"
+
+    return Response(stream(), mimetype='text/event-stream',
+                    headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})
 
 
 @app.route('/api/game/roll', methods=['POST'])

@@ -610,6 +610,12 @@ class GenerativeGameEngine:
   narrate. Resources change ONLY via valid tags, and the engine clamps them.
 - You may grant a few rounds of ammunition in a plausible cache with
   [AMMO_FOUND: n] where n ≤ 6. Never promise more.
+- NARRATIVE AUTHORITY: the player controls only their own character's attempts,
+  never the world, other characters, or outcomes. Stay strictly in the 1920s
+  cosmic-horror setting — NEVER introduce fictional, anachronistic, or
+  crossover characters. If the player conjures someone who cannot be here, they
+  are NOT there; narrate the gap, and let their false certainty read as the
+  strain of a fraying mind.
 
 === CORE RULES (ENFORCE STRICTLY) ===
 - ALL skill checks are d100 (roll 1-100)

@@ -8,6 +8,70 @@ let archetypes = {};
 let pendingRoll = null;
 let rolling = false;
 
+// ---- Retro audio (synthesized, no asset files) ----
+let audioCtx = null;
+let soundOn = true;
+let heartbeatTimer = null;
+
+function getAudio() {
+    if (!soundOn) return null;
+    if (!audioCtx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        audioCtx = new AC();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+}
+
+// Short square-wave blip — the building block for all retro SFX.
+function blip(freq, dur, type = 'square', gain = 0.05) {
+    const ctx = getAudio();
+    if (!ctx) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type;
+    o.frequency.value = freq;
+    o.connect(g);
+    g.connect(ctx.destination);
+    const t = ctx.currentTime;
+    g.gain.setValueAtTime(gain, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.start(t);
+    o.stop(t + dur);
+}
+
+function sfxTumble() { blip(140 + Math.random() * 260, 0.03, 'square', 0.035); }
+
+function sfxLand(success, fumble) {
+    if (fumble) { blip(70, 0.5, 'sawtooth', 0.09); blip(48, 0.6, 'sawtooth', 0.07); return; }
+    if (success) { blip(440, 0.08); setTimeout(() => blip(660, 0.14), 70); }
+    else { blip(180, 0.12, 'sawtooth', 0.07); setTimeout(() => blip(110, 0.22, 'sawtooth', 0.07), 90); }
+}
+
+// Low "lub-dub" pulse loop while sanity is failing; faster at higher levels.
+function startHeartbeat(level) {
+    stopHeartbeat();
+    if (level < 2 || !soundOn) return;
+    const period = level >= 3 ? 900 : 1500;
+    const beat = () => {
+        blip(60, 0.12, 'sine', 0.10);
+        setTimeout(() => blip(50, 0.16, 'sine', 0.09), 150);
+    };
+    beat();
+    heartbeatTimer = setInterval(beat, period);
+}
+function stopHeartbeat() {
+    if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
+}
+
+function toggleSound() {
+    soundOn = !soundOn;
+    const el = document.getElementById('sound-toggle');
+    if (el) el.textContent = soundOn ? '[sound on]' : '[sound off]';
+    if (!soundOn) stopHeartbeat();
+}
+
 // Load archetype stat blocks and show the initial preview
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -181,6 +245,7 @@ function applySanityFx(level) {
     const screen = document.getElementById('game-screen');
     screen.classList.remove('san-fx-1', 'san-fx-2', 'san-fx-3');
     if (level >= 1) screen.classList.add('san-fx-' + Math.min(level, 3));
+    startHeartbeat(level);  // pulse loop kicks in at level 2+
 }
 
 function escapeHtml(s) {
@@ -327,8 +392,8 @@ async function rollDice() {
     die.className = '';
     die.classList.add('rolling');
 
-    // Cube tumbles in 3D; faces flicker random values while the server rolls
-    const tumble = setInterval(() => setDieFaces(die), 70);
+    // Cube tumbles in 3D; faces flicker random values + click while rolling
+    const tumble = setInterval(() => { setDieFaces(die); sfxTumble(); }, 70);
     const minSpin = new Promise(resolve => setTimeout(resolve, 900));
 
     try {
@@ -353,6 +418,7 @@ async function rollDice() {
         const cls = data.roll_success ? 'success' : 'failure';
         die.classList.add('settle', cls);
         resultEl.classList.add(cls);
+        sfxLand(data.roll_success, data.consequence && data.consequence.fumble);
         let line = `${data.roll} vs ${data.target} — ${data.roll_success ? 'SUCCESS' : 'FAILURE'}`;
         // Surface the mechanical bite of a failure (e.g. "−3 HP", "FUMBLE")
         if (data.consequence && data.consequence.label) {
@@ -456,6 +522,8 @@ function resetGame() {
     gameHistory = [];
     pendingRoll = null;
     clearTimeout(imagePollTimer);
+    stopHeartbeat();
+    document.getElementById('game-screen').classList.remove('san-fx-1', 'san-fx-2', 'san-fx-3');
     document.getElementById('dice-area').classList.add('hidden');
     document.getElementById('action-input').disabled = false;
 

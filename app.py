@@ -389,8 +389,17 @@ def _finalize_turn(gs, result):
     for damage in result.get("sanity_checks", []):
         gs.engine.apply_sanity_check(int(damage))
 
+    # Combat the DM declared this turn: start it and hand the player an attack
+    # roll. Each die throw then resolves one round (see execute_roll).
+    for enemy_key in result.get("combat_start", []):
+        if not gs.engine.state.active_combat:
+            started = gs.engine.start_combat(enemy_key)
+            if not started.get("error"):
+                gs.pending_roll = gs.engine.combat_attack_roll()
+            break
+
     rolls = result.get("rolls_requested", [])
-    if rolls:
+    if rolls and not gs.pending_roll:
         skill, difficulty = rolls[0]
         gs.pending_roll = gs.engine.prepare_skill_check(skill, difficulty)
 
@@ -404,6 +413,7 @@ def _finalize_turn(gs, result):
         "sanity_corruption": result.get("sanity_corruption", 0),
         "npcs": result.get("npc_status", []),
         "resources": gs.engine.resources_status(),
+        "combat": gs.engine.combat_status(),
         "pending_roll": gs.pending_roll,
         "state": _investigator_stats(gs.investigator)
     }
@@ -495,13 +505,21 @@ def execute_roll(gs):
         # Server rolls the actual die (the client animation is theater)
         result = gs.engine.execute_skill_check(roll["skill"], roll["difficulty"])
 
-        # DM narrates the outcome immediately
-        outcome = gs.engine.resolve_roll_consequences()
         narrative = ""
         consequence = None
-        if isinstance(outcome, dict):
-            narrative = outcome.get("narrative", "")
-            consequence = outcome.get("consequence")
+        if roll.get("combat"):
+            # Combat round: resolve mechanically (your attack + enemy counter).
+            combat_res = gs.engine.resolve_combat_round(result["success"])
+            narrative = combat_res.get("narrative", "")
+            if not combat_res.get("combat_over") and gs.engine.state.active_combat:
+                # Fight continues — queue the next attack throw.
+                gs.pending_roll = gs.engine.combat_attack_roll()
+        else:
+            # Non-combat skill check: the DM narrates the consequence.
+            outcome = gs.engine.resolve_roll_consequences()
+            if isinstance(outcome, dict):
+                narrative = outcome.get("narrative", "")
+                consequence = outcome.get("consequence")
 
         _autosave(gs)
 
@@ -517,6 +535,8 @@ def execute_roll(gs):
             "consequence": consequence,  # mechanical bite on failure (kind/amount/label/fumble)
             "empty": result.get("empty", False),
             "resources": gs.engine.resources_status(),
+            "combat": gs.engine.combat_status(),
+            "pending_roll": gs.pending_roll,
             "turn": gs.engine.state.turn,
             "location": gs.engine.state.location,
             "state": _investigator_stats(gs.investigator)

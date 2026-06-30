@@ -267,6 +267,19 @@ input:focus, select:focus {
     margin: -10px -8px 10px -8px;
 }
 
+/* ---- Combat bar ---- */
+#combat-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-top: 1px solid var(--danger);
+    color: var(--danger);
+    letter-spacing: 1px;
+}
+#combat-bar .combat-icon { font-size: 16px; }
+#combat-hp { color: var(--text); font-variant-numeric: tabular-nums; }
+
 /* ---- Dice roll ---- */
 
 #dice-area {

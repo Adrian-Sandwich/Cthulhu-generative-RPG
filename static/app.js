@@ -219,6 +219,15 @@ function updateStats(stats) {
     document.getElementById('luck-value').textContent = stats.Luck;
 }
 
+// Show the current enemy and its HP while fighting.
+function renderCombat(combat) {
+    const bar = document.getElementById('combat-bar');
+    if (!combat) { bar.classList.add('hidden'); return; }
+    document.getElementById('combat-name').textContent = combat.name;
+    document.getElementById('combat-hp').textContent = `HP ${combat.hp}`;
+    bar.classList.remove('hidden');
+}
+
 // Show finite stakes (ammo, doom clock) in the HUD.
 function renderResources(res) {
     if (!res) return;
@@ -292,6 +301,7 @@ async function refreshGameState() {
         document.getElementById('turn-counter').textContent = data.turn;
         renderNpcs(data.npcs);
         renderResources(data.resources);
+        renderCombat(data.combat);
         applySanityFx(data.sanity_corruption || 0);
 
         // Scene frame only appears when an image is present or being made;
@@ -354,6 +364,7 @@ function finishTurnUI(done, action, dmEl) {
     updateStats(done.state);
     renderNpcs(done.npcs);
     renderResources(done.resources);
+    renderCombat(done.combat);
     applySanityFx(done.sanity_corruption || 0);
     document.getElementById('turn-counter').textContent = done.turn;
     document.getElementById('location-display').textContent = done.location;
@@ -434,6 +445,7 @@ async function submitActionFallback(action) {
             updateStats(data.state);
             renderNpcs(data.npcs);
             renderResources(data.resources);
+            renderCombat(data.combat);
             applySanityFx(data.sanity_corruption || 0);
             document.getElementById('turn-counter').textContent = data.turn;
             document.getElementById('location-display').textContent = data.location;
@@ -469,8 +481,9 @@ function showDiceArea(roll) {
     die.className = '';
     setDieFaces(die, '?');
 
-    document.getElementById('dice-label').textContent =
-        `ROLL: ${roll.skill} (${roll.difficulty}) — target ${roll.target}`;
+    document.getElementById('dice-label').textContent = roll.combat
+        ? `ATTACK: ${roll.skill} — target ${roll.target}`
+        : `ROLL: ${roll.skill} (${roll.difficulty}) — target ${roll.target}`;
     const result = document.getElementById('dice-result');
     result.textContent = '';
     result.className = '';
@@ -489,6 +502,7 @@ function hideDiceArea() {
 async function rollDice() {
     if (!pendingRoll || rolling) return;
     rolling = true;
+    const roll = pendingRoll;  // capture (combat rounds re-show a new one)
 
     const die = document.getElementById('pixel-die');
     const resultEl = document.getElementById('dice-result');
@@ -537,18 +551,25 @@ async function rollDice() {
 
         updateStats(data.state);
         renderResources(data.resources);
+        renderCombat(data.combat);
         document.getElementById('turn-counter').textContent = data.turn;
         document.getElementById('location-display').textContent = data.location;
 
-        // Let the result sink in, then show the DM's consequence
+        // Let the result sink in, then show the outcome
         setTimeout(() => {
+            const label = roll && roll.combat ? 'attack' : `roll ${data.skill} (${data.difficulty})`;
             addNarrativeTurn(
                 data.turn,
-                `roll ${data.skill} (${data.difficulty}): ${data.roll} vs ${data.target}`,
+                `${label}: ${data.roll} vs ${data.target}`,
                 data.narrative
             );
-            hideDiceArea();
-            refreshGameState();
+            if (data.pending_roll) {
+                // Combat continues — hand the player the next attack throw.
+                showDiceArea(data.pending_roll);
+            } else {
+                hideDiceArea();
+                refreshGameState();
+            }
         }, 1200);
     } catch (error) {
         clearInterval(tumble);
@@ -633,6 +654,7 @@ function resetGame() {
     clearTimeout(imagePollTimer);
     stopHeartbeat();
     document.getElementById('game-screen').classList.remove('san-fx-1', 'san-fx-2', 'san-fx-3');
+    document.getElementById('combat-bar').classList.add('hidden');
     document.getElementById('dice-area').classList.add('hidden');
     document.getElementById('action-input').disabled = false;
 

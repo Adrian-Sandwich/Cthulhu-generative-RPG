@@ -1399,13 +1399,32 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
             "message": f"Combat started: {enemy['name']} (HP: {enemy['hp']})"
         }
 
+    def combat_attack_roll(self) -> Dict:
+        """Build the pending attack check for the current combat round.
+
+        Picks the firearm if one is loaded, otherwise brawling. Flagged
+        ``combat`` so the roll endpoint resolves it as a combat round.
+        """
+        inv = self.state.investigator
+        has_gun = self.state.ammo > 0 and any(
+            "revolver" in i.lower() or "pistol" in i.lower() for i in inv.inventory
+        )
+        skill = "firearms_revolver" if has_gun else "brawl"
+        pending = self.prepare_skill_check(skill, "Normal")
+        pending["combat"] = True
+        return pending
+
     def resolve_combat_round(self, player_roll_success: bool) -> Dict:
-        """Resolve one round of combat"""
+        """Resolve one round of combat: player attack, then enemy counter."""
         if not self.state.active_combat:
             return {"error": "Not in combat"}
 
         enemy = self.state.active_combat
         result = {"player_hit": False, "enemy_hit": False}
+        lines = []
+
+        # Firearms consume a round when used as the attack.
+        # (Ammo already spent in execute_skill_check before we get here.)
 
         # Player attacks
         if player_roll_success:
@@ -1413,31 +1432,47 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
             enemy["hp"] -= damage
             result["player_hit"] = True
             result["player_damage"] = damage
-            result["player_message"] = f"You hit! The creature takes {damage} damage."
+            lines.append(f"You strike — {enemy['name']} takes {damage} damage.")
 
             if enemy["hp"] <= 0:
                 self.state.active_combat = None
                 self.state.game_phase = "exploring"
+                lines.append(f"{enemy['name']} shudders and collapses. The threat is over.")
                 return {
-                    **result,
-                    "combat_over": True,
-                    "message": f"{enemy['name']} falls. Combat over."
+                    **result, "combat_over": True, "enemy_dead": True,
+                    "enemy_hp": 0, "narrative": " ".join(lines),
                 }
         else:
-            result["player_message"] = "You miss!"
+            lines.append("Your attack goes wide.")
 
         # Enemy counter-attacks
         enemy_roll = self.rules.roll_d100()
         if enemy_roll <= enemy["skill"]:
             damage = random.randint(1, enemy.get("damage", 4))
-            self.apply_hp_damage(damage)
+            hp_res = self.apply_hp_damage(damage)
             result["enemy_hit"] = True
             result["enemy_damage"] = damage
-            result["enemy_message"] = f"{enemy['name']} strikes! You take {damage} damage."
+            lines.append(f"{enemy['name']} strikes back — you take {damage} damage.")
+            if hp_res.get("state") == "DEAD":
+                self.state.active_combat = None
+                return {
+                    **result, "combat_over": True, "player_dead": True,
+                    "enemy_hp": enemy["hp"], "narrative": " ".join(lines),
+                }
         else:
-            result["enemy_message"] = f"{enemy['name']} attacks but misses!"
+            lines.append(f"{enemy['name']} lunges, but misses.")
 
+        result["combat_over"] = False
+        result["enemy_hp"] = enemy["hp"]
+        result["enemy_name"] = enemy["name"]
+        result["narrative"] = " ".join(lines)
         return result
+
+    def combat_status(self) -> Optional[Dict]:
+        """Current enemy for the HUD, or None when not fighting."""
+        if not self.state or not self.state.active_combat:
+            return None
+        return {"name": self.state.active_combat["name"], "hp": self.state.active_combat["hp"]}
 
     # Intrusive fragments that bleed into the narrative as sanity fails.
     SANITY_WHISPERS = [

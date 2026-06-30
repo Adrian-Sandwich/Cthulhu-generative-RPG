@@ -155,6 +155,40 @@ function updateStats(stats) {
     document.getElementById('luck-value').textContent = stats.Luck;
 }
 
+// Render the dossier of NPCs the player has met, with how they regard you.
+function renderNpcs(npcs) {
+    const dossier = document.getElementById('npc-dossier');
+    const list = document.getElementById('npc-list');
+    if (!npcs || npcs.length === 0) {
+        dossier.classList.add('hidden');
+        return;
+    }
+    list.innerHTML = npcs.map(n => {
+        const rep = (n.reputation >= 0 ? '+' : '') + n.reputation;
+        const mem = n.times_talked > 1 ? ` · remembers ${n.times_talked}` : '';
+        return `<span class="npc-chip">
+            <span class="npc-name">${escapeHtml(n.name)}</span>
+            <span class="npc-att att-${n.attitude}">${n.attitude}</span>
+            <span class="npc-rep">${rep}</span>
+            <span class="npc-mem">${mem}</span>
+        </span>`;
+    }).join('');
+    dossier.classList.remove('hidden');
+}
+
+// Distort the screen as sanity fails (0=lucid .. 3=shattered).
+function applySanityFx(level) {
+    const screen = document.getElementById('game-screen');
+    screen.classList.remove('san-fx-1', 'san-fx-2', 'san-fx-3');
+    if (level >= 1) screen.classList.add('san-fx-' + Math.min(level, 3));
+}
+
+function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s == null ? '' : s;
+    return d.innerHTML;
+}
+
 // Refresh game state from server (location, scene image).
 // Image generation runs server-side in the background; poll until ready.
 async function refreshGameState() {
@@ -169,6 +203,8 @@ async function refreshGameState() {
 
         document.getElementById('location-display').textContent = data.location;
         document.getElementById('turn-counter').textContent = data.turn;
+        renderNpcs(data.npcs);
+        applySanityFx(data.sanity_corruption || 0);
 
         // Scene frame only appears when an image is present or being made;
         // text-only mode (images disabled) hides it entirely
@@ -217,6 +253,8 @@ async function submitAction(event) {
         if (data.success) {
             addNarrativeTurn(data.turn, action, data.narrative);
             updateStats(data.state);
+            renderNpcs(data.npcs);
+            applySanityFx(data.sanity_corruption || 0);
             document.getElementById('turn-counter').textContent = data.turn;
             document.getElementById('location-display').textContent = data.location;
 

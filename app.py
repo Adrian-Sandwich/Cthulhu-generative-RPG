@@ -329,6 +329,8 @@ def get_game_state(gs):
         "image_url": image_url,
         "image_generating": image_generating,
         "pending_roll": gs.pending_roll,
+        "npcs": gs.engine.get_npc_status(),
+        "sanity_corruption": gs.engine.sanity_corruption_level(),
         "investigator": {
             "name": inv.name,
             "archetype": inv.occupation,
@@ -383,6 +385,8 @@ def process_action(gs):
             "turn": gs.engine.state.turn,
             "location": gs.engine.state.location,
             "narrative": result.get("narrative", ""),
+            "sanity_corruption": result.get("sanity_corruption", 0),
+            "npcs": result.get("npc_status", []),
             "pending_roll": gs.pending_roll,
             "state": _investigator_stats(gs.investigator)
         })

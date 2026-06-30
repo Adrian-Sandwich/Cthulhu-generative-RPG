@@ -1043,14 +1043,22 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
         if rolls_requested:
             self.state.last_roll = None
 
+        # Track NPC encounters so they remember (and judge) the player later.
+        npc_status = self._register_npc_encounter(player_input, clean_response)
+
+        # Low sanity corrupts what the player perceives (outgoing copy only).
+        display_narrative, corruption = self._corrupt_narrative(clean_response)
+
         return {
-            "narrative": clean_response,
+            "narrative": display_narrative,
+            "sanity_corruption": corruption,
             "rolls_requested": rolls_requested,
             "sanity_checks": sanity_checks,
             "items_found": items_found,
             "hp_damage": hp_damage,
             "combat_start": combat_start,
             "npc_dialogue": npc_dialogue,
+            "npc_status": npc_status,
             "state": asdict(self.state)
         }
 
@@ -1324,6 +1332,59 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
 
         return result
 
+    # Intrusive fragments that bleed into the narrative as sanity fails.
+    SANITY_WHISPERS = [
+        "(it watches)", "...the deep remembers...", "they are already here",
+        "you cannot trust this", "look behind you", "the light lies",
+        "we see you", "it wears your face", "...drown...", "no one is coming",
+    ]
+
+    def sanity_corruption_level(self) -> int:
+        """0=lucid, 1=frayed, 2=cracking, 3=shattered — scaled by current SAN."""
+        if not self.state:
+            return 0
+        san = self.state.investigator.characteristics.get("SAN", 99)
+        if san > 50:
+            return 0
+        if san > 30:
+            return 1
+        if san > 15:
+            return 2
+        return 3
+
+    def _corrupt_narrative(self, text: str):
+        """
+        Distort the player-facing narrative as sanity drops. The investigator's
+        perception is unreliable, so the TEXT ITSELF degrades — something a plain
+        chat assistant can't do. Applied only to the outgoing copy; the stored
+        narrative and memory stay clean.
+
+        Returns (possibly-corrupted text, corruption level).
+        """
+        level = self.sanity_corruption_level()
+        if level == 0 or not text:
+            return text, level
+
+        words = text.split(" ")
+        # Black out and stutter words; frequency grows with the level.
+        for i, w in enumerate(words):
+            if not w:
+                continue
+            if random.random() < 0.05 * level:
+                words[i] = "▓" * max(2, min(len(w), 6))   # ▓ static block
+            elif level >= 2 and random.random() < 0.04 * level:
+                words[i] = f"{w} {w}"                            # intrusive stutter
+        out = " ".join(words)
+
+        # Bleed in whispers — more, and harder to ignore, as sanity fails.
+        n = min(level, len(self.SANITY_WHISPERS))
+        for whisper in random.sample(self.SANITY_WHISPERS, n):
+            if level >= 3:
+                out += f"  {whisper.upper()}"
+            else:
+                out += f"  *{whisper}*"
+        return out, level
+
     def _failure_consequence(self, roll: Dict) -> Dict:
         """
         Decide and APPLY the mechanical cost of a failed roll.
@@ -1430,8 +1491,12 @@ NO NEW ROLLS. NO TAGS. Just the outcome."""
         # Clear the roll from pending
         self.state.last_roll = None
 
+        # Low sanity corrupts what the player perceives (outgoing copy only).
+        display_narrative, corruption = self._corrupt_narrative(clean_response)
+
         return {
-            "narrative": clean_response,
+            "narrative": display_narrative,
+            "sanity_corruption": corruption,
             "success": roll['success'],
             "consequence": consequence,
             "hp_damage": [consequence["amount"]] if consequence and consequence["kind"] == "hp" else [],
@@ -1580,6 +1645,68 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             return "friendly"
         else:
             return "trusted"
+
+    # Words that shift how an NPC regards the player, applied when they're
+    # mentioned in a free-text action.
+    _POSITIVE_WORDS = {"help", "thank", "please", "trust", "ally", "save",
+                       "protect", "agree", "calm", "reassure", "befriend"}
+    _NEGATIVE_WORDS = {"threaten", "attack", "kill", "lie", "betray", "refuse",
+                       "insult", "hurt", "accuse", "rob", "abandon", "intimidate"}
+
+    def _npc_aliases(self, npc_key: str, npc_data: Dict):
+        """Lowercased tokens that count as referring to this NPC."""
+        aliases = {npc_key.lower()}
+        for token in npc_data.get("name", "").lower().replace(".", "").split():
+            if len(token) > 3:                       # skip "lt", "dr", "the"
+                aliases.add(token)
+        return aliases
+
+    def _register_npc_encounter(self, player_input: str, dm_response: str):
+        """
+        Detect known NPCs referenced this turn, record the encounter so they
+        remember it, and shift reputation by how the player treated them.
+
+        This is the persistent, judging relationship a stateless chat can't keep.
+        Returns the current dossier of NPCs the player has met.
+        """
+        if not self.state:
+            return []
+
+        haystack = f"{player_input} {dm_response}".lower()
+        words = set(player_input.lower().replace(",", " ").replace(".", " ").split())
+        tone = 0
+        if words & self._POSITIVE_WORDS:
+            tone += 5
+        if words & self._NEGATIVE_WORDS:
+            tone -= 8
+
+        for npc_key, npc_data in self.NPC_DEFINITIONS.items():
+            if not (self._npc_aliases(npc_key, npc_data) & set(haystack.split())):
+                continue
+            # Record the conversation (memory of past interactions).
+            self.state.npcs_talked_to.setdefault(npc_key, []).append(player_input[:200])
+            if tone:
+                self.update_npc_reputation(npc_key, tone, "encounter tone")
+            if self.memory and self.memory.enabled:
+                self.memory.add_npc_interaction(npc_key, player_input, dm_response, self.state.turn)
+
+        return self.get_npc_status()
+
+    def get_npc_status(self):
+        """Dossier of NPCs the player has met: who they are and how they regard you."""
+        status = []
+        for npc_key in self.state.npcs_talked_to:
+            npc = self.NPC_DEFINITIONS.get(npc_key, {})
+            rep = self.state.npc_reputation.get(npc_key, 0)
+            status.append({
+                "key": npc_key,
+                "name": npc.get("name", npc_key),
+                "role": npc.get("role", ""),
+                "reputation": rep,
+                "attitude": self._reputation_label(rep),
+                "times_talked": len(self.state.npcs_talked_to[npc_key]),
+            })
+        return status
 
     def get_ending_text(self) -> Optional[str]:
         """Get narrative for current ending"""

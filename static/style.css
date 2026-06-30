@@ -390,6 +390,79 @@ input:focus, select:focus {
 #dice-result.success { color: #55ff55; }
 #dice-result.failure { color: var(--danger); }
 
+/* ---- NPC dossier (persistent relationships) ---- */
+#npc-dossier {
+    border-top: 1px solid var(--text-dim);
+    padding: 6px 8px;
+    font-size: 13px;
+}
+.dossier-title {
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    font-size: 11px;
+}
+#npc-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin-top: 4px;
+}
+.npc-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    white-space: nowrap;
+}
+.npc-chip .npc-name { color: var(--text); }
+.npc-chip .npc-att  { font-size: 11px; letter-spacing: 1px; }
+.npc-chip .npc-rep  { color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.npc-chip .npc-mem  { color: var(--text-dim); font-size: 11px; }
+/* attitude colors */
+.att-hostile     { color: var(--danger); }
+.att-distrustful { color: #ff9955; }
+.att-neutral     { color: var(--text-dim); }
+.att-friendly    { color: var(--text); }
+.att-trusted     { color: #55ff55; }
+
+/* ---- Sanity corruption: the screen itself degrades as SAN fails ---- */
+#game-screen.san-fx-1 #narrative-content { animation: san-flicker 6s infinite; }
+#game-screen.san-fx-2 #narrative-content {
+    animation: san-flicker 3.5s infinite;
+    text-shadow: 1px 0 var(--danger), -1px 0 var(--bar-bg);
+}
+#game-screen.san-fx-3 #narrative-content {
+    animation: san-jitter 0.9s steps(3) infinite;
+    text-shadow: 2px 0 var(--danger), -2px 0 var(--bar-bg);
+}
+/* the SAN readout pulses red as it drops into danger */
+#game-screen.san-fx-2 #san-value,
+#game-screen.san-fx-3 #san-value { color: var(--danger); animation: san-pulse 1.2s infinite; }
+
+@keyframes san-flicker {
+    0%, 96%, 100% { opacity: 1; }
+    97% { opacity: 0.78; }
+    98% { opacity: 1; }
+    99% { opacity: 0.85; }
+}
+@keyframes san-jitter {
+    0%   { transform: translateX(0); }
+    25%  { transform: translateX(-1px) skewX(-0.4deg); }
+    50%  { transform: translateX(1px); }
+    75%  { transform: translateX(-1px) skewX(0.4deg); }
+    100% { transform: translateX(0); }
+}
+@keyframes san-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.4; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #game-screen.san-fx-1 #narrative-content,
+    #game-screen.san-fx-2 #narrative-content,
+    #game-screen.san-fx-3 #narrative-content,
+    #game-screen.san-fx-2 #san-value,
+    #game-screen.san-fx-3 #san-value { animation: none; }
+}
+
 /* ---- Action input ---- */
 
 #action-form {

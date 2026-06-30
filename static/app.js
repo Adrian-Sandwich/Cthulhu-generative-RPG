@@ -484,6 +484,8 @@ function showDiceArea(roll) {
     document.getElementById('dice-label').textContent = roll.combat
         ? `ATTACK: ${roll.skill} — target ${roll.target}`
         : `ROLL: ${roll.skill} (${roll.difficulty}) — target ${roll.target}`;
+    // Flee is only an option mid-combat.
+    document.getElementById('flee-btn').classList.toggle('hidden', !roll.combat);
     const result = document.getElementById('dice-result');
     result.textContent = '';
     result.className = '';
@@ -494,9 +496,32 @@ function showDiceArea(roll) {
 function hideDiceArea() {
     pendingRoll = null;
     document.getElementById('dice-area').classList.add('hidden');
+    document.getElementById('flee-btn').classList.add('hidden');
     const actionInput = document.getElementById('action-input');
     actionInput.disabled = false;
     actionInput.focus();
+}
+
+// Break off combat instead of throwing the attack die.
+async function flee() {
+    if (rolling) return;
+    rolling = true;
+    try {
+        const data = await (await fetch('/api/game/flee', { method: 'POST' })).json();
+        if (data.success) {
+            addNarrativeTurn(data.turn, 'flee', data.narrative);
+            updateStats(data.state);
+            renderCombat(data.combat);
+            hideDiceArea();
+            refreshGameState();
+        } else {
+            setStatus(data.error || 'Cannot flee', true);
+        }
+    } catch (e) {
+        setStatus(e.message, true);
+    } finally {
+        rolling = false;
+    }
 }
 
 async function rollDice() {

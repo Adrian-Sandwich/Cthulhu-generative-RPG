@@ -546,6 +546,32 @@ def execute_roll(gs):
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+@app.route('/api/game/flee', methods=['POST'])
+@synchronized
+def flee_combat(gs):
+    """Break off the current fight (the enemy gets one free attack)."""
+    if not _ensure_engine(gs) or not gs.investigator:
+        return jsonify({"error": "Game not started"}), 400
+    if not gs.engine.state.active_combat:
+        return jsonify({"error": "Not in combat"}), 400
+    try:
+        res = gs.engine.attempt_flee()
+        gs.pending_roll = None
+        _autosave(gs)
+        return jsonify({
+            "success": True,
+            "narrative": res.get("narrative", ""),
+            "combat": gs.engine.combat_status(),
+            "pending_roll": None,
+            "turn": gs.engine.state.turn,
+            "location": gs.engine.state.location,
+            "state": _investigator_stats(gs.investigator)
+        })
+    except Exception as e:
+        logger.warning("flee failed for sid=%s", gs.sid, exc_info=True)
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @app.route('/api/game/reset', methods=['POST'])
 @synchronized
 def reset_game(gs):

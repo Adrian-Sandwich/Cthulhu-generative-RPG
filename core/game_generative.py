@@ -108,6 +108,16 @@ MENTAL_SKILLS = {
     "psychology", "science", "navigate", "listen", "archaeology", "anthropology",
 }
 
+# Attack intent (English + Spanish) — used to synthesize combat when the player
+# clearly attacks a present threat but the DM didn't formally start a fight.
+ATTACK_VERBS = {
+    "attack", "fight", "hit", "punch", "kick", "shoot", "fire", "stab", "strike",
+    "kill", "slash", "swing", "shoot at", "gun down",
+    "ataco", "atacar", "ataca", "disparo", "disparar", "dispara", "golpeo",
+    "golpear", "golpea", "pelear", "peleo", "mato", "matar", "apuñalo",
+    "apuñalar", "embisto", "embestir", "le pego", "disparale",
+}
+
 # Witnessing the unnatural costs Sanity. If the DM narrates horror but forgets
 # the mechanic, the engine forces a Sanity check on these cues.
 SANITY_TRIGGERS = {
@@ -1060,6 +1070,15 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
         for found in parsed.get("ammo_found", []):
             self._grant_ammo(found)
 
+        # Combat synthesis: the player clearly attacks a present threat but the
+        # DM didn't emit [COMBAT_START]. Start the fight so it's mechanized.
+        if not combat_start and not self.state.active_combat:
+            pi = player_input.lower()
+            scene = f"{player_input} {clean_response}".lower()
+            if (any(v in pi for v in ATTACK_VERBS)
+                    and any(w in scene for w in SANITY_TRIGGERS)):
+                combat_start.append(self._infer_enemy(scene))
+
         # Phase 2e Fix C: Synthesize roll if LLM omitted one for a physical action
         if not rolls_requested and not combat_start and not sanity_checks:
             action_lower = player_input.lower()
@@ -1398,6 +1417,35 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
             "enemy": enemy["name"],
             "message": f"Combat started: {enemy['name']} (HP: {enemy['hp']})"
         }
+
+    def _infer_enemy(self, text: str) -> str:
+        """Best-guess enemy key from scene text (for synthesized combat)."""
+        t = text.lower()
+        if any(w in t for w in ("deep one", "fish", "amphib", "scaled", "gill")):
+            return "deep_one_hybrid"
+        if any(w in t for w in ("corpse", "dead", "cadaver", "cadáver", "rotting", "zombie")):
+            return "animated_corpse"
+        if any(w in t for w in ("shadow", "sombra", "darkness given", "shade")):
+            return "shadow_thing"
+        return "deep_one_hybrid"
+
+    def attempt_flee(self) -> Dict:
+        """Break off combat. The enemy gets one free swing as you turn to run."""
+        if not self.state or not self.state.active_combat:
+            return {"error": "Not in combat"}
+        enemy = self.state.active_combat
+        lines = ["You break away and flee into the dark."]
+        roll = self.rules.roll_d100()
+        if roll <= enemy["skill"]:
+            dmg = random.randint(1, enemy.get("damage", 4))
+            hp_res = self.apply_hp_damage(dmg)
+            lines.insert(0, f"{enemy['name']} rakes you as you turn — {dmg} damage.")
+            if hp_res.get("state") == "DEAD":
+                self.state.active_combat = None
+                return {"fled": True, "player_dead": True, "narrative": " ".join(lines)}
+        self.state.active_combat = None
+        self.state.game_phase = "exploring"
+        return {"fled": True, "narrative": " ".join(lines)}
 
     def combat_attack_roll(self) -> Dict:
         """Build the pending attack check for the current combat round.

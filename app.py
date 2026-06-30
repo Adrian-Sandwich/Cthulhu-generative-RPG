@@ -409,10 +409,12 @@ def execute_roll(gs):
         result = gs.engine.execute_skill_check(roll["skill"], roll["difficulty"])
 
         # DM narrates the outcome immediately
-        consequence = gs.engine.resolve_roll_consequences()
+        outcome = gs.engine.resolve_roll_consequences()
         narrative = ""
-        if isinstance(consequence, dict):
-            narrative = consequence.get("narrative", "")
+        consequence = None
+        if isinstance(outcome, dict):
+            narrative = outcome.get("narrative", "")
+            consequence = outcome.get("consequence")
 
         _autosave(gs)
 
@@ -425,6 +427,7 @@ def execute_roll(gs):
             "roll_success": result["success"],
             "message": result["message"],
             "narrative": narrative,
+            "consequence": consequence,  # mechanical bite on failure (kind/amount/label/fumble)
             "turn": gs.engine.state.turn,
             "location": gs.engine.state.location,
             "state": _investigator_stats(gs.investigator)

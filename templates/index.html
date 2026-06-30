@@ -143,7 +143,17 @@
 
             <div id="dice-area" class="hidden">
                 <span id="dice-label">ROLL: Dodge (Hard) — target 20</span>
-                <div id="pixel-die" onclick="rollDice()">?</div>
+                <div id="die-stage">
+                    <div id="pixel-die" onclick="rollDice()" role="button" tabindex="0"
+                         aria-label="Throw the die">
+                        <span class="face f-front">?</span>
+                        <span class="face f-back">?</span>
+                        <span class="face f-right">?</span>
+                        <span class="face f-left">?</span>
+                        <span class="face f-top">?</span>
+                        <span class="face f-bottom">?</span>
+                    </div>
+                </div>
                 <span id="dice-result"></span>
             </div>
 

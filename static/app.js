@@ -245,13 +245,23 @@ async function submitAction(event) {
 
 // ---- Dice rolling ----
 
+// Set every face of the 3D die to the same (or a random) value.
+function setDieFaces(die, value) {
+    const faces = die.querySelectorAll('.face');
+    faces.forEach(f => {
+        f.textContent = value === undefined
+            ? (1 + Math.floor(Math.random() * 100))
+            : value;
+    });
+}
+
 function showDiceArea(roll) {
     pendingRoll = roll;
     document.getElementById('action-input').disabled = true;
 
     const die = document.getElementById('pixel-die');
-    die.textContent = '?';
     die.className = '';
+    setDieFaces(die, '?');
 
     document.getElementById('dice-label').textContent =
         `ROLL: ${roll.skill} (${roll.difficulty}) — target ${roll.target}`;
@@ -276,12 +286,11 @@ async function rollDice() {
 
     const die = document.getElementById('pixel-die');
     const resultEl = document.getElementById('dice-result');
+    die.className = '';
     die.classList.add('rolling');
 
-    // Pixel die tumbles with random faces while the server rolls
-    const tumble = setInterval(() => {
-        die.textContent = 1 + Math.floor(Math.random() * 100);
-    }, 70);
+    // Cube tumbles in 3D; faces flicker random values while the server rolls
+    const tumble = setInterval(() => setDieFaces(die), 70);
     const minSpin = new Promise(resolve => setTimeout(resolve, 900));
 
     try {
@@ -292,21 +301,27 @@ async function rollDice() {
         const data = await response.json();
 
         clearInterval(tumble);
-        die.classList.remove('rolling');
 
         if (!data.success) {
+            die.classList.remove('rolling');
             setStatus(data.error || 'Roll failed', true);
             hideDiceArea();
             return;
         }
 
-        // Settle on the server's number
-        die.textContent = data.roll;
+        // Lock the result onto every face, then play the landing bounce
+        setDieFaces(die, data.roll);
+        die.classList.remove('rolling');
         const cls = data.roll_success ? 'success' : 'failure';
-        die.classList.add(cls);
+        die.classList.add('settle', cls);
         resultEl.classList.add(cls);
-        resultEl.textContent =
-            `${data.roll} vs ${data.target} — ${data.roll_success ? 'SUCCESS' : 'FAILURE'}`;
+        let line = `${data.roll} vs ${data.target} — ${data.roll_success ? 'SUCCESS' : 'FAILURE'}`;
+        // Surface the mechanical bite of a failure (e.g. "−3 HP", "FUMBLE")
+        if (data.consequence && data.consequence.label) {
+            const c = data.consequence;
+            line += `  [${c.fumble ? 'FUMBLE! ' : ''}${c.label}]`;
+        }
+        resultEl.textContent = line;
 
         updateStats(data.state);
         document.getElementById('turn-counter').textContent = data.turn;

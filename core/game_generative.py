@@ -85,6 +85,18 @@ ROLL_KEYWORDS: Dict[str, Tuple[str, str]] = {
 }
 
 
+# Failed-roll consequence categories. The ENGINE decides the mechanical bite
+# (not the LLM), so failure always costs something and can't be retried away.
+PHYSICAL_SKILLS = {
+    "climb", "swim", "jump", "dodge", "brawl", "fight", "throw",
+    "firearms", "firearms_revolver", "firearms_rifle", "firearms_shotgun",
+}
+MENTAL_SKILLS = {
+    "occult", "investigate", "spot_hidden", "library", "library_use",
+    "psychology", "science", "navigate", "listen", "archaeology", "anthropology",
+}
+
+
 @dataclass
 class InvestigatorState:
     """Player character state"""
@@ -1312,16 +1324,74 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
 
         return result
 
+    def _failure_consequence(self, roll: Dict) -> Dict:
+        """
+        Decide and APPLY the mechanical cost of a failed roll.
+
+        The engine — not the LLM — owns this, so failure always bites and a
+        bad outcome can't be retried away. Severity scales with how badly the
+        roll missed; a fumble (96-100) is catastrophic.
+
+        Returns a dict describing what happened, for the DM to narrate and the
+        UI to surface.
+        """
+        skill = roll["skill"].lower()
+        margin = roll["roll"] - roll["target"]          # > 0 on a failed roll
+        fumble = roll["roll"] >= 96                      # CoC 7e fumble band
+
+        # Severity tiers grow with the miss margin, spike on a fumble.
+        tier = 2
+        if margin >= 30:
+            tier += 1
+        if margin >= 60:
+            tier += 1
+        if fumble:
+            tier += 2
+
+        def _matches(pool):
+            return any(part in pool for part in skill.replace("-", "_").split("_")) or skill in pool
+
+        if _matches(PHYSICAL_SKILLS):
+            dmg = tier
+            res = self.apply_hp_damage(dmg)
+            return {
+                "kind": "hp", "amount": dmg, "fumble": fumble,
+                "label": f"−{dmg} HP",
+                "summary": f"You take {dmg} damage. HP now {res['hp']}.",
+                "dead": res.get("state") == "DEAD",
+            }
+
+        if _matches(MENTAL_SKILLS):
+            san = max(1, tier - 1)
+            res = self.apply_sanity_check(san, source=f"failed {skill}")
+            return {
+                "kind": "san", "amount": san, "fumble": fumble,
+                "label": f"−{san} SAN",
+                "summary": f"The failure rattles you. You lose {san} Sanity (SAN {res['sanity_remaining']}).",
+                "broke": res.get("broke", False),
+            }
+
+        # Social / other: no stat loss, but a concrete setback the DM must honor.
+        return {
+            "kind": "setback", "amount": 0, "fumble": fumble,
+            "label": "SETBACK",
+            "summary": "The attempt backfires and the situation turns against you.",
+        }
+
     def resolve_roll_consequences(self, on_chunk=None) -> Dict:
         """
-        After a roll is made, automatically generate DM narrative
-        describing the consequences (success or failure).
+        After a roll is made, generate DM narrative for the outcome.
+
+        On failure the engine applies a deterministic mechanical consequence
+        FIRST, then asks the DM to narrate it — mechanics drive the story, not
+        the other way around.
         Called after execute_skill_check().
         """
         if not self.state or not self.state.last_roll:
             return {"error": "No pending roll"}
 
         roll = self.state.last_roll
+        consequence = None
 
         # Build a simple, direct prompt
         if roll['success']:
@@ -1333,41 +1403,39 @@ Describe in 2-3 sentences what the player accomplished. What does success look l
 Be vivid and advance the story.
 NO NEW ROLLS. NO TAGS. Just the outcome."""
         else:
+            # Engine decides + applies the cost before the DM narrates it.
+            consequence = self._failure_consequence(roll)
+            fumble_note = ("\nThis was a FUMBLE — make the failure catastrophic and lasting."
+                           if consequence["fumble"] else "")
             consequence_prompt = f"""You are the Dungeon Master.
 
 The player FAILED at: {roll['skill']} (rolled {roll['roll']} vs {roll['target']})
+Mechanical outcome (ALREADY APPLIED): {consequence['summary']}{fumble_note}
 
-Describe in 2-3 sentences what went wrong. Add consequences if appropriate.
-For physical failure (climb, dodge, fight), add: [HP_DAMAGE: 2-4]
-For mental failure (occult, investigation), add: [SANITY_CHECK: 1-2]
-NO NEW ROLLS. Just the outcome."""
+Narrate in 2-3 sentences what goes wrong, consistent with that exact outcome.
+Make the failure matter and hard to undo. Do NOT contradict the mechanical outcome.
+NO NEW ROLLS. NO TAGS. Just the outcome."""
 
         # Get DM response for the consequence
         consequence_response = self._call_ollama(consequence_prompt, max_tokens=200, on_chunk=on_chunk)
 
-        # Parse any tags that might be in the consequence
+        # Parse tags only to strip them; the engine already owns any damage so
+        # we must NOT re-apply LLM-emitted HP/SAN here (would double-count).
         parsed = parse_dm_response(consequence_response)
-        hp_damage = parsed["hp_damage"]
-        sanity_checks = parsed["sanity_checks"]
         clean_response = parsed["clean_response"]
 
         # Update narrative
         self.state.narrative.append(f"DM: {clean_response}")
-
-        # Apply any damage/sanity from the consequence
-        for damage in hp_damage:
-            self.apply_hp_damage(int(damage))
-        for damage in sanity_checks:
-            self.apply_sanity_check(int(damage))
 
         # Clear the roll from pending
         self.state.last_roll = None
 
         return {
             "narrative": clean_response,
-            "hp_damage": hp_damage,
-            "sanity_checks": sanity_checks,
-            "success": roll['success']
+            "success": roll['success'],
+            "consequence": consequence,
+            "hp_damage": [consequence["amount"]] if consequence and consequence["kind"] == "hp" else [],
+            "sanity_checks": [consequence["amount"]] if consequence and consequence["kind"] == "san" else [],
         }
 
     def talk_to_npc(self, npc_key: str, player_question: str) -> str:

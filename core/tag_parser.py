@@ -25,6 +25,7 @@ _TAG_PATTERNS = {
     "HP_DAMAGE": r'\[HP_DAMAGE: (\d+(?:[dD]\d+)?)\]',
     "COMBAT_START": r'\[COMBAT_START: (\w+)\]',
     "NPC_DIALOGUE": r'\[NPC_DIALOGUE: (\w+)\]',
+    "AMMO_FOUND": r'\[AMMO_FOUND: (\d+)\]',
 }
 
 
@@ -40,7 +41,7 @@ def _resolve_amount(expr: str) -> str:
     return expr
 
 _STRIP_PATTERN = re.compile(
-    r'\[(?:ROLL|SANITY_CHECK|ITEM_FOUND|HP_DAMAGE|COMBAT_START|NPC_DIALOGUE): .*?\]'
+    r'\[(?:ROLL|SANITY_CHECK|ITEM_FOUND|HP_DAMAGE|COMBAT_START|NPC_DIALOGUE|AMMO_FOUND): .*?\]'
 )
 
 # Beyond the known mechanic tags, models invent their own ([NAVIGATE],
@@ -137,6 +138,7 @@ def parse_dm_response(dm_response: str) -> Dict:
         ],
         "combat_start": re.findall(_TAG_PATTERNS["COMBAT_START"], dm_response),
         "npc_dialogue": re.findall(_TAG_PATTERNS["NPC_DIALOGUE"], dm_response),
+        "ammo_found": [int(v) for v in re.findall(_TAG_PATTERNS["AMMO_FOUND"], dm_response)],
         "clean_response": trim_to_last_sentence(
             strip_leaks(strip_markdown(strip_tags(dm_response)))
         ).strip(),

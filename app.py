@@ -69,6 +69,10 @@ IMAGES_ENABLED = os.environ.get('ENABLE_IMAGES', '0') == '1'
 # Idle sessions are evicted (and their engines closed) after this long.
 SESSION_TTL = int(os.environ.get('SESSION_TTL', '3600'))
 
+# Reject oversized actions before they reach the model (cost/DoS guard). The
+# engine separately sanitizes + truncates; this is the outer bound.
+MAX_ACTION_LEN = 2000
+
 
 @app.route('/images/<path:filename>')
 def serve_generated_image(filename):
@@ -361,9 +365,13 @@ def process_action(gs):
 
     if not isinstance(player_input, str) or not player_input.strip():
         return jsonify({"error": "Action cannot be empty"}), 400
+    if len(player_input) > MAX_ACTION_LEN:
+        return jsonify({"error": "Action too long"}), 413
 
     try:
         result = gs.engine.process_player_action(player_input)
+        if result.get("error"):
+            return jsonify({"error": result["error"]}), 400
         return jsonify(_finalize_turn(gs, result))
     except Exception as e:
         logger.warning("process_action failed for sid=%s", gs.sid, exc_info=True)
@@ -413,6 +421,8 @@ def process_action_stream():
     player_input = data.get('action', '')
     if not isinstance(player_input, str) or not player_input.strip():
         return jsonify({"error": "Action cannot be empty"}), 400
+    if len(player_input) > MAX_ACTION_LEN:
+        return jsonify({"error": "Action too long"}), 413
 
     def stream():
         import json as _json
@@ -456,7 +466,12 @@ def process_action_stream():
                 yield f"event: error\ndata: {_json.dumps({'error': holder['err']})}\n\n"
                 return
 
-            final = _finalize_turn(gs, holder.get('res', {}))
+            res = holder.get('res', {})
+            if res.get("error"):
+                yield f"event: error\ndata: {_json.dumps({'error': res['error']})}\n\n"
+                return
+
+            final = _finalize_turn(gs, res)
             yield f"event: done\ndata: {_json.dumps(final)}\n\n"
 
     return Response(stream(), mimetype='text/event-stream',

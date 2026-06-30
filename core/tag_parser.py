@@ -56,6 +56,15 @@ _LEAK_PATTERNS = [
     # roll-result echoes: "Roll: 74 (success)", "(Difficulty: Hard)"
     re.compile(r'\bRoll:\s*\d+\s*\((?:success|failure)\)', re.IGNORECASE),
     re.compile(r'\(Difficulty:\s*\w+\)', re.IGNORECASE),
+    # the model pre-narrating both branches instead of requesting a roll:
+    # "IF ROLL FAILS: ...  IF ROLL SUCCEEDS: ..." — strip from the marker to the
+    # next such marker or end. The engine, not the prose, decides the outcome.
+    re.compile(r'IF\s+(?:THE\s+)?ROLL\s+(?:FAILS?|SUCCEEDS?|IS)\b.*?(?=IF\s+(?:THE\s+)?ROLL\b|$)',
+               re.IGNORECASE | re.DOTALL),
+    # leaked enemy stat blocks: "Deep One Hybrid - HP: 15 - Damage: 1d8+3 ..."
+    re.compile(r'\b(?:HP|Damage|Special Abilities|Skill):\s*[^\n]*', re.IGNORECASE),
+    # bare instruction to roll left in prose: "Roll to dodge its attack!"
+    re.compile(r'\bRoll to\s+\w+[^.!\n]*[.!]?', re.IGNORECASE),
 ]
 
 # Sentence terminators used to trim a response that overran the token budget

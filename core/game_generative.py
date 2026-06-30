@@ -108,6 +108,15 @@ MENTAL_SKILLS = {
     "psychology", "science", "navigate", "listen", "archaeology", "anthropology",
 }
 
+# Witnessing the unnatural costs Sanity. If the DM narrates horror but forgets
+# the mechanic, the engine forces a Sanity check on these cues.
+SANITY_TRIGGERS = {
+    "monster", "monstrous", "monstrosity", "creature", "eldritch", "abomination",
+    "horror", "horrifying", "tentacle", "writhing", "grotesque", "incomprehensible",
+    "comprehend", "unnatural", "nightmare", "deep one", "corpse", "rotting",
+    "blasphem", "non-euclidean", "impossible geometry", "thing beneath", "cyclopean",
+}
+
 
 @dataclass
 class InvestigatorState:
@@ -623,6 +632,17 @@ class GenerativeGameEngine:
 - Failure: roll > target number
 - Difficulty: Normal (x1), Hard (÷2), Extreme (÷5)
 
+=== ROLL PROTOCOL (CRITICAL) ===
+- When an action needs a check, emit ONE tag and STOP. Do NOT describe the
+  result — the engine rolls and narrates the outcome next turn.
+  • skill: [ROLL: skill/Difficulty]   (e.g. [ROLL: climb/Hard])
+  • combat: [COMBAT_START: enemy_key]  (then stop; the engine runs the fight)
+  • witnessing horror/the unnatural: [SANITY_CHECK: n]  (n = 1-6)
+- NEVER write "IF ROLL FAILS / IF ROLL SUCCEEDS", never pre-narrate both
+  branches, never state the die result yourself.
+- NEVER print enemy stat blocks (HP/Damage/Abilities) in the prose — that is
+  the engine's job. Just describe the threat.
+
 === SKILL MATRIX - WHEN TO REQUEST ROLLS ===
 
 PHYSICAL ACTIONS (risky/uncertain):
@@ -1048,6 +1068,14 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
                     # LLM should have requested a roll — inject one
                     rolls_requested.append((skill, difficulty))
                     break
+
+        # Horror has a price: if the player describes witnessing something
+        # terrible and the DM forgot the Sanity check, the engine enforces one
+        # so SAN actually drops (and the world starts to corrupt) — even when a
+        # skill roll also fired. Keyed off the player's words (not the DM's
+        # prose) so atmospheric narration doesn't bleed SAN every turn.
+        if not sanity_checks and any(w in player_input.lower() for w in SANITY_TRIGGERS):
+            sanity_checks.append(str(random.randint(2, 5)))
 
         # Update narrative
         self.state.narrative.append(f"Player: {player_input}")

@@ -262,8 +262,10 @@ function renderNpcs(npcs) {
     list.innerHTML = npcs.map(n => {
         const rep = (n.reputation >= 0 ? '+' : '') + n.reputation;
         const mem = n.times_talked > 1 ? ` · remembers ${n.times_talked}` : '';
+        const ally = n.companion ? `<span class="npc-att att-trusted">⚑ ally</span>` : '';
         return `<span class="npc-chip">
             <span class="npc-name">${escapeHtml(n.name)}</span>
+            ${ally}
             <span class="npc-att att-${n.attitude}">${n.attitude}</span>
             <span class="npc-rep">${rep}</span>
             <span class="npc-mem">${mem}</span>

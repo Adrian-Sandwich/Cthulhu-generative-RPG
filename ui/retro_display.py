@@ -8,10 +8,15 @@ import os
 import sys
 from typing import List, Optional, Tuple
 from .color_system import get_colors, orange, green, cyan, red, yellow, gray, white
+from .text_utils import wrap_text
 
 
 class RetroDisplay:
     """Base class for retro-styled terminal output"""
+
+    def _wrap_text(self, text: str, width: int) -> List[str]:
+        """Wrap text to fit width (shared helper; see ui.text_utils)."""
+        return wrap_text(text, width)
 
     # Box-drawing characters
     BOX_CHARS = {
@@ -286,34 +291,6 @@ class NarrativeDisplay(RetroDisplay):
             print(f"  {line}")
         print()
 
-    def _wrap_text(self, text: str, width: int) -> List[str]:
-        """
-        Wrap text to fit width.
-
-        Args:
-            text: Text to wrap
-            width: Maximum width
-
-        Returns:
-            List of wrapped lines
-        """
-        words = text.split()
-        lines = []
-        current_line = []
-
-        for word in words:
-            if len(" ".join(current_line + [word])) <= width:
-                current_line.append(word)
-            else:
-                if current_line:
-                    lines.append(" ".join(current_line))
-                current_line = [word]
-
-        if current_line:
-            lines.append(" ".join(current_line))
-
-        return lines
-
     def stream_narrative(
         self,
         on_chunk,
@@ -454,26 +431,6 @@ class EndingDisplay(RetroDisplay):
 
         self.print_divider()
         print()
-
-    def _wrap_text(self, text: str, width: int) -> List[str]:
-        """Wrap text to fit width"""
-        words = text.split()
-        lines = []
-        current_line = []
-
-        for word in words:
-            if len(" ".join(current_line + [word])) <= width:
-                current_line.append(word)
-            else:
-                if current_line:
-                    lines.append(" ".join(current_line))
-                current_line = [word]
-
-        if current_line:
-            lines.append(" ".join(current_line))
-
-        return lines
-
 
 # Test function
 if __name__ == "__main__":

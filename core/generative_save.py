@@ -53,7 +53,7 @@ class GenerativeSave:
     @staticmethod
     def save(state, session_id: str, model: str, location_state=None, sanity_system=None,
              app_state: Optional[Dict] = None, adventure: Optional[str] = None,
-             language: str = "en") -> str:
+             language: str = "en", companions=None) -> str:
         """
         Serialize game state to JSON file.
 
@@ -96,6 +96,7 @@ class GenerativeSave:
             "game_state": asdict(state),
             "location_state": location_state_data,
             "sanity_state": sanity_state_data,
+            "companions_state": companions.to_dict() if companions else None,
             "app_state": app_state  # app-layer state (e.g. web pending_roll) not in GameState
         }
 
@@ -133,6 +134,19 @@ class GenerativeSave:
             data.get("location_state"),
             data.get("sanity_state")
         )
+
+    @staticmethod
+    def load_companions_state(session_id: str) -> Optional[Dict]:
+        """Return the serialized CompanionManager stored with a save, or None."""
+        path = GenerativeSave._save_path(session_id)
+        if not path.exists():
+            return None
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return data.get("companions_state")
+        except Exception:
+            return None
 
     @staticmethod
     def load_app_state(session_id: str) -> Optional[Dict]:

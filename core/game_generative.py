@@ -779,6 +779,7 @@ Location: {self.state.location}
 {self._get_location_context_for_prompt()}Turn: {self.state.turn}
 Phase: {self.state.game_phase}
 Combat: {'In combat with ' + self.state.active_combat['name'] if self.state.active_combat else 'None'}
+Companions: {self.companions.get_companion_context() if self.companions else 'You are alone.'}
 
 Last Roll Status:
 {self._format_last_roll_info()}
@@ -1363,6 +1364,21 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
                 self.state.narrative.append(
                     f"[PERMANENT DISORDER: {disorder.type} - affecting investigator indefinitely]"
                 )
+
+        # Companions witness the same horror — they take roughly half the
+        # strain, and can break, flee, or die from it.
+        if self.companions and self.companions.active_companions:
+            companion_events = []
+            shared = max(1, damage // 2)
+            for comp in self.companions.get_active_companions():
+                c_res = comp.apply_sanity_damage(shared, source)
+                if c_res.get("narrative"):
+                    companion_events.append(c_res["narrative"])
+            companion_events.extend(self.companions.check_companion_stability())
+            for event in companion_events:
+                self.state.narrative.append(f"[{event}]")
+            if companion_events:
+                result["companion_events"] = companion_events
 
         # Check for madness ending
         if result["sanity_remaining"] == 0:
@@ -1983,6 +1999,16 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             if self.memory and self.memory.enabled:
                 self.memory.add_npc_interaction(npc_key, player_input, dm_response, self.state.turn)
 
+            # Earned trust turns an NPC into a traveling ally. From then on
+            # they share the horror (and can break, flee, or die).
+            if (self.companions
+                    and self.state.npc_reputation.get(npc_key, 0) >= 75
+                    and npc_key not in self.companions.active_companions):
+                self.companions.recruit_custom(
+                    npc_key, npc_data.get("name", npc_key), npc_data.get("role", ""))
+                self.state.narrative.append(
+                    f"[{npc_data.get('name', npc_key)} now travels with you.]")
+
         return self.get_npc_status()
 
     def resources_status(self) -> Dict:
@@ -2000,6 +2026,8 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
 
     def get_npc_status(self):
         """Dossier of NPCs the player has met: who they are and how they regard you."""
+        active_allies = (set(self.companions.active_companions)
+                         if self.companions else set())
         status = []
         for npc_key in self.state.npcs_talked_to:
             npc = self.NPC_DEFINITIONS.get(npc_key, {})
@@ -2011,6 +2039,7 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
                 "reputation": rep,
                 "attitude": self._reputation_label(rep),
                 "times_talked": len(self.state.npcs_talked_to[npc_key]),
+                "companion": npc_key in active_allies,
             })
         return status
 
@@ -2048,6 +2077,7 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             app_state=app_state,
             adventure=getattr(self, "adventure_name", None),
             language=getattr(self, "language", "en"),
+            companions=self.companions,
         )
 
         # Also persist ChromaDB memory if available
@@ -2139,5 +2169,14 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
                 engine.sanity_system = SanitySystem(investigator)
         except Exception:
             engine.sanity_system = SanitySystem(investigator)
+
+        # Restore traveling companions (trusted NPCs who joined the player)
+        try:
+            companions_data = GenerativeSave.load_companions_state(session_id)
+            if companions_data:
+                from .companion_system import CompanionManager
+                engine.companions = CompanionManager.from_dict(companions_data)
+        except Exception:
+            logger.warning("companion restore failed for %s", session_id, exc_info=True)
 
         return engine

@@ -13,6 +13,7 @@ import re
 import tty
 import termios
 from ui.color_system import orange, green, cyan, red, yellow, gray
+from ui.text_utils import wrap_text
 from ui.retro_display import RetroDisplay
 
 # ANSI escape code regex for measuring visual length
@@ -519,20 +520,5 @@ class HistoryViewer(RetroDisplay):
         self._run_pager(lines)
 
     def _wrap_text(self, text: str, width: int) -> List[str]:
-        """Wrap text to fit width"""
-        words = text.split()
-        lines = []
-        current_line = []
-
-        for word in words:
-            if len(" ".join(current_line + [word])) <= width:
-                current_line.append(word)
-            else:
-                if current_line:
-                    lines.append(" ".join(current_line))
-                current_line = [word]
-
-        if current_line:
-            lines.append(" ".join(current_line))
-
-        return lines
+        """Wrap text to fit width (shared helper; see ui.text_utils)."""
+        return wrap_text(text, width)

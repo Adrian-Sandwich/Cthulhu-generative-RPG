@@ -554,9 +554,12 @@ def _run_game_loop(engine: GenerativeGameEngine, model: str):
                     if "error" not in combat_round:
                         clear()
                         print_header("COMBAT ROUND")
-                        print(combat_round.get('player_message', ''))
-                        print(combat_round.get('enemy_message', ''))
-                        if combat_round.get('combat_over'):
+                        print(combat_round.get('narrative', ''))
+                        if not combat_round.get('combat_over'):
+                            enemy_hp = combat_round.get('enemy_hp')
+                            if enemy_hp is not None:
+                                print(f"\n👹 {combat_round.get('enemy_name', 'Enemy')}: {enemy_hp} HP")
+                        else:
                             print("\n🎭 Combat has ended!")
                         input("\nPress ENTER to continue...")
 

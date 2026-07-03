@@ -158,18 +158,36 @@ ACTION RESOLUTION:
 ═══════════════════════════════════════════════════════════════════════════════
 """
 
+    # Single source of truth for the roll protocol. Referenced by BOTH DM
+    # system prompts (this narrative/tag path and the tool-calling path in
+    # game_generative) so the two brains can't drift apart.
+    ROLL_PROTOCOL = """=== ROLL PROTOCOL (CRITICAL) ===
+- When an action needs a check, emit ONE tag and STOP. Do NOT describe the
+  result — the engine rolls and narrates the outcome next turn.
+  • skill: [ROLL: skill/Difficulty]   (e.g. [ROLL: climb/Hard])
+  • combat: [COMBAT_START: enemy_key]  (then stop; the engine runs the fight)
+  • witnessing horror/the unnatural: [SANITY_CHECK: n]  (n = 1-6)
+- NEVER write "IF ROLL FAILS / IF ROLL SUCCEEDS", never pre-narrate both
+  branches, never state the die result yourself.
+- NEVER print enemy stat blocks (HP/Damage/Abilities) in the prose — that is
+  the engine's job. Just describe the threat."""
+
     @staticmethod
-    def build_system_prompt(location: str, game_phase: str) -> str:
+    def build_system_prompt(location: str, game_phase: str,
+                            adventure_description: str = None) -> str:
         """
         Build complete system prompt with all context layers.
 
         Args:
             location: Current location
             game_phase: Current phase (exploring, investigation, combat, climax, ending)
+            adventure_description: Adventure brief from the adventure's
+                config.json. Falls back to the legacy Point Black constant.
 
         Returns:
             Complete system prompt for LLM
         """
+        description = adventure_description or AdventureContext.ADVENTURE_DESCRIPTION
         system = f"""You are the Dungeon Master for a Call of Cthulhu horror investigation game.
 
 === NARRATIVE AUTHORITY (NON-NEGOTIABLE) ===
@@ -185,7 +203,9 @@ ACTION RESOLUTION:
   intention and reality. Their certainty about things that aren't real is itself
   a sign of fraying sanity — you may reflect that dread.
 
-{AdventureContext.ADVENTURE_DESCRIPTION}
+{description}
+
+{AdventureContext.ROLL_PROTOCOL}
 
 {AdventureContext.ENDINGS_GUIDANCE}
 

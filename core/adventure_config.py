@@ -29,6 +29,9 @@ class AdventureConfig:
     name: str
     story_seed: str
     start_location: str
+    # DM-facing adventure brief (setting, mystery, threat) injected into the
+    # system prompt. Optional: engine falls back to its legacy constant.
+    description: str = ""
     locations: List[Dict] = field(default_factory=list)        # {key, name, description}
     location_keywords: Dict[str, str] = field(default_factory=dict)  # narrative keyword -> location name
     npcs: Dict[str, Dict] = field(default_factory=dict)         # key -> {name, role, knows, ...}
@@ -75,6 +78,7 @@ class AdventureConfig:
             name=name,
             story_seed=data["story_seed"],
             start_location=data["start_location"],
+            description=data.get("description", ""),
             locations=data.get("locations", []) or [],
             location_keywords=data.get("location_keywords", {}) or {},
             npcs=data.get("npcs", {}) or {},

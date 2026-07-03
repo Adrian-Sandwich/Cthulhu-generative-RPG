@@ -616,7 +616,8 @@ class GenerativeGameEngine:
 
         system_prompt = self._lang_instruction() + AdventureContext.build_system_prompt(
             location=self.state.location,
-            game_phase=self.state.game_phase
+            game_phase=self.state.game_phase,
+            adventure_description=self.adventure_config.description or None
         )
 
         # Build message history from narrative (alternating user/assistant)
@@ -667,7 +668,10 @@ class GenerativeGameEngine:
         Build system prompt for DM role with Call of Cthulhu 7e rules.
         Used for both regular prompts and tool calling mode.
         """
+        from .adventure_context import AdventureContext
+
         inv = self.state.investigator
+        roll_protocol = AdventureContext.ROLL_PROTOCOL
 
         return f"""You are the Dungeon Master for Call of Cthulhu 7th Edition.
 
@@ -694,16 +698,7 @@ class GenerativeGameEngine:
 - Failure: roll > target number
 - Difficulty: Normal (x1), Hard (÷2), Extreme (÷5)
 
-=== ROLL PROTOCOL (CRITICAL) ===
-- When an action needs a check, emit ONE tag and STOP. Do NOT describe the
-  result — the engine rolls and narrates the outcome next turn.
-  • skill: [ROLL: skill/Difficulty]   (e.g. [ROLL: climb/Hard])
-  • combat: [COMBAT_START: enemy_key]  (then stop; the engine runs the fight)
-  • witnessing horror/the unnatural: [SANITY_CHECK: n]  (n = 1-6)
-- NEVER write "IF ROLL FAILS / IF ROLL SUCCEEDS", never pre-narrate both
-  branches, never state the die result yourself.
-- NEVER print enemy stat blocks (HP/Damage/Abilities) in the prose — that is
-  the engine's job. Just describe the threat.
+{roll_protocol}
 
 === SKILL MATRIX - WHEN TO REQUEST ROLLS ===
 

@@ -269,6 +269,7 @@ def handle_roll_request(engine: GenerativeGameEngine, skill: str, difficulty: st
 
     print()
     input("Press ENTER to continue...")
+    return result
 
 
 def detect_and_resume() -> Optional[Tuple[GenerativeGameEngine, str]]:
@@ -480,28 +481,15 @@ def _run_game_loop(engine: GenerativeGameEngine, model: str):
 
             print("\n")  # Newline after streamed response
 
-            # Handle items found
-            for item_key in result['items_found']:
-                item_msg = engine.pick_up_item(item_key)
-                print(f"\n✓ {item_msg}")
-
-            # Handle HP damage
-            for damage_str in result['hp_damage']:
-                input("\nPress ENTER to resolve damage...")
-                hp_result = engine.apply_hp_damage(int(damage_str))
-                clear()
-                print_header("TAKING DAMAGE")
-                print(hp_result['message'])
+            # Apply consequences through the shared turn-runner (same code the
+            # web endpoints use — no more terminal/web drift or double damage)
+            outcome = engine.apply_turn_consequences(result)
+            icons = {"item": "✓", "hp": "💔", "san": "😰",
+                     "companion": "🫂", "combat": "⚔️"}
+            for ev in outcome["events"]:
+                print(f"\n{icons.get(ev['kind'], '•')} {ev['text']}")
+            if outcome["events"]:
                 input("\nPress ENTER to continue...")
-                clear()
-                print_header("DUNGEON MASTER")
-                print(result['narrative'])
-
-            # Handle combat start
-            for enemy_key in result['combat_start']:
-                combat_result = engine.start_combat(enemy_key)
-                if 'error' not in combat_result:
-                    print(f"\n⚔️  {combat_result['message']}")
 
             # Handle NPC dialogue from DM
             for npc_key in result['npc_dialogue']:
@@ -509,70 +497,45 @@ def _run_game_loop(engine: GenerativeGameEngine, model: str):
                     npc = engine.NPC_DEFINITIONS[npc_key]
                     print(f"\n  {npc['name']}: [appears and speaks]")
 
-            # Handle roll requests
-            for skill, difficulty in result['rolls_requested']:
+            # Resolve any pending check interactively. In combat each throw is
+            # one round (attack + counter) and re-arms until the fight ends.
+            pending = outcome["pending_roll"]
+            while pending:
                 input("\nPress ENTER to make the skill check...")
-                handle_roll_request(engine, skill, difficulty)
+                roll_result = handle_roll_request(
+                    engine, pending["skill"], pending["difficulty"])
 
-                # Automatically resolve the consequences of the roll
-                clear()
-                print_header("RESOLVING OUTCOME")
-
-                # Show Keeper thinking while determining consequences
-                show_keeper_thinking(preset="action_resolution")
-
-                consequence_result = engine.resolve_roll_consequences(on_chunk=stream_callback)
-                print("\n")
-
-                # Display consequence damage if any
-                for damage in consequence_result['hp_damage']:
-                    hp_res = engine.apply_hp_damage(int(damage))
-                    print(f"\n💔 DAMAGE: {hp_res['message']}")
-                    input("Press ENTER to continue...")
-
-                for damage in consequence_result['sanity_checks']:
-                    san_res = engine.apply_sanity_check(int(damage))
-                    san_msg = f"You lose {damage} sanity points"
-                    if san_res.get('broke'):
-                        san_msg += f" - {san_res.get('narrative', 'breaking point!')}"
-                    print(f"\n😰 SANITY: {san_msg}")
-                    input("Press ENTER to continue...")
-
-                # If in combat, resolve that round
-                if engine.state.active_combat:
-                    # Find the last roll result in narrative
-                    player_hit = False
-                    for msg in reversed(engine.state.narrative[-3:]):
-                        if "SUCCESS" in msg or "✓" in msg:
-                            player_hit = True
-                            break
-                        if "FAILURE" in msg or "✗" in msg:
-                            player_hit = False
-                            break
-
-                    combat_round = engine.resolve_combat_round(player_hit)
+                if pending.get("combat") and engine.state.active_combat:
+                    combat_round = engine.resolve_combat_round(
+                        bool(roll_result and roll_result.get("success")))
                     if "error" not in combat_round:
                         clear()
                         print_header("COMBAT ROUND")
-                        print(combat_round.get('player_message', ''))
-                        print(combat_round.get('enemy_message', ''))
-                        if combat_round.get('combat_over'):
+                        print(combat_round.get('narrative', ''))
+                        if not combat_round.get('combat_over'):
+                            enemy_hp = combat_round.get('enemy_hp')
+                            if enemy_hp is not None:
+                                print(f"\n👹 {combat_round.get('enemy_name', 'Enemy')}: {enemy_hp} HP")
+                        else:
                             print("\n🎭 Combat has ended!")
                         input("\nPress ENTER to continue...")
-
-            # Handle sanity checks
-            for damage in result['sanity_checks']:
-                input("\nPress ENTER to resolve sanity check...")
-                san_result = engine.apply_sanity_check(int(damage))
-                clear()
-                print_header("SANITY CHECK")
-                san_msg = f"You lose {damage} sanity points"
-                if san_result.get('broke'):
-                    san_msg += f"\n\n{san_result.get('narrative', 'A breaking point!')}"
-                print(san_msg)
-                new_san = engine.state.investigator.characteristics['SAN']
-                print(f"\nSanity: {new_san}/99")
-                input("\nPress ENTER to continue...")
+                    pending = (engine.combat_attack_roll()
+                               if engine.state.active_combat else None)
+                else:
+                    # Narrative consequence — the engine already applied any
+                    # mechanical cost inside resolve_roll_consequences.
+                    clear()
+                    print_header("RESOLVING OUTCOME")
+                    show_keeper_thinking(preset="action_resolution")
+                    consequence_result = engine.resolve_roll_consequences(
+                        on_chunk=stream_callback)
+                    print("\n")
+                    cons = consequence_result.get("consequence")
+                    if cons:
+                        prefix = "💀 FUMBLE! " if cons.get("fumble") else "💔 "
+                        print(f"\n{prefix}{cons.get('summary', '')}")
+                        input("Press ENTER to continue...")
+                    pending = None
 
             # AUTO-SAVE after each turn (silent)
             engine.save_game()
@@ -602,7 +565,10 @@ def main():
         engine, model = resume_result
         print(f"\n✓ Resuming session (Turn {engine.state.turn})")
         input("Press ENTER to continue your investigation...")
-        _run_game_loop(engine, model)
+        try:
+            _run_game_loop(engine, model)
+        finally:
+            engine.close()
         return
 
     # New game flow
@@ -636,7 +602,10 @@ def main():
     input("Press ENTER to start your investigation...")
 
     # Run game loop
-    _run_game_loop(engine, model)
+    try:
+        _run_game_loop(engine, model)
+    finally:
+        engine.close()
 
 
 if __name__ == '__main__':

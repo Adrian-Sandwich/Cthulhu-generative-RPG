@@ -171,6 +171,15 @@ class CompanionManager:
         self.active_companions: Dict[str, Companion] = {}
         self.past_companions: List[Companion] = []
 
+    def recruit_custom(self, key: str, name: str, role: str,
+                       skills: Optional[Dict[str, int]] = None) -> Companion:
+        """Recruit an ally not in COMPANION_DEFINITIONS (e.g. a trusted NPC)."""
+        if key in self.active_companions:
+            return self.active_companions[key]
+        companion = Companion(key=key, name=name, role=role, skills=skills or {})
+        self.active_companions[key] = companion
+        return companion
+
     def recruit_companion(self, companion_key: str) -> Optional[Companion]:
         """Recruit a companion to travel with player"""
         if companion_key not in self.COMPANION_DEFINITIONS:

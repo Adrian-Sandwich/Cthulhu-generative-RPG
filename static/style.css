@@ -267,6 +267,19 @@ input:focus, select:focus {
     margin: -10px -8px 10px -8px;
 }
 
+/* ---- Combat bar ---- */
+#combat-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-top: 1px solid var(--danger);
+    color: var(--danger);
+    letter-spacing: 1px;
+}
+#combat-bar .combat-icon { font-size: 16px; }
+#combat-hp { color: var(--text); font-variant-numeric: tabular-nums; }
+
 /* ---- Dice roll ---- */
 
 #dice-area {
@@ -281,44 +294,106 @@ input:focus, select:focus {
     color: var(--accent);
 }
 
-/* Chunky pixel d100: stepped corners faked with box-shadow */
+/* Retro 3D pixel d100: a real cube that tumbles in space.
+   --die: edge length, --half: translateZ to push each face out. */
+#die-stage {
+    --die: 56px;
+    --half: 28px;
+    width: var(--die);
+    height: var(--die);
+    perspective: 340px;
+    flex: none;
+    /* room for the cube to spill past its box while tumbling */
+    margin: 6px 10px;
+}
+
 #pixel-die {
-    width: 52px;
-    height: 52px;
-    background: var(--text);
-    color: var(--bg);
-    font-weight: bold;
-    font-size: 20px;
+    position: relative;
+    width: var(--die);
+    height: var(--die);
+    transform-style: preserve-3d;
+    transform: rotateX(-18deg) rotateY(22deg);
+    cursor: pointer;
+    user-select: none;
+}
+
+#pixel-die:hover { filter: brightness(1.25); }
+
+/* Each face: chunky pixel die — dark well, phosphor ridge border, big glyph */
+#pixel-die .face {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--die);
+    height: var(--die);
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    user-select: none;
+    font-weight: bold;
+    font-size: 22px;
+    color: var(--text);
+    background: #061414;
+    border: 3px solid var(--text);
     box-shadow:
-        4px 0 0 var(--bg) inset, -4px 0 0 var(--bg) inset,
-        0 4px 0 var(--bg) inset, 0 -4px 0 var(--bg) inset,
-        4px 4px 0 var(--text) inset, -4px -4px 0 var(--text) inset,
-        -4px 4px 0 var(--text) inset, 4px -4px 0 var(--text) inset;
+        0 0 6px var(--text),
+        4px 4px 0 #021010 inset,
+        -4px -4px 0 #021010 inset;
+    text-shadow: 0 0 4px var(--text);
+    backface-visibility: hidden;
 }
 
-#pixel-die:hover {
-    background: var(--accent);
-}
+#pixel-die .f-front  { transform: rotateY(0deg)    translateZ(var(--half)); }
+#pixel-die .f-back   { transform: rotateY(180deg)  translateZ(var(--half)); }
+#pixel-die .f-right  { transform: rotateY(90deg)   translateZ(var(--half)); }
+#pixel-die .f-left   { transform: rotateY(-90deg)  translateZ(var(--half)); }
+#pixel-die .f-top    { transform: rotateX(90deg)   translateZ(var(--half)); }
+#pixel-die .f-bottom { transform: rotateX(-90deg)  translateZ(var(--half)); }
 
+/* Tumbling: spin across all three axes while the server rolls */
 #pixel-die.rolling {
-    animation: die-shake 0.12s infinite;
+    animation: die-tumble 0.7s linear infinite;
     cursor: default;
 }
 
-#pixel-die.success { background: #55ff55; }
-#pixel-die.failure { background: var(--danger); color: var(--bg); }
+@keyframes die-tumble {
+    0%   { transform: rotateX(0deg)   rotateY(0deg)   rotateZ(0deg); }
+    25%  { transform: rotateX(180deg) rotateY(90deg)  rotateZ(40deg); }
+    50%  { transform: rotateX(360deg) rotateY(180deg) rotateZ(0deg); }
+    75%  { transform: rotateX(540deg) rotateY(270deg) rotateZ(-40deg); }
+    100% { transform: rotateX(720deg) rotateY(360deg) rotateZ(0deg); }
+}
 
-@keyframes die-shake {
-    0%   { transform: translate(0, 0) rotate(0deg); }
-    25%  { transform: translate(-3px, 2px) rotate(-6deg); }
-    50%  { transform: translate(2px, -3px) rotate(5deg); }
-    75%  { transform: translate(-2px, -2px) rotate(-4deg); }
-    100% { transform: translate(3px, 2px) rotate(6deg); }
+/* Landing: settle to a readable 3/4 view with a short bounce */
+#pixel-die.settle {
+    animation: die-land 0.45s cubic-bezier(0.22, 1.4, 0.4, 1) both;
+}
+
+@keyframes die-land {
+    0%   { transform: rotateX(140deg) rotateY(120deg) scale(0.9); }
+    60%  { transform: rotateX(-22deg) rotateY(26deg)  scale(1.12); }
+    100% { transform: rotateX(-18deg) rotateY(22deg)  scale(1); }
+}
+
+/* Result tint flows onto every face */
+#pixel-die.success .face {
+    color: #062012; border-color: #55ff55;
+    background: #55ff55; box-shadow: 0 0 10px #55ff55, 4px 4px 0 #2db84a inset, -4px -4px 0 #2db84a inset;
+    text-shadow: none;
+}
+#pixel-die.failure .face {
+    color: #200606; border-color: var(--danger);
+    background: var(--danger); box-shadow: 0 0 10px var(--danger), 4px 4px 0 #a83232 inset, -4px -4px 0 #a83232 inset;
+    text-shadow: none;
+}
+
+/* Respect reduced-motion: no 3D spin, just the number settling */
+@media (prefers-reduced-motion: reduce) {
+    #pixel-die,
+    #pixel-die.rolling,
+    #pixel-die.settle {
+        animation: none;
+        transform: rotateX(-18deg) rotateY(22deg);
+    }
 }
 
 #dice-result {
@@ -327,6 +402,82 @@ input:focus, select:focus {
 
 #dice-result.success { color: #55ff55; }
 #dice-result.failure { color: var(--danger); }
+
+/* Depleted finite resources (empty gun, doom clock near zero) pulse red */
+.depleted { color: var(--danger); font-weight: bold; }
+
+/* ---- NPC dossier (persistent relationships) ---- */
+#npc-dossier {
+    border-top: 1px solid var(--text-dim);
+    padding: 6px 8px;
+    font-size: 13px;
+}
+.dossier-title {
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    font-size: 11px;
+}
+#npc-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin-top: 4px;
+}
+.npc-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    white-space: nowrap;
+}
+.npc-chip .npc-name { color: var(--text); }
+.npc-chip .npc-att  { font-size: 11px; letter-spacing: 1px; }
+.npc-chip .npc-rep  { color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.npc-chip .npc-mem  { color: var(--text-dim); font-size: 11px; }
+/* attitude colors */
+.att-hostile     { color: var(--danger); }
+.att-distrustful { color: #ff9955; }
+.att-neutral     { color: var(--text-dim); }
+.att-friendly    { color: var(--text); }
+.att-trusted     { color: #55ff55; }
+
+/* ---- Sanity corruption: the screen itself degrades as SAN fails ---- */
+#game-screen.san-fx-1 #narrative-content { animation: san-flicker 6s infinite; }
+#game-screen.san-fx-2 #narrative-content {
+    animation: san-flicker 3.5s infinite;
+    text-shadow: 1px 0 var(--danger), -1px 0 var(--bar-bg);
+}
+#game-screen.san-fx-3 #narrative-content {
+    animation: san-jitter 0.9s steps(3) infinite;
+    text-shadow: 2px 0 var(--danger), -2px 0 var(--bar-bg);
+}
+/* the SAN readout pulses red as it drops into danger */
+#game-screen.san-fx-2 #san-value,
+#game-screen.san-fx-3 #san-value { color: var(--danger); animation: san-pulse 1.2s infinite; }
+
+@keyframes san-flicker {
+    0%, 96%, 100% { opacity: 1; }
+    97% { opacity: 0.78; }
+    98% { opacity: 1; }
+    99% { opacity: 0.85; }
+}
+@keyframes san-jitter {
+    0%   { transform: translateX(0); }
+    25%  { transform: translateX(-1px) skewX(-0.4deg); }
+    50%  { transform: translateX(1px); }
+    75%  { transform: translateX(-1px) skewX(0.4deg); }
+    100% { transform: translateX(0); }
+}
+@keyframes san-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.4; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #game-screen.san-fx-1 #narrative-content,
+    #game-screen.san-fx-2 #narrative-content,
+    #game-screen.san-fx-3 #narrative-content,
+    #game-screen.san-fx-2 #san-value,
+    #game-screen.san-fx-3 #san-value { animation: none; }
+}
 
 /* ---- Action input ---- */
 

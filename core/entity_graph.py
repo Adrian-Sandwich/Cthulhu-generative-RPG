@@ -5,6 +5,7 @@ Tracks NPC relationships, factions, locations, and knowledge connections
 to inform DM narrative and detect conspiracies.
 """
 
+import logging
 from typing import Dict, List, Optional, Tuple
 
 try:
@@ -13,14 +14,26 @@ except ImportError:
     GraphDatabase = None
     Session = None
 
+logger = logging.getLogger(__name__)
+
 
 class EntityGraph:
     """
     Neo4j-based entity relationship graph.
     Tracks NPCs, locations, factions, artifacts, and their interconnections.
+
+    All nodes are scoped by ``session_id`` so that concurrent games share a
+    single Neo4j instance without colliding, and a game can wipe only its own
+    nodes on re-initialization.
     """
 
-    def __init__(self, uri: str = "bolt://localhost:7687", user: str = "neo4j", password: str = "password"):
+    # Relationship types the engine is allowed to write. The rel type cannot be
+    # parameterized in Cypher, so it is interpolated into the query string —
+    # validating against this fixed set keeps that interpolation injection-safe.
+    ALLOWED_RELS = {"WORKS_FOR", "KNOWS", "FEARS", "PROTECTS"}
+
+    def __init__(self, uri: str = "bolt://localhost:7687", user: str = "neo4j",
+                 password: str = "password", session_id: str = "default"):
         """
         Initialize Neo4j connection.
 
@@ -28,9 +41,11 @@ class EntityGraph:
             uri: Neo4j connection URI
             user: Neo4j username
             password: Neo4j password
+            session_id: Scopes every node this instance creates/reads/deletes.
         """
         self.driver = None
         self.session: Optional[Session] = None
+        self.session_id = session_id
         self.enabled = False
 
         if GraphDatabase is None:
@@ -82,11 +97,11 @@ class EntityGraph:
             with session:
                 meta = metadata or {}
                 query = """
-                MERGE (npc:NPC {key: $key})
+                MERGE (npc:NPC {key: $key, session_id: $sid})
                 SET npc.name = $name, npc.role = $role, npc.properties = $meta
                 RETURN npc
                 """
-                session.run(query, key=key, name=name, role=role, meta=meta)
+                session.run(query, key=key, name=name, role=role, meta=meta, sid=self.session_id)
 
                 # Assign to faction if provided
                 if faction_key:
@@ -94,6 +109,7 @@ class EntityGraph:
 
             return True
         except Exception:
+            logger.warning("add_npc failed for key=%s", key, exc_info=True)
             return False
 
     def add_location(self, key: str, name: str, description: str = "") -> bool:
@@ -118,13 +134,14 @@ class EntityGraph:
 
             with session:
                 query = """
-                MERGE (loc:Location {key: $key})
+                MERGE (loc:Location {key: $key, session_id: $sid})
                 SET loc.name = $name, loc.description = $description
                 RETURN loc
                 """
-                session.run(query, key=key, name=name, description=description)
+                session.run(query, key=key, name=name, description=description, sid=self.session_id)
             return True
         except Exception:
+            logger.warning("add_location failed for key=%s", key, exc_info=True)
             return False
 
     def add_faction(self, key: str, name: str, alignment: str = "neutral") -> bool:
@@ -149,13 +166,14 @@ class EntityGraph:
 
             with session:
                 query = """
-                MERGE (f:Faction {key: $key})
+                MERGE (f:Faction {key: $key, session_id: $sid})
                 SET f.name = $name, f.alignment = $alignment
                 RETURN f
                 """
-                session.run(query, key=key, name=name, alignment=alignment)
+                session.run(query, key=key, name=name, alignment=alignment, sid=self.session_id)
             return True
         except Exception:
+            logger.warning("add_faction failed for key=%s", key, exc_info=True)
             return False
 
     def add_relationship(self, from_key: str, rel_type: str, to_key: str, metadata: Dict = None) -> bool:
@@ -174,6 +192,12 @@ class EntityGraph:
         if not self.enabled:
             return False
 
+        # rel_type is interpolated into the query (Cypher can't parameterize it),
+        # so reject anything outside the known-safe set to prevent injection.
+        if rel_type not in self.ALLOWED_RELS:
+            logger.warning("add_relationship rejected unknown rel_type=%r", rel_type)
+            return False
+
         try:
             session = self._get_session()
             if not session:
@@ -182,14 +206,15 @@ class EntityGraph:
             with session:
                 meta = metadata or {}
                 query = f"""
-                MATCH (a {{key: $from_key}}), (b {{key: $to_key}})
+                MATCH (a {{key: $from_key, session_id: $sid}}), (b {{key: $to_key, session_id: $sid}})
                 MERGE (a)-[r:{rel_type}]-(b)
                 SET r.properties = $meta
                 RETURN r
                 """
-                session.run(query, from_key=from_key, to_key=to_key, meta=meta)
+                session.run(query, from_key=from_key, to_key=to_key, meta=meta, sid=self.session_id)
             return True
         except Exception:
+            logger.warning("add_relationship failed %s-[%s]-%s", from_key, rel_type, to_key, exc_info=True)
             return False
 
     def get_npc_relationships(self, npc_key: str) -> Dict[str, List[str]]:
@@ -212,10 +237,10 @@ class EntityGraph:
 
             with session:
                 query = """
-                MATCH (npc:NPC {key: $key})-[r]-(other)
+                MATCH (npc:NPC {key: $key, session_id: $sid})-[r]-(other {session_id: $sid})
                 RETURN type(r) as rel_type, collect(other.key) as targets
                 """
-                result = session.run(query, key=npc_key)
+                result = session.run(query, key=npc_key, sid=self.session_id)
 
                 relationships = {}
                 for record in result:
@@ -225,6 +250,7 @@ class EntityGraph:
 
             return relationships
         except Exception:
+            logger.warning("get_npc_relationships failed for key=%s", npc_key, exc_info=True)
             return {}
 
     def get_npc_context(self, npc_key: str) -> str:
@@ -267,6 +293,7 @@ class EntityGraph:
 
             return " | ".join(context_parts) if context_parts else ""
         except Exception:
+            logger.warning("get_npc_context failed for key=%s", npc_key, exc_info=True)
             return ""
 
     def find_connection_path(self, from_key: str, to_key: str, max_depth: int = 3) -> Optional[List[Tuple[str, str]]]:
@@ -292,12 +319,12 @@ class EntityGraph:
             with session:
                 query = f"""
                 MATCH path = shortestPath(
-                    (a {{key: $from_key}})-[*1..{max_depth}]-(b {{key: $to_key}})
+                    (a {{key: $from_key, session_id: $sid}})-[*1..{max_depth}]-(b {{key: $to_key, session_id: $sid}})
                 )
                 RETURN path
                 LIMIT 1
                 """
-                result = session.run(query, from_key=from_key, to_key=to_key)
+                result = session.run(query, from_key=from_key, to_key=to_key, sid=self.session_id)
 
                 for record in result:
                     path = record["path"]
@@ -309,6 +336,7 @@ class EntityGraph:
 
             return None
         except Exception:
+            logger.warning("find_connection_path failed %s->%s", from_key, to_key, exc_info=True)
             return None
 
     def get_faction_members(self, faction_key: str) -> List[str]:
@@ -331,16 +359,17 @@ class EntityGraph:
 
             with session:
                 query = """
-                MATCH (npc:NPC)-[:WORKS_FOR]-(f:Faction {key: $faction_key})
+                MATCH (npc:NPC {session_id: $sid})-[:WORKS_FOR]-(f:Faction {key: $faction_key, session_id: $sid})
                 RETURN collect(npc.key) as members
                 """
-                result = session.run(query, faction_key=faction_key)
+                result = session.run(query, faction_key=faction_key, sid=self.session_id)
 
                 for record in result:
                     return record["members"] or []
 
             return []
         except Exception:
+            logger.warning("get_faction_members failed for faction=%s", faction_key, exc_info=True)
             return []
 
     def get_graph_stats(self) -> Dict[str, int]:
@@ -360,13 +389,11 @@ class EntityGraph:
 
             with session:
                 query = """
-                MATCH (n)
-                RETURN
-                  COUNT(DISTINCT n {.*}) as nodes,
-                  SIZE(relationships(n)) as relationships
-                LIMIT 1
+                MATCH (n {session_id: $sid})
+                OPTIONAL MATCH (n)-[r {}]-(m {session_id: $sid})
+                RETURN count(DISTINCT n) as nodes, count(DISTINCT r) as relationships
                 """
-                result = session.run(query)
+                result = session.run(query, sid=self.session_id)
 
                 stats = {"enabled": True}
                 for record in result:
@@ -375,11 +402,15 @@ class EntityGraph:
 
             return stats
         except Exception:
+            logger.warning("get_graph_stats failed", exc_info=True)
             return {"enabled": False}
 
     def clear(self) -> bool:
         """
-        Clear all nodes and relationships from graph.
+        Clear only THIS session's nodes and relationships.
+
+        Scoped by ``session_id`` — never touches other games' data on a shared
+        Neo4j instance.
 
         Returns:
             True if successful
@@ -393,10 +424,14 @@ class EntityGraph:
                 return False
 
             with session:
-                session.run("MATCH (n) DETACH DELETE n")
+                session.run("MATCH (n {session_id: $sid}) DETACH DELETE n", sid=self.session_id)
             return True
         except Exception:
+            logger.warning("clear failed for session_id=%s", self.session_id, exc_info=True)
             return False
+
+    # Explicit alias — makes the session-scoped intent obvious at call sites.
+    clear_session = clear
 
     def close(self):
         """Close Neo4j connection"""

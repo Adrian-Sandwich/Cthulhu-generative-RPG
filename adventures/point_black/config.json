@@ -1,0 +1,151 @@
+{
+  "name": "point_black",
+  "story_seed": "\n    ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.\n    ",
+  "description": "\n═══════════════════════════════════════════════════════════════════════════════\nALONE AGAINST THE DARK - Point Black Lighthouse Adventure\n═══════════════════════════════════════════════════════════════════════════════\n\nSETTING:\nYou are at Point Black Lighthouse on the remote Maine coast. The lighthouse\nstands on black rock, surrounded by crashing Atlantic waves and fog. A keeper\nvanished 2 weeks ago under mysterious circumstances.\n\nTHE MYSTERY:\n- The lighthouse keeper disappeared without explanation\n- His final logbook entries became increasingly erratic: \"They call from below\"\n- Strange sounds heard at night from the ocean\n- Evidence of a pre-human fissure beneath the lighthouse\n- Symbols cover the keeper's quarters - alien geometry that hurts to look at\n- The lighthouse may have been built to CONTAIN something, not protect FROM it\n\nKEY LOCATIONS:\n- Lighthouse Exterior: Rocky black stone, salt spray, fog, weathered structure\n- Keeper's Quarters: Sparse furniture, dust, decay smell, chemical odor\n- Lighthouse Interior: Spiral stairs, damp, strange luminescent fungus (glow green)\n- Lantern Room: Top of lighthouse, beacon lamp, ancient symbols, wide ocean view\n- Ground Floor: Solid stone, darkness, echoing sounds\n- Lighthouse Stairs: Iron spiral, flickering light, salt smell\n\nKEY CHARACTERS:\n- Lieutenant Warner (Coast Guard) - Knows keeper vanished, organized search\n- Dr. Armitage (Professor) - Expert on pre-human symbols, ancient languages\n- Chief Marsh (Police Chief) - Skeptical, pragmatic, wants mundane explanation\n\nTHE THREAT:\nSomething ancient lies beneath the ocean. It may be waking. The lighthouse\nhas contained it for centuries, but something has changed. The fissure is\nbecoming active. Reality is becoming thin around this place.\n\nYOUR OBJECTIVE:\nUncover what happened to the keeper. Understand the nature of the threat.\nDecide: Escape? Seal the fissure? Destroy the lighthouse? Confront the entity?\n═══════════════════════════════════════════════════════════════════════════════\n",
+  "start_location": "Point Black Lighthouse - Exterior",
+  "resources": {
+    "ammo": 6,
+    "time_limit": 18
+  },
+  "location_keywords": {
+    "keeper": "Keeper's Quarters",
+    "chamber": "Hidden Chamber",
+    "basement": "Basement",
+    "roof": "Lantern Room",
+    "stairs": "Lighthouse Stairs",
+    "lantern room": "Lantern Room",
+    "ground floor": "Ground Floor",
+    "upper level": "Upper Level",
+    "interior": "Lighthouse Interior",
+    "inside": "Lighthouse Interior"
+  },
+  "locations": [
+    {
+      "key": "lighthouse_exterior",
+      "name": "Point Black Lighthouse - Exterior",
+      "description": "A weathered lighthouse stands on rocky black stone, its paint peeling from decades of exposure to salt spray and Atlantic winds. The structure is perhaps thirty feet tall, surrounded by a low stone wall. The keeper's cottage sits nearby, its windows dark and empty."
+    },
+    {
+      "key": "keeper_quarters",
+      "name": "Keeper's Quarters",
+      "description": "The keeper's sparse living space: a cot, a table with a single chair, shelves of maritime equipment. Everything is covered in dust. Through the single window, you can see the lighthouse. There's a faint smell of decay and something else—something chemical."
+    },
+    {
+      "key": "lighthouse_interior",
+      "name": "Lighthouse Interior",
+      "description": "The interior of the lighthouse is a spiral of iron stairs ascending into darkness. The air is thick and stale. Each step groans under your weight. The walls are covered in moisture and a strange luminescent fungus that glows faintly green in the darkness."
+    },
+    {
+      "key": "keeper_room_top",
+      "name": "Keeper's Room - Lighthouse Top",
+      "description": "At the top of the lighthouse, a small room contains a cot, desk, and the great lamp mechanism. Papers are scattered everywhere—logbooks, journals, sketches of impossible symbols. The light mechanism hasn't been lit in weeks. Through the windows, you can see the entire rocky coast and far out to sea."
+    },
+    {
+      "key": "lantern_room",
+      "name": "Lantern Room",
+      "description": "The glass-walled crown of the lighthouse. The great beacon lamp sits cold and dark, its lenses filmed with salt. Ancient symbols have been scratched into the brass fittings—recent work, done with a shaking hand. Through the panes, the ocean stretches gray and endless, and something about the horizon looks subtly wrong."
+    },
+    {
+      "key": "lighthouse_stairs",
+      "name": "Lighthouse Stairs",
+      "description": "An iron spiral staircase winds up through the tower's throat. Each step rings hollow and the whole structure trembles faintly in the wind. The lamps here flicker though no draft moves, and the smell of salt gives way to something older—brine and rot from somewhere far below."
+    },
+    {
+      "key": "ground_floor",
+      "name": "Ground Floor",
+      "description": "The base of the tower: solid stone walls a yard thick, a packed-earth floor, coils of rope and rusted tools. Sounds echo strangely here, arriving a half-second late, as if the room were larger than its walls. A cold draft seeps up from between the flagstones."
+    },
+    {
+      "key": "upper_level",
+      "name": "Upper Level",
+      "description": "A cramped landing below the lantern room, cluttered with supply crates and oil cans. The window is small and rimed with salt. From here the stairs continue up toward the light—and someone has painted a crude warding symbol on the underside of the hatch above."
+    },
+    {
+      "key": "basement",
+      "name": "Basement",
+      "description": "A low-ceilinged cellar cut into the living rock beneath the lighthouse. Barrels of lamp oil line one wall, furred with mold. The air is wet and mineral. In the far corner, the floor has been dug up—recently—and the exposed stone beneath bears a hairline crack that weeps seawater, though you are well above the tide line."
+    },
+    {
+      "key": "hidden_chamber",
+      "name": "Hidden Chamber",
+      "description": "A space that should not exist, sealed behind the basement wall. The chamber is older than the lighthouse—far older. Its walls are covered in carved symbols that hurt to follow, geometry that folds back on itself. At its center, the fissure: a black seam in the rock, breathing cold air that smells of the deep ocean. The keeper's final logbook lies open beside it."
+    }
+  ],
+  "factions": [
+    {
+      "key": "coast_guard",
+      "name": "U.S. Coast Guard",
+      "alignment": "neutral"
+    },
+    {
+      "key": "miskatonic",
+      "name": "Miskatonic University",
+      "alignment": "neutral"
+    },
+    {
+      "key": "cultists",
+      "name": "Deep One Cultists",
+      "alignment": "hostile"
+    }
+  ],
+  "npcs": {
+    "warner": {
+      "name": "Lt. William Warner",
+      "role": "Coast Guard Officer",
+      "knows": [
+        "keeper vanished",
+        "lighthouse abandoned 2 weeks",
+        "strange sounds at night"
+      ],
+      "knows_secret": [
+        "I saw something in the water two months ago. Unnatural. Not a whale, not a fish.",
+        "The keeper's name was Marinus Weld. He was afraid of something specific... kept muttering about 'the deep'."
+      ],
+      "personality": "professional but visibly shaken, trying to maintain composure",
+      "available_turns": [
+        1,
+        10
+      ]
+    },
+    "armitage": {
+      "name": "Dr. Henry Armitage",
+      "role": "Miskatonic University Professor",
+      "knows": [
+        "symbols are pre-human",
+        "fissure predates lighthouse",
+        "ritual to seal it"
+      ],
+      "knows_secret": [
+        "I've decoded part of the inscription. It's a warning, not a seal. The seal was never completed.",
+        "The lighthouse wasn't built to protect anything from us. It was built to contain something beneath the ocean. To keep it sleeping."
+      ],
+      "personality": "academic, grave, speaks in measured tones",
+      "available_turns": [
+        3,
+        10
+      ]
+    }
+  },
+  "relationships": [
+    {
+      "from": "warner",
+      "rel": "WORKS_FOR",
+      "to": "coast_guard"
+    },
+    {
+      "from": "armitage",
+      "rel": "WORKS_FOR",
+      "to": "miskatonic"
+    },
+    {
+      "from": "warner",
+      "rel": "KNOWS",
+      "to": "armitage"
+    },
+    {
+      "from": "warner",
+      "rel": "PROTECTS",
+      "to": "lighthouse_exterior"
+    }
+  ]
+}

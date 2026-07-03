@@ -48,6 +48,10 @@
                         <option value="occultist">Occultist</option>
                         <option value="wanderer">Wanderer</option>
                     </select>
+                    <select id="game-language" title="Narration language">
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                    </select>
                     <button type="submit" class="start-btn">BEGIN</button>
                 </div>
             </form>
@@ -71,12 +75,20 @@
                 <span>HP <span id="hp-value">—</span></span>
                 <span>SAN <span id="san-value">—</span></span>
                 <span>LUCK <span id="luck-value">—</span></span>
+                <span id="ammo-stat" class="hidden">AMMO <span id="ammo-value">—</span></span>
+                <span id="time-stat" class="hidden">TIME <span id="time-value">—</span></span>
                 <span class="menu-keys">
                     <a onclick="showHelp()">[help]</a>
                     <a onclick="showSheet()">[sheet]</a>
                     <a onclick="showHistory()">[history]</a>
+                    <a id="sound-toggle" onclick="toggleSound()">[sound on]</a>
                     <a onclick="resetGame()">[new game]</a>
                 </span>
+            </div>
+
+            <div id="npc-dossier" class="hidden">
+                <span class="dossier-title">KNOWN FIGURES</span>
+                <div id="npc-list"></div>
             </div>
 
             <div id="narrative-display">
@@ -141,10 +153,27 @@
                 </div>
             </div>
 
+            <div id="combat-bar" class="hidden">
+                <span class="combat-icon">⚔</span>
+                <span id="combat-name">—</span>
+                <span id="combat-hp"></span>
+            </div>
+
             <div id="dice-area" class="hidden">
                 <span id="dice-label">ROLL: Dodge (Hard) — target 20</span>
-                <div id="pixel-die" onclick="rollDice()">?</div>
+                <div id="die-stage">
+                    <div id="pixel-die" onclick="rollDice()" role="button" tabindex="0"
+                         aria-label="Throw the die">
+                        <span class="face f-front">?</span>
+                        <span class="face f-back">?</span>
+                        <span class="face f-right">?</span>
+                        <span class="face f-left">?</span>
+                        <span class="face f-top">?</span>
+                        <span class="face f-bottom">?</span>
+                    </div>
+                </div>
                 <span id="dice-result"></span>
+                <a id="flee-btn" class="hidden" onclick="flee()">[flee]</a>
             </div>
 
             <form id="action-form" onsubmit="submitAction(event)">

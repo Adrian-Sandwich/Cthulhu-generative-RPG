@@ -118,6 +118,17 @@ ATTACK_VERBS = {
     "apuñalar", "embisto", "embestir", "le pego", "disparale",
 }
 
+# Deliberate recovery: resting/praying steadies the mind. Costs the turn (the
+# doom clock keeps ticking), gated by a cooldown so it can't be spammed.
+REST_KEYWORDS = {
+    "rest", "take a breath", "catch my breath", "calm down", "calm myself",
+    "meditate", "pray", "steady myself", "compose myself",
+    "descanso", "descansar", "respiro", "me calmo", "calmarme", "medito",
+    "meditar", "rezo", "rezar", "oro", "orar", "me recompongo",
+}
+REST_COOLDOWN_TURNS = 3
+REST_RECOVERY = (1, 2)  # random range of SAN recovered per rest
+
 # Witnessing the unnatural costs Sanity. If the DM narrates horror but forgets
 # the mechanic, the engine forces a Sanity check on these cues.
 SANITY_TRIGGERS = {
@@ -158,6 +169,7 @@ class GameState:
     npc_reputation: Dict[str, int] = None  # NPC key -> reputation score (-100 to +100)
     ammo: int = 0          # rounds left for the firearm; 0 = empty
     time_limit: int = 0    # turn at which doom arrives (0 = no clock)
+    last_rest_turn: int = 0  # cooldown anchor for deliberate sanity recovery
 
 
 class CoC7eRulesEngine:
@@ -1144,6 +1156,22 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
         if not sanity_checks and any(w in player_input.lower() for w in SANITY_TRIGGERS):
             sanity_checks.append(str(random.randint(2, 5)))
 
+        # Deliberate recovery: resting/praying steadies the mind. Resting is a
+        # deliberately SAFE action — it overrides any roll the DM requested for
+        # it. It spends the turn (the doom clock still ticks), only works out
+        # of combat, and is cooldown-gated so it can't be spammed to full SAN.
+        sanity_recovered = 0
+        if (not sanity_checks and not combat_start
+                and not self.state.active_combat and self.sanity_system
+                and any(k in player_input.lower() for k in REST_KEYWORDS)):
+            rolls_requested = []  # no dice for catching your breath
+            never_rested = self.state.last_rest_turn == 0
+            if never_rested or self.state.turn - self.state.last_rest_turn >= REST_COOLDOWN_TURNS:
+                rec = self.sanity_system.recover_sanity(
+                    random.randint(*REST_RECOVERY), "rest")
+                sanity_recovered = rec["recovered"]
+                self.state.last_rest_turn = self.state.turn
+
         # Update narrative
         self.state.narrative.append(f"Player: {player_input}")
         self.state.narrative.append(f"DM: {clean_response}")
@@ -1206,6 +1234,7 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
             "combat_start": combat_start,
             "npc_dialogue": npc_dialogue,
             "npc_status": npc_status,
+            "sanity_recovered": sanity_recovered,
             "ammo": self.state.ammo,
             "time_remaining": self.resources_status()["time_remaining"],
             "state": asdict(self.state)
@@ -2077,7 +2106,8 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             npc_reputation=state_dict.get("npc_reputation", {}),
             last_roll=state_dict.get("last_roll"),
             ammo=state_dict.get("ammo", 0),
-            time_limit=state_dict.get("time_limit", 0)
+            time_limit=state_dict.get("time_limit", 0),
+            last_rest_turn=state_dict.get("last_rest_turn", 0)
         )
 
         # Create engine instance with same model, session, and adventure.

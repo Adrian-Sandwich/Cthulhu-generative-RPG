@@ -414,6 +414,7 @@ def _finalize_turn(gs, result):
         "location": gs.engine.state.location,
         "narrative": result.get("narrative", ""),
         "sanity_corruption": result.get("sanity_corruption", 0),
+        "sanity_recovered": result.get("sanity_recovered", 0),
         "npcs": result.get("npc_status", []),
         "resources": gs.engine.resources_status(),
         "combat": gs.engine.combat_status(),

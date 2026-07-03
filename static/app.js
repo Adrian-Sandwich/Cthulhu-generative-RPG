@@ -363,6 +363,9 @@ function finishTurnUI(done, action, dmEl) {
     dmEl.textContent = (done.narrative || dmEl.textContent || '...').trim();
     gameHistory.push({ turn: done.turn, playerAction: action, dmResponse: done.narrative });
     updateStats(done.state);
+    if (done.sanity_recovered > 0) {
+        setStatus(`Your mind steadies. +${done.sanity_recovered} SAN`);
+    }
     renderNpcs(done.npcs);
     renderResources(done.resources);
     renderCombat(done.combat);
@@ -419,7 +422,7 @@ async function submitAction(event) {
         }
 
         if (errMsg) { turnEl.remove(); setStatus(errMsg, true); return; }
-        if (done) { finishTurnUI(done, action, dmEl); actionInput.value = ''; setStatus(''); }
+        if (done) { setStatus(''); finishTurnUI(done, action, dmEl); actionInput.value = ''; }
         else { turnEl.remove(); throw new Error('stream ended early'); }
     } catch (error) {
         turnEl.remove();
@@ -451,7 +454,8 @@ async function submitActionFallback(action) {
             document.getElementById('turn-counter').textContent = data.turn;
             document.getElementById('location-display').textContent = data.location;
             document.getElementById('action-input').value = '';
-            setStatus('');
+            setStatus(data.sanity_recovered > 0
+                ? `Your mind steadies. +${data.sanity_recovered} SAN` : '');
             if (data.pending_roll) showDiceArea(data.pending_roll);
             refreshGameState();
         } else {

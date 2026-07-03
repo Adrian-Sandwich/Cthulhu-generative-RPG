@@ -2011,6 +2011,62 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
 
         return self.get_npc_status()
 
+    def apply_turn_consequences(self, result: Dict) -> Dict:
+        """
+        Apply a processed turn's mechanical consequences uniformly.
+
+        Single turn-runner shared by the web endpoints and the terminal loop so
+        the two frontends can't drift (items lost on web, double damage on
+        terminal — both were real bugs from divergent copies of this logic).
+
+        Args:
+            result: The dict returned by process_player_action().
+
+        Returns:
+            {"events": [{kind, text}, ...], "pending_roll": Dict | None}
+            Events are display-ready lines (item pickups, damage, sanity,
+            companion strain, combat start). pending_roll is the check the
+            player must now throw, if any (combat attack takes precedence).
+        """
+        events = []
+
+        # Items the DM granted
+        for item_key in result.get("items_found", []):
+            events.append({"kind": "item", "text": self.pick_up_item(item_key)})
+
+        # Direct HP damage declared inline by the DM
+        for damage in result.get("hp_damage", []):
+            res = self.apply_hp_damage(int(damage))
+            events.append({"kind": "hp", "text": res["message"]})
+
+        # Sanity costs (witnessed horror) — companions share the strain
+        for damage in result.get("sanity_checks", []):
+            res = self.apply_sanity_check(int(damage))
+            text = f"You lose {damage} sanity"
+            if res.get("broke"):
+                text += f" — {res.get('narrative', 'a breaking point!')}"
+            events.append({"kind": "san", "text": text})
+            for ev in res.get("companion_events", []):
+                events.append({"kind": "companion", "text": ev})
+
+        # Combat the DM declared: start it and arm the player's attack roll
+        pending_roll = None
+        for enemy_key in result.get("combat_start", []):
+            if not self.state.active_combat:
+                started = self.start_combat(enemy_key)
+                if not started.get("error"):
+                    events.append({"kind": "combat", "text": started["message"]})
+                    pending_roll = self.combat_attack_roll()
+            break
+
+        # Skill check the DM (or roll synthesis) requested — combat roll wins
+        rolls = result.get("rolls_requested", [])
+        if rolls and not pending_roll:
+            skill, difficulty = rolls[0]
+            pending_roll = self.prepare_skill_check(skill, difficulty)
+
+        return {"events": events, "pending_roll": pending_roll}
+
     def resources_status(self) -> Dict:
         """Finite stakes for the HUD: rounds left and turns until doom."""
         if not self.state:

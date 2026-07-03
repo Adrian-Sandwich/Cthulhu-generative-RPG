@@ -384,27 +384,13 @@ def process_action(gs):
 def _finalize_turn(gs, result):
     """Apply a turn's consequences and build the response payload.
 
-    Shared by the JSON action endpoint and the SSE streaming endpoint so both
-    end a turn identically (damage applied, pending roll set, autosave).
+    Shared by the JSON action endpoint and the SSE streaming endpoint. The
+    actual consequence logic lives in engine.apply_turn_consequences (also
+    used by the terminal loop) so frontends can't drift.
     """
-    for damage in result.get("hp_damage", []):
-        gs.engine.apply_hp_damage(int(damage))
-    for damage in result.get("sanity_checks", []):
-        gs.engine.apply_sanity_check(int(damage))
-
-    # Combat the DM declared this turn: start it and hand the player an attack
-    # roll. Each die throw then resolves one round (see execute_roll).
-    for enemy_key in result.get("combat_start", []):
-        if not gs.engine.state.active_combat:
-            started = gs.engine.start_combat(enemy_key)
-            if not started.get("error"):
-                gs.pending_roll = gs.engine.combat_attack_roll()
-            break
-
-    rolls = result.get("rolls_requested", [])
-    if rolls and not gs.pending_roll:
-        skill, difficulty = rolls[0]
-        gs.pending_roll = gs.engine.prepare_skill_check(skill, difficulty)
+    outcome = gs.engine.apply_turn_consequences(result)
+    if outcome["pending_roll"] and not gs.pending_roll:
+        gs.pending_roll = outcome["pending_roll"]
 
     _autosave(gs)
 
@@ -413,6 +399,7 @@ def _finalize_turn(gs, result):
         "turn": gs.engine.state.turn,
         "location": gs.engine.state.location,
         "narrative": result.get("narrative", ""),
+        "events": outcome["events"],
         "sanity_corruption": result.get("sanity_corruption", 0),
         "sanity_recovered": result.get("sanity_recovered", 0),
         "npcs": result.get("npc_status", []),

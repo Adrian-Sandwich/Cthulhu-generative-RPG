@@ -491,10 +491,13 @@ class GenerativeGameEngine:
 
     def create_game(self, investigator: InvestigatorState) -> GameState:
         """Initialize a new game"""
+        # Store the intro in the narration language — keeping the English seed
+        # in the narrative while the player reads a translation made the model
+        # keep re-translating that block in later turns.
         self.state = GameState(
             turn=1,
             location=self.adventure_config.start_location,
-            narrative=[self.STORY_SEED],
+            narrative=[self.localized_intro()],
             investigator=investigator,
             recent_actions=[],
             game_phase="exploring",
@@ -592,6 +595,18 @@ class GenerativeGameEngine:
                "Mantieni i tag (es. [ROLL: climb/Hard]) invariati."),
     }
 
+    # One-line per-turn reminders. The FULL directive lives only in the system
+    # prompt; repeating the whole block in every user message made weak models
+    # degenerate (re-translating their own output over and over, ballooning
+    # responses with nested translations).
+    _LANG_REMINDER = {
+        "es": "(Responde únicamente en español.)",
+        "fr": "(Réponds uniquement en français.)",
+        "de": "(Antworte nur auf Deutsch.)",
+        "pt": "(Responda apenas em português.)",
+        "it": "(Rispondi solo in italiano.)",
+    }
+
     def _lang_instruction(self) -> str:
         """System-prompt prefix forcing the narration language (empty for English)."""
         if self.language == "en":
@@ -602,11 +617,21 @@ class GenerativeGameEngine:
             f"Keep mechanic tags unchanged.")
         return f"\n\n=== IDIOMA / LANGUAGE (CRITICAL) ===\n{directive}"
 
+    def _lang_reminder(self) -> str:
+        """Short per-turn nudge appended to the user message (empty for English)."""
+        if self.language == "en":
+            return ""
+        return "\n" + self._LANG_REMINDER.get(
+            self.language,
+            f"(Respond only in {self._LANG_NAMES.get(self.language, self.language)}.)")
+
     def localized_intro(self) -> str:
-        """The opening story seed, translated to the narration language."""
+        """The opening story seed, translated to the narration language (cached)."""
         seed = self.STORY_SEED.strip()
         if self.language == "en":
             return seed
+        if getattr(self, "_intro_cache", None):
+            return self._intro_cache
         name = self._LANG_NAMES.get(self.language, self.language)
         directive = self._LANG_DIRECTIVE.get(self.language, f"Respond only in {name}.")
         translated = self.llm.chat(
@@ -617,7 +642,8 @@ class GenerativeGameEngine:
             max_tokens=400,
             temperature=0.3,
         )
-        return translated or seed
+        self._intro_cache = translated or seed
+        return self._intro_cache
 
     def _call_ollama(self, prompt: str, max_tokens: int = 200, on_chunk=None) -> str:
         """
@@ -638,12 +664,12 @@ class GenerativeGameEngine:
             max_messages=15  # Keep sliding window of last 15 turns
         )
 
-        # Add current action as user message. Repeat the language directive here
-        # too — weak models otherwise follow the (English) instructions embedded
-        # in engine-built prompts (consequences, NPC dialogue, endings).
+        # Add current action as user message with a SHORT language nudge (the
+        # full directive lives in the system prompt; repeating it here made
+        # weak models emit nested re-translations).
         message_history.append({
             "role": "user",
-            "content": prompt + self._lang_instruction()
+            "content": prompt + self._lang_reminder()
         })
 
         return self.llm.chat(
@@ -973,7 +999,7 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
             {
                 "role": "user",
                 "content": (f"Recent story:\n{narrative_context}\n\n=== PLAYER ACTION ===\n"
-                            f"{player_action}{self._lang_instruction()}")
+                            f"{player_action}{self._lang_reminder()}")
             }
         ]
 

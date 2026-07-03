@@ -441,8 +441,38 @@ def process_action_stream():
             q = _queue.Queue()
             holder = {}
 
+            # Suppress mechanic tags ([ROLL: ...], [SANITY_CHECK: ...]) from the
+            # live stream — otherwise the player watches raw tags appear and
+            # then vanish when the cleaned final text replaces the stream.
+            tag_buf = {"pending": ""}
+
             def on_chunk(text):
-                q.put(text)
+                data = tag_buf["pending"] + text
+                tag_buf["pending"] = ""
+                out = []
+                while data:
+                    if data.startswith("["):
+                        close = data.find("]")
+                        if close == -1:
+                            if len(data) > 120:   # unterminated — not a tag
+                                out.append(data)
+                                data = ""
+                            else:
+                                tag_buf["pending"] = data
+                                data = ""
+                        else:
+                            data = data[close + 1:]  # drop the whole [tag]
+                    else:
+                        nxt = data.find("[")
+                        if nxt == -1:
+                            out.append(data)
+                            data = ""
+                        else:
+                            out.append(data[:nxt])
+                            data = data[nxt:]
+                clean = "".join(out)
+                if clean:
+                    q.put(clean)
 
             def worker():
                 try:

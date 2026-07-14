@@ -392,6 +392,13 @@ def _finalize_turn(gs, result):
     if outcome["pending_roll"] and not gs.pending_roll:
         gs.pending_roll = outcome["pending_roll"]
 
+    # A reached ending archives the playthrough automatically.
+    if gs.engine.state.ending_reached:
+        try:
+            gs.engine.export_playtest("ending")
+        except Exception:
+            logger.warning("playtest export on ending failed", exc_info=True)
+
     _autosave(gs)
 
     return {
@@ -597,6 +604,12 @@ def flee_combat(gs):
 @synchronized
 def reset_game(gs):
     """Reset this session's game to start, releasing its resources."""
+    # Archive the run first — every playthrough is data to learn from.
+    if gs.engine and gs.engine.state:
+        try:
+            gs.engine.export_playtest("reset")
+        except Exception:
+            logger.warning("playtest export on reset failed", exc_info=True)
     _cleanup_session(gs)
     gs.engine = None
     gs.investigator = None

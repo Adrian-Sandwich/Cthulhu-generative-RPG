@@ -112,10 +112,22 @@ MENTAL_SKILLS = {
 # clearly attacks a present threat but the DM didn't formally start a fight.
 ATTACK_VERBS = {
     "attack", "fight", "hit", "punch", "kick", "shoot", "fire", "stab", "strike",
-    "kill", "slash", "swing", "shoot at", "gun down",
+    "kill", "slash", "swing", "shoot at", "gun down", "engage", "combat",
+    "charge at", "lunge at", "confront",
     "ataco", "atacar", "ataca", "disparo", "disparar", "dispara", "golpeo",
     "golpear", "golpea", "pelear", "peleo", "mato", "matar", "apuñalo",
-    "apuñalar", "embisto", "embestir", "le pego", "disparale",
+    "apuñalar", "embisto", "embestir", "le pego", "disparale", "combate",
+    "enfrento", "enfrentar", "me enfrento",
+}
+
+# Movement intent — location auto-detect only fires when the PLAYER tries to
+# move. Matching location keywords against the DM's prose alone teleported the
+# player whenever the DM merely mentioned a room ("the hidden chamber above").
+MOVEMENT_VERBS = {
+    "go", "enter", "climb", "descend", "head", "walk", "move", "step", "run to",
+    "approach", "leave", "exit", "sneak", "crawl", "follow", "return",
+    "entro", "entrar", "subo", "subir", "bajo", "bajar", "voy", "camino",
+    "me dirijo", "avanzo", "salgo", "salir", "regreso", "vuelvo", "sigo",
 }
 
 # Deliberate recovery: resting/praying steadies the mind. Costs the turn (the
@@ -1262,15 +1274,19 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
         # Update sanity system (reduce disorder durations, etc.)
         self.update_sanity_system()
 
-        # Auto-detect location changes from narrative (keywords from adventure config)
-        narrative_lower = clean_response.lower()
-        location_map = self.adventure_config.location_keywords
-        for keyword, new_location in location_map.items():
-            if keyword in narrative_lower and new_location != self.state.location:
-                self.state.location = new_location
-                if self.location_state:
-                    self.location_state.visit_location(new_location, self.state.turn)
-                break
+        # Auto-detect location changes — ONLY when the player expressed
+        # movement intent. Keying off the DM's prose alone teleported the
+        # player whenever a room was merely mentioned in narration.
+        pi_lower = player_input.lower()
+        if any(v in pi_lower for v in MOVEMENT_VERBS):
+            haystack = f"{pi_lower} {clean_response.lower()}"
+            location_map = self.adventure_config.location_keywords
+            for keyword, new_location in location_map.items():
+                if keyword in haystack and new_location != self.state.location:
+                    self.state.location = new_location
+                    if self.location_state:
+                        self.location_state.visit_location(new_location, self.state.turn)
+                    break
 
         # If a new roll is requested, clear the previous roll record
         # (DM has now responded to the consequences)
@@ -2124,6 +2140,62 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             pending_roll = self.prepare_skill_check(skill, difficulty)
 
         return {"events": events, "pending_roll": pending_roll}
+
+    def export_playtest(self, reason: str = "manual") -> Optional[str]:
+        """
+        Archive the full session to playtests/ for post-mortem analysis.
+
+        Captures the complete narrative plus metadata (actions, locations,
+        stats trajectory endpoints, NPCs, companions, resources, ending) so
+        past games can be studied to tune the DM and mechanics.
+
+        Args:
+            reason: why it was archived — "reset", "ending", or "manual".
+        """
+        if not self.state:
+            return None
+        from datetime import datetime
+        from pathlib import Path as _Path
+
+        out_dir = _Path("playtests")
+        out_dir.mkdir(exist_ok=True)
+        inv = self.state.investigator
+        data = {
+            "archived_at": datetime.now().isoformat(),
+            "reason": reason,
+            "session_id": self.session_id,
+            "adventure": self.adventure_name,
+            "language": self.language,
+            "model": self.model,
+            "turns": self.state.turn,
+            "game_phase": self.state.game_phase,
+            "ending": self.state.ending_reached,
+            "final_location": self.state.location,
+            "investigator": {
+                "name": inv.name,
+                "occupation": inv.occupation,
+                "HP": inv.characteristics.get("HP"),
+                "SAN": inv.characteristics.get("SAN"),
+                "inventory": inv.inventory,
+                "visited_locations": inv.visited_locations,
+                "sanity_breaks": inv.sanity_breaks,
+            },
+            "resources": self.resources_status(),
+            "npcs": self.get_npc_status(),
+            "companions": self.companions.to_dict() if self.companions else None,
+            "recent_actions": self.state.recent_actions,
+            "narrative": self.state.narrative,
+        }
+        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_sid = re.sub(r"[^A-Za-z0-9_-]", "", self.session_id)[:12] or "anon"
+        path = out_dir / f"{stamp}_{safe_sid}.json"
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+        except OSError:
+            logger.warning("playtest export failed", exc_info=True)
+            return None
+        return str(path)
 
     def resources_status(self) -> Dict:
         """Finite stakes for the HUD: rounds left and turns until doom."""

@@ -10,6 +10,7 @@ legacy/pixel_landscape/target/
 
 # Game saves and session data
 saves/
+playtests/
 
 # Flask session signing key (generated at runtime)
 .flask_secret

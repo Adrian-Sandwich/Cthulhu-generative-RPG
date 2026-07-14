@@ -114,8 +114,50 @@ function startMusic() {
     diss.connect(dissGain); dissGain.connect(filter);
 
     o1.start(); o2.start(); lfo.start(); diss.start();
-    music = { ctx, master, filter, o1, o2, lfo, diss, dissGain, pulseTimer: null };
+    music = { ctx, master, filter, o1, o2, lfo, diss, dissGain,
+              pulseTimer: null, swellTimer: null, boomTimer: null };
     updateMusic();
+    scheduleSwell();
+    scheduleBoom();
+}
+
+// Variety layer 1: every 25-70s a soft minor-scale tone swells in and out —
+// keeps the drone from turning into wallpaper.
+function scheduleSwell() {
+    if (!music) return;
+    music.swellTimer = setTimeout(() => {
+        if (!music) return;
+        const ctx = music.ctx;
+        const notes = [82.4, 98, 110, 130.8, 164.8];  // E2 G2 A2 C3 E3
+        const f = notes[Math.floor(Math.random() * notes.length)]
+                  * (1 + (Math.random() - 0.5) * 0.012);  // slight drift
+        const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+        const g = ctx.createGain(); g.gain.value = 0;
+        o.connect(g); g.connect(music.filter);
+        const t = ctx.currentTime;
+        g.gain.linearRampToValueAtTime(0.16, t + 4);
+        g.gain.linearRampToValueAtTime(0.0001, t + 11);
+        o.start(t); o.stop(t + 11.5);
+        scheduleSwell();
+    }, 25000 + Math.random() * 45000);
+}
+
+// Variety layer 2: rarely (60-180s), something enormous shifts far below —
+// a deep sub-bass pulse at the edge of hearing.
+function scheduleBoom() {
+    if (!music) return;
+    music.boomTimer = setTimeout(() => {
+        if (!music) return;
+        const ctx = music.ctx;
+        const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = 36;
+        const g = ctx.createGain();
+        o.connect(g); g.connect(music.master);
+        const t = ctx.currentTime;
+        g.gain.setValueAtTime(0.12, t);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 2.5);
+        o.start(t); o.stop(t + 2.6);
+        scheduleBoom();
+    }, 60000 + Math.random() * 120000);
 }
 
 function stopMusic() {
@@ -125,6 +167,8 @@ function stopMusic() {
     try {
         m.master.gain.linearRampToValueAtTime(0.0001, m.ctx.currentTime + 1);
         if (m.pulseTimer) clearInterval(m.pulseTimer);
+        if (m.swellTimer) clearTimeout(m.swellTimer);
+        if (m.boomTimer) clearTimeout(m.boomTimer);
         setTimeout(() => {
             try { [m.o1, m.o2, m.lfo, m.diss].forEach(o => o.stop()); } catch (e) {}
         }, 1200);

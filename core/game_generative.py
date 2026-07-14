@@ -120,6 +120,16 @@ ATTACK_VERBS = {
     "enfrento", "enfrentar", "me enfrento",
 }
 
+# Ambush: the DM narrates something physically seizing/attacking the PLAYER.
+# Combat should start even though the player never declared an attack.
+AMBUSH_CUES = {
+    "grabs you", "grabs your", "grasps your", "grasps you", "seizes you",
+    "lunges at you", "attacks you", "strikes at you", "charges at you",
+    "wraps around you", "pounces on you", "drags you", "claws at you",
+    "te agarra", "te ataca", "se abalanza sobre ti", "te embiste",
+    "te arrastra", "te sujeta",
+}
+
 # Movement intent — location auto-detect only fires when the PLAYER tries to
 # move. Matching location keywords against the DM's prose alone teleported the
 # player whenever the DM merely mentioned a room ("the hidden chamber above").
@@ -1230,6 +1240,10 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
             scene = f"{player_input} {clean_response}".lower()
             if (any(v in pi for v in ATTACK_VERBS)
                     and any(w in scene for w in SANITY_TRIGGERS)):
+                combat_start.append(self._infer_enemy(scene))
+            # Ambush: the DM narrated something seizing/attacking the player —
+            # the fight starts whether they wanted it or not.
+            elif any(cue in clean_response.lower() for cue in AMBUSH_CUES):
                 combat_start.append(self._infer_enemy(scene))
 
         # Phase 2e Fix C: Synthesize roll if LLM omitted one for a physical action

@@ -65,6 +65,11 @@ _LEAK_PATTERNS = [
     re.compile(r'\b(?:HP|Damage|Special Abilities|Skill):\s*[^\n]*', re.IGNORECASE),
     # bare instruction to roll left in prose: "Roll to dodge its attack!"
     re.compile(r'\bRoll to\s+\w+[^.!\n]*[.!]?', re.IGNORECASE),
+    # section-header labels the model invents (English + Spanish):
+    # "Respuesta:", "Nota:", "Descripción adicional:", "NARRATIVE", "Response:"
+    re.compile(r'^\s*(?:Respuesta|Nota|Descripci[oó]n(?:\s+adicional)?|Response|'
+               r'Narrative|NARRATIVE|Outcome|Resultado)\s*[:—-]?\s*',
+               re.IGNORECASE | re.MULTILINE),
 ]
 
 # Sentence terminators used to trim a response that overran the token budget

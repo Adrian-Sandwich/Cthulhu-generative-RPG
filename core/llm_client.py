@@ -62,6 +62,9 @@ class OllamaClient:
             "stream": True,
             "temperature": temperature,
             "num_predict": max_tokens,
+            # Keep the model loaded between turns — reloading it is the single
+            # biggest latency spike on local Ollama.
+            "keep_alive": "30m",
         }
         if system_prompt:
             payload["system"] = system_prompt
@@ -128,6 +131,7 @@ class OllamaClient:
                         "messages": messages,
                         "tools": tools,
                         "stream": False,
+                        "keep_alive": "30m",
                         "options": {
                             "temperature": temperature,
                             "num_predict": max_tokens,

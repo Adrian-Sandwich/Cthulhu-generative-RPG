@@ -414,6 +414,11 @@ class GenerativeGameEngine:
         self.state: Optional[GameState] = None
         self.rules = CoC7eRulesEngine()
 
+        # Tool-calling is OFF by default: it is non-streaming, so the player
+        # stares at nothing for the whole generation. The tag path streams from
+        # the first token and the engine synthesizes any missing mechanics.
+        self.use_tools = os.environ.get("DM_USE_TOOLS", "0") == "1"
+
         # Load adventure content from data (story seed, locations, NPCs,
         # factions, relationships, keywords) instead of engine constants.
         from .adventure_config import AdventureConfig
@@ -626,10 +631,17 @@ class GenerativeGameEngine:
             f"(Respond only in {self._LANG_NAMES.get(self.language, self.language)}.)")
 
     def localized_intro(self) -> str:
-        """The opening story seed, translated to the narration language (cached)."""
+        """The opening story seed in the narration language.
+
+        Prefers a pre-authored translation from the adventure config (instant,
+        deterministic); falls back to a cached one-off LLM translation.
+        """
         seed = self.STORY_SEED.strip()
         if self.language == "en":
             return seed
+        static = self.adventure_config.story_seed_i18n.get(self.language)
+        if static:
+            return static.strip()
         if getattr(self, "_intro_cache", None):
             return self._intro_cache
         name = self._LANG_NAMES.get(self.language, self.language)
@@ -645,7 +657,7 @@ class GenerativeGameEngine:
         self._intro_cache = translated or seed
         return self._intro_cache
 
-    def _call_ollama(self, prompt: str, max_tokens: int = 200, on_chunk=None) -> str:
+    def _call_ollama(self, prompt: str, max_tokens: int = 150, on_chunk=None) -> str:
         """
         Call Ollama with adventure context and conversation history.
         Delegates transport, retries and fallbacks to OllamaClient.
@@ -970,7 +982,8 @@ Recent narrative:
 {player_action}
 
 Respond with the IMMEDIATE narrative outcome of this action. Stay in location.
-Write 2-4 complete sentences and always finish your final sentence.
+Write 2-3 SHORT sentences and always finish your final sentence.
+NO headers, NO notes, NO lists, NO "Respuesta:"/"Nota:" labels — just prose.
 Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
 """
         return prompt
@@ -1089,7 +1102,7 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
         npc_dialogue = []
         clean_response = ""
 
-        if self.model in TOOL_CAPABLE_MODELS:
+        if self.use_tools and self.model in TOOL_CAPABLE_MODELS:
             # Build narrative context for tool calling
             if self.memory and self.memory.enabled:
                 semantic_hits = self.memory.query_relevant_facts(player_input, n=5)
@@ -1813,7 +1826,7 @@ Make the failure matter and hard to undo. Do NOT contradict the mechanical outco
 NO NEW ROLLS. NO TAGS. Just the outcome."""
 
         # Get DM response for the consequence
-        consequence_response = self._call_ollama(consequence_prompt, max_tokens=200, on_chunk=on_chunk)
+        consequence_response = self._call_ollama(consequence_prompt, max_tokens=120, on_chunk=on_chunk)
 
         # Parse tags only to strip them; the engine already owns any damage so
         # we must NOT re-apply LLM-emitted HP/SAN here (would double-count).

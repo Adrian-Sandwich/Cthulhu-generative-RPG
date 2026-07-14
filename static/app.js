@@ -158,6 +158,13 @@ async function startGame(event) {
     const archetype = document.getElementById('investigator-archetype').value;
     const language = document.getElementById('game-language').value;
 
+    // Guard against double-submit: repeated BEGIN clicks each restarted the
+    // game server-side (and re-translated the intro) while the first loaded.
+    const startBtn = document.querySelector('.start-btn');
+    if (startBtn.disabled) return;
+    startBtn.disabled = true;
+    startBtn.textContent = '...';
+
     try {
         const response = await fetch('/api/game/start', {
             method: 'POST',
@@ -203,6 +210,9 @@ async function startGame(event) {
         }
     } catch (error) {
         setStatus('Connection error: ' + error.message, true);
+    } finally {
+        startBtn.disabled = false;
+        startBtn.textContent = 'BEGIN';
     }
 }
 

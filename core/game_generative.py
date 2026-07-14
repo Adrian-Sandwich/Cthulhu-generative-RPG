@@ -736,6 +736,32 @@ class GenerativeGameEngine:
             return f"{context}\n"
         return ""
 
+    def _retry_if_repetitive(self, dm_prompt: str, dm_response: str) -> str:
+        """
+        Echo-trap guard: weak models often copy their own previous reply almost
+        verbatim (same handle, same lantern click, twice). If the new response
+        is >55% similar to the last DM beat, regenerate once demanding
+        something new. The retry is silent (not streamed); on the web the final
+        text replaces the stream, on the terminal the stored narrative wins.
+        """
+        from difflib import SequenceMatcher
+
+        last_dm = next((line[4:] for line in reversed(self.state.narrative)
+                        if line.startswith("DM: ")), "")
+        if not last_dm or len(dm_response) < 40:
+            return dm_response
+        ratio = SequenceMatcher(None, dm_response.lower(), last_dm.lower()).ratio()
+        if ratio < 0.55:
+            return dm_response
+
+        logger.info("repetitive DM reply (%.0f%% match); retrying once", ratio * 100)
+        retry = self._call_ollama(
+            dm_prompt + "\n\nIMPORTANT: Your previous reply repeated the last scene "
+            "almost verbatim. Write something NEW — advance the scene, reveal a "
+            "change, or escalate the threat. Do not reuse prior sentences.",
+            max_tokens=150)
+        return retry or dm_response
+
     def _build_dm_system_prompt(self) -> str:
         """
         Build system prompt for DM role with Call of Cthulhu 7e rules.
@@ -1166,6 +1192,7 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
                 # Tool calling failed or returned empty - fall back to tag-based system
                 dm_prompt = self._build_dm_prompt(player_input)
                 dm_response = self._call_ollama(dm_prompt, on_chunk=on_chunk)
+                dm_response = self._retry_if_repetitive(dm_prompt, dm_response)
 
                 parsed = parse_dm_response(dm_response)
                 rolls_requested = parsed["rolls_requested"]
@@ -1179,6 +1206,7 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
             # Model doesn't support tool calling - use tag-based system
             dm_prompt = self._build_dm_prompt(player_input)
             dm_response = self._call_ollama(dm_prompt, on_chunk=on_chunk)
+            dm_response = self._retry_if_repetitive(dm_prompt, dm_response)
 
             parsed = parse_dm_response(dm_response)
             rolls_requested = parsed["rolls_requested"]

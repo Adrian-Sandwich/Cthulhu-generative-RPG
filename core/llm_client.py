@@ -60,11 +60,19 @@ class OllamaClient:
             "model": self.model,
             "messages": messages,
             "stream": True,
-            "temperature": temperature,
-            "num_predict": max_tokens,
             # Keep the model loaded between turns — reloading it is the single
             # biggest latency spike on local Ollama.
             "keep_alive": "30m",
+            # NOTE: sampling params MUST be nested under "options" — at the top
+            # level Ollama silently ignores them (tokens ran unbounded before).
+            "options": {
+                "temperature": temperature,
+                "num_predict": max_tokens,
+                # Fight the echo trap: penalize reusing recent tokens, with a
+                # window long enough to cover the previous DM reply in history.
+                "repeat_penalty": 1.18,
+                "repeat_last_n": 256,
+            },
         }
         if system_prompt:
             payload["system"] = system_prompt

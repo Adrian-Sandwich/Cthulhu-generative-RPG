@@ -5,6 +5,9 @@
 cd "$(dirname "$0")" || exit 1
 
 PORT="${PORT:-5001}"
+# LAN=1 abre el juego a tu red local (amigos entran con http://TU-IP:PUERTO)
+HOST="${HOST:-127.0.0.1}"
+if [ "${LAN:-0}" = "1" ]; then HOST="0.0.0.0"; fi
 URL="http://127.0.0.1:${PORT}"
 
 echo "═══════════════════════════════════════════"
@@ -26,7 +29,11 @@ sleep 1
 
 # 3. Launch the game server
 echo "✓ Lanzando el juego en ${URL}"
-FLASK_DEBUG=0 PORT="${PORT}" LOG_LEVEL=WARNING python3 app.py &
+if [ "${HOST}" = "0.0.0.0" ]; then
+    LAN_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null)
+    [ -n "${LAN_IP}" ] && echo "✓ Abierto a tu LAN: otros pueden jugar en http://${LAN_IP}:${PORT}"
+fi
+FLASK_DEBUG=0 HOST="${HOST}" PORT="${PORT}" LOG_LEVEL=WARNING python3 app.py &
 SERVER_PID=$!
 
 # 4. Wait until it answers, then open the browser

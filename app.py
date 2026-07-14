@@ -632,4 +632,8 @@ if __name__ == '__main__':
     logging.basicConfig(level=os.environ.get('LOG_LEVEL', 'INFO'))
     debug = os.environ.get('FLASK_DEBUG', '0') == '1'
     port = int(os.environ.get('PORT', '5000'))
-    app.run(debug=debug, port=port)
+    # Default: loopback only (no one else can reach the game). Set HOST=0.0.0.0
+    # to open it to the LAN — anyone on your network can then play at
+    # http://<your-lan-ip>:<port>. Sessions are already isolated per browser.
+    host = os.environ.get('HOST', '127.0.0.1')
+    app.run(debug=debug, host=host, port=port)

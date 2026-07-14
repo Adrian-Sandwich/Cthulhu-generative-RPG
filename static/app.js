@@ -69,7 +69,90 @@ function toggleSound() {
     soundOn = !soundOn;
     const el = document.getElementById('sound-toggle');
     if (el) el.textContent = soundOn ? '[sound on]' : '[sound off]';
-    if (!soundOn) stopHeartbeat();
+    if (!soundOn) { stopHeartbeat(); stopMusic(); }
+    else if (gameStarted) startMusic();
+}
+
+// ---- Adaptive ambient music (synthesized drone, no asset files) ----
+// A low Lovecraftian drone that reacts to the game: dissonance swells as
+// sanity fails, a pulse enters during combat, and everything sharpens when
+// the doom clock nears zero.
+let music = null;
+const musicState = { corruption: 0, inCombat: false, timeRemaining: -1 };
+
+function startMusic() {
+    if (music || !soundOn) return;
+    const ctx = getAudio();
+    if (!ctx) return;
+
+    const master = ctx.createGain();
+    master.gain.value = 0;
+    master.connect(ctx.destination);
+    master.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 4); // slow fade-in
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 220;
+    filter.connect(master);
+
+    // Two detuned low saws = the sea's drone
+    const o1 = ctx.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = 55;
+    const o2 = ctx.createOscillator(); o2.type = 'sawtooth'; o2.frequency.value = 55.7;
+    const g1 = ctx.createGain(); g1.gain.value = 0.5;
+    const g2 = ctx.createGain(); g2.gain.value = 0.4;
+    o1.connect(g1); g1.connect(filter);
+    o2.connect(g2); g2.connect(filter);
+
+    // Very slow LFO sweeping the filter — the swell of the tide
+    const lfo = ctx.createOscillator(); lfo.frequency.value = 0.05;
+    const lfoGain = ctx.createGain(); lfoGain.gain.value = 80;
+    lfo.connect(lfoGain); lfoGain.connect(filter.frequency);
+
+    // Dissonant tritone layer — silent while sane, rises with corruption
+    const diss = ctx.createOscillator(); diss.type = 'triangle'; diss.frequency.value = 77.8;
+    const dissGain = ctx.createGain(); dissGain.gain.value = 0;
+    diss.connect(dissGain); dissGain.connect(filter);
+
+    o1.start(); o2.start(); lfo.start(); diss.start();
+    music = { ctx, master, filter, o1, o2, lfo, diss, dissGain, pulseTimer: null };
+    updateMusic();
+}
+
+function stopMusic() {
+    if (!music) return;
+    const m = music;
+    music = null;
+    try {
+        m.master.gain.linearRampToValueAtTime(0.0001, m.ctx.currentTime + 1);
+        if (m.pulseTimer) clearInterval(m.pulseTimer);
+        setTimeout(() => {
+            try { [m.o1, m.o2, m.lfo, m.diss].forEach(o => o.stop()); } catch (e) {}
+        }, 1200);
+    } catch (e) { /* context already gone */ }
+}
+
+function updateMusic() {
+    if (!music) return;
+    const t = music.ctx.currentTime;
+    // Madness: the tritone rises out of the drone
+    const dissLevels = [0, 0.12, 0.25, 0.4];
+    music.dissGain.gain.linearRampToValueAtTime(
+        dissLevels[Math.min(musicState.corruption, 3)], t + 2);
+    // Doom near: everything a half-step sharper, tide moves faster
+    const doom = musicState.timeRemaining >= 0 && musicState.timeRemaining <= 3;
+    const base = doom ? 58.27 : 55;
+    music.o1.frequency.linearRampToValueAtTime(base, t + 2);
+    music.o2.frequency.linearRampToValueAtTime(base + 0.7, t + 2);
+    music.lfo.frequency.linearRampToValueAtTime(doom ? 0.15 : 0.05, t + 2);
+    // Combat: a low pulse under everything
+    if (musicState.inCombat && !music.pulseTimer) {
+        music.pulseTimer = setInterval(() => {
+            if (soundOn && music) blip(110, 0.09, 'square', 0.04);
+        }, 480);
+    } else if (!musicState.inCombat && music.pulseTimer) {
+        clearInterval(music.pulseTimer);
+        music.pulseTimer = null;
+    }
 }
 
 // Load archetype stat blocks and show the initial preview
@@ -205,6 +288,7 @@ async function startGame(event) {
             refreshGameState();
             setStatus('');
             document.getElementById('action-input').focus();
+            startMusic();  // BEGIN click is the user gesture AudioContext needs
         } else {
             setStatus('Error: ' + (data.error || 'unknown'), true);
         }
@@ -233,6 +317,8 @@ function updateStats(stats) {
 // Show the current enemy and its HP while fighting.
 function renderCombat(combat) {
     const bar = document.getElementById('combat-bar');
+    musicState.inCombat = !!combat;
+    updateMusic();
     if (!combat) { bar.classList.add('hidden'); return; }
     document.getElementById('combat-name').textContent = combat.name;
     document.getElementById('combat-hp').textContent = `HP ${combat.hp}`;
@@ -259,6 +345,8 @@ function renderResources(res) {
         timeVal.classList.toggle('depleted', res.time_remaining <= 3);
         timeStat.classList.remove('hidden');
     }
+    musicState.timeRemaining = (res.time_remaining !== undefined) ? res.time_remaining : -1;
+    updateMusic();
 }
 
 // Render the dossier of NPCs the player has met, with how they regard you.
@@ -290,6 +378,8 @@ function applySanityFx(level) {
     screen.classList.remove('san-fx-1', 'san-fx-2', 'san-fx-3');
     if (level >= 1) screen.classList.add('san-fx-' + Math.min(level, 3));
     startHeartbeat(level);  // pulse loop kicks in at level 2+
+    musicState.corruption = level;
+    updateMusic();
 }
 
 function escapeHtml(s) {
@@ -695,6 +785,8 @@ function resetGame() {
     pendingRoll = null;
     clearTimeout(imagePollTimer);
     stopHeartbeat();
+    stopMusic();
+    musicState.corruption = 0; musicState.inCombat = false; musicState.timeRemaining = -1;
     document.getElementById('game-screen').classList.remove('san-fx-1', 'san-fx-2', 'san-fx-3');
     document.getElementById('combat-bar').classList.add('hidden');
     document.getElementById('dice-area').classList.add('hidden');

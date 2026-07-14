@@ -129,6 +129,17 @@ REST_KEYWORDS = {
 REST_COOLDOWN_TURNS = 3
 REST_RECOVERY = (1, 2)  # random range of SAN recovered per rest
 
+# STRICT cues for a major horror reveal in the DM's OWN prose (a demon
+# unleashed, an entity manifesting). Deliberately narrow — unlike
+# SANITY_TRIGGERS (keyed off the player's words), matching the DM's prose too
+# loosely would bleed SAN on mere atmosphere. Big reveals must cost sanity.
+ESCALATION_CUES = {
+    "unleashed", "has awakened", "awakens", "demon", "manifests before",
+    "rises from the deep", "sea monster", "it has claimed", "will not rest",
+    "demonio", "liberado", "ha despertado", "se manifiesta", "monstruo marino",
+    "no descansará",
+}
+
 # Witnessing the unnatural costs Sanity. If the DM narrates horror but forgets
 # the mechanic, the engine forces a Sanity check on these cues.
 SANITY_TRIGGERS = {
@@ -981,8 +992,10 @@ Recent narrative:
 === PLAYER ACTION THIS TURN ===
 {player_action}
 
-Respond with the IMMEDIATE narrative outcome of this action. Stay in location.
-Write 2-3 SHORT sentences and always finish your final sentence.
+Respond DIRECTLY to THIS action — do NOT continue your previous scene as if
+the player had said nothing. If the action is impossible or absurd, narrate
+the attempt itself failing in-world (the gesture, the silence after it).
+Stay in location. Write 2-3 SHORT sentences and always finish your final sentence.
 NO headers, NO notes, NO lists, NO "Respuesta:"/"Nota:" labels — just prose.
 Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
 """
@@ -1195,6 +1208,12 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
         # prose) so atmospheric narration doesn't bleed SAN every turn.
         if not sanity_checks and any(w in player_input.lower() for w in SANITY_TRIGGERS):
             sanity_checks.append(str(random.randint(2, 5)))
+
+        # Escalation enforcement: if the DM's own prose delivers a MAJOR horror
+        # reveal (strict cues only) without charging for it, the engine bills
+        # the sanity cost — epic reveals can't be free.
+        if not sanity_checks and any(cue in clean_response.lower() for cue in ESCALATION_CUES):
+            sanity_checks.append(str(random.randint(3, 6)))
 
         # Deliberate recovery: resting/praying steadies the mind. Resting is a
         # deliberately SAFE action — it overrides any roll the DM requested for

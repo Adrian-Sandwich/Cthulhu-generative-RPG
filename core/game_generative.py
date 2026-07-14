@@ -1628,13 +1628,19 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
         }
 
     def _infer_enemy(self, text: str) -> str:
-        """Best-guess enemy key from scene text (for synthesized combat)."""
+        """Best-guess enemy key from scene text (for synthesized combat).
+
+        Cues must be SPECIFIC: "lurking in the shadows" is everyday horror
+        phrasing and must not summon the deadliest enemy in the roster —
+        only an explicitly shadow-natured creature does.
+        """
         t = text.lower()
-        if any(w in t for w in ("deep one", "fish", "amphib", "scaled", "gill")):
+        if any(w in t for w in ("deep one", "fish", "amphib", "scaled", "gill", "seaweed")):
             return "deep_one_hybrid"
-        if any(w in t for w in ("corpse", "dead", "cadaver", "cadáver", "rotting", "zombie")):
+        if any(w in t for w in ("corpse", "dead body", "cadaver", "cadáver", "rotting", "zombie")):
             return "animated_corpse"
-        if any(w in t for w in ("shadow", "sombra", "darkness given", "shade")):
+        if any(w in t for w in ("shadow entity", "shadow thing", "living shadow",
+                                "made of shadow", "sombra viviente", "criatura de sombra")):
             return "shadow_thing"
         return "deep_one_hybrid"
 
@@ -1671,25 +1677,36 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
         pending["combat"] = True
         return pending
 
-    def resolve_combat_round(self, player_roll_success: bool) -> Dict:
-        """Resolve one round of combat: player attack, then enemy counter."""
+    def resolve_combat_round(self, player_roll_success: bool,
+                             critical: Optional[str] = None) -> Dict:
+        """Resolve one round of combat: player attack, then enemy counter.
+
+        Crits matter: a CRITICAL SUCCESS (d100 <= 5) deals double damage and
+        the staggered enemy loses its counter-attack; a CRITICAL FAILURE
+        (>= 96) leaves an opening — the enemy's counter hits automatically.
+        """
         if not self.state.active_combat:
             return {"error": "Not in combat"}
 
         enemy = self.state.active_combat
-        result = {"player_hit": False, "enemy_hit": False}
+        result = {"player_hit": False, "enemy_hit": False, "critical": critical}
         lines = []
+        crit_success = critical == "CRITICAL SUCCESS"
+        crit_failure = critical == "CRITICAL FAILURE"
 
         # Firearms consume a round when used as the attack.
         # (Ammo already spent in execute_skill_check before we get here.)
 
         # Player attacks
         if player_roll_success:
-            damage = random.randint(2, 6)
+            damage = random.randint(2, 6) * (2 if crit_success else 1)
             enemy["hp"] -= damage
             result["player_hit"] = True
             result["player_damage"] = damage
-            lines.append(f"You strike — {enemy['name']} takes {damage} damage.")
+            if crit_success:
+                lines.append(f"CRITICAL! A devastating blow — {enemy['name']} takes {damage} damage.")
+            else:
+                lines.append(f"You strike — {enemy['name']} takes {damage} damage.")
 
             if enemy["hp"] <= 0:
                 self.state.active_combat = None
@@ -1700,24 +1717,29 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
                     "enemy_hp": 0, "narrative": " ".join(lines),
                 }
         else:
-            lines.append("Your attack goes wide.")
+            lines.append("Your attack goes wide." if not crit_failure
+                         else "FUMBLE! You stumble, wide open.")
 
-        # Enemy counter-attacks
-        enemy_roll = self.rules.roll_d100()
-        if enemy_roll <= enemy["skill"]:
-            damage = random.randint(1, enemy.get("damage", 4))
-            hp_res = self.apply_hp_damage(damage)
-            result["enemy_hit"] = True
-            result["enemy_damage"] = damage
-            lines.append(f"{enemy['name']} strikes back — you take {damage} damage.")
-            if hp_res.get("state") == "DEAD":
-                self.state.active_combat = None
-                return {
-                    **result, "combat_over": True, "player_dead": True,
-                    "enemy_hp": enemy["hp"], "narrative": " ".join(lines),
-                }
+        # Enemy counter-attacks — skipped when staggered by a critical hit;
+        # automatic when the player fumbled.
+        if crit_success:
+            lines.append(f"{enemy['name']} reels, too staggered to strike back.")
         else:
-            lines.append(f"{enemy['name']} lunges, but misses.")
+            enemy_roll = 0 if crit_failure else self.rules.roll_d100()
+            if enemy_roll <= enemy["skill"]:
+                damage = random.randint(1, enemy.get("damage", 4))
+                hp_res = self.apply_hp_damage(damage)
+                result["enemy_hit"] = True
+                result["enemy_damage"] = damage
+                lines.append(f"{enemy['name']} strikes back — you take {damage} damage.")
+                if hp_res.get("state") == "DEAD":
+                    self.state.active_combat = None
+                    return {
+                        **result, "combat_over": True, "player_dead": True,
+                        "enemy_hp": enemy["hp"], "narrative": " ".join(lines),
+                    }
+            else:
+                lines.append(f"{enemy['name']} lunges, but misses.")
 
         result["combat_over"] = False
         result["enemy_hp"] = enemy["hp"]

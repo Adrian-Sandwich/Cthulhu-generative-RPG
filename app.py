@@ -537,7 +537,8 @@ def execute_roll(gs):
         consequence = None
         if roll.get("combat"):
             # Combat round: resolve mechanically (your attack + enemy counter).
-            combat_res = gs.engine.resolve_combat_round(result["success"])
+            combat_res = gs.engine.resolve_combat_round(
+                result["success"], critical=result.get("critical"))
             narrative = combat_res.get("narrative", "")
             if not combat_res.get("combat_over") and gs.engine.state.active_combat:
                 # Fight continues — queue the next attack throw.

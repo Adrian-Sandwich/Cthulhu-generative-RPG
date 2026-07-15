@@ -26,6 +26,7 @@ _TAG_PATTERNS = {
     "COMBAT_START": r'\[COMBAT_START: (\w+)\]',
     "NPC_DIALOGUE": r'\[NPC_DIALOGUE: (\w+)\]',
     "AMMO_FOUND": r'\[AMMO_FOUND: (\d+)\]',
+    "LOCATION": r'\[LOCATION: ([^\]]+)\]',
 }
 
 
@@ -69,6 +70,10 @@ _LEAK_PATTERNS = [
     # "Respuesta:", "Nota:", "Descripción adicional:", "NARRATIVE", "Response:"
     re.compile(r'^\s*(?:Respuesta|Nota|Descripci[oó]n(?:\s+adicional)?|Response|'
                r'Narrative|NARRATIVE|Outcome|Resultado)\s*[:—-]?\s*',
+               re.IGNORECASE | re.MULTILINE),
+    # meta-preambles echoing the instruction: "Respondiendo a tu acción, ..."
+    # / "Responding to the player's action: ..."
+    re.compile(r'^\s*(?:Respondiendo a[^,:.]*[,:.]?|Responding to[^,:.]*[,:.]?)\s*',
                re.IGNORECASE | re.MULTILINE),
 ]
 
@@ -153,6 +158,7 @@ def parse_dm_response(dm_response: str) -> Dict:
         "combat_start": re.findall(_TAG_PATTERNS["COMBAT_START"], dm_response),
         "npc_dialogue": re.findall(_TAG_PATTERNS["NPC_DIALOGUE"], dm_response),
         "ammo_found": [int(v) for v in re.findall(_TAG_PATTERNS["AMMO_FOUND"], dm_response)],
+        "location_moves": [v.strip() for v in re.findall(_TAG_PATTERNS["LOCATION"], dm_response)],
         "clean_response": trim_to_last_sentence(
             strip_leaks(strip_markdown(strip_tags(dm_response)))
         ).strip(),

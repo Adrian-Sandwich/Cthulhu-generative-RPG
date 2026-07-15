@@ -81,7 +81,26 @@ roll resolution. → Addressed same day with suggested-action chips
 5. Camino claro al arma/revólver (AMMO no debe ser decorativo)
 6. Re-habilitar selector de idioma
 
+## Feedback de Pao (2026-07-15)
+
+> "los lugares no eran correctos" · "no respetaba los lugares de la isla a
+> los que quería cambiar, te deja en el mismo lugar o te mandaba a otro" ·
+> "a veces te ponía 'respondiendo a...'" · "hay palabras que siguen en
+> inglés cuando cambias de idioma"
+
+Diagnóstico y estado:
+1-2. **Locations rotas en español**: `location_keywords` era inglés-only
+   ("stairs", "basement") — "voy hacia las escaleras" jamás matcheaba →
+   te quedabas o saltabas mal. **Arreglado de raíz**: nuevo tag
+   `[LOCATION: <nombre>]` que el DM emite al moverte, **validado contra el
+   registro de la aventura** — independiente de idioma, y además rechaza
+   lugares inventados (bonus de contención: "Biblioteca del Pueblo" ya no
+   existe aunque el DM lo narre). Keywords quedan como fallback.
+3. **"Respondiendo a..."**: preámbulo-meta del modelo. **Arreglado**:
+   patrón de limpieza EN+ES lo elimina de la salida.
+4. **Palabras en inglés mezcladas**: limitación de mistral en ES. Queda en
+   el backlog de re-habilitar español (mejor modelo o directiva más dura).
+
 ## Pendiente de feedback
 
-- Comentarios de Pao (en espera).
-- Más sesiones de los demás testers.
+- Más sesiones / comentarios de los demás testers.

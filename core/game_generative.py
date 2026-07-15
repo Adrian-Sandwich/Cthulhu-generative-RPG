@@ -1316,11 +1316,27 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
         # Update sanity system (reduce disorder durations, etc.)
         self.update_sanity_system()
 
-        # Auto-detect location changes — ONLY when the player expressed
-        # movement intent. Keying off the DM's prose alone teleported the
-        # player whenever a room was merely mentioned in narration.
+        # Explicit scene change: the DM emitted [LOCATION: name]. Validated
+        # against the adventure's registered locations — language-independent
+        # (fixes Spanish players never matching English keywords) and rejects
+        # invented off-map places (containment).
+        moved_by_tag = False
+        for wanted in parsed.get("location_moves", []):
+            resolved = self._resolve_location(wanted)
+            if resolved and resolved != self.state.location:
+                self.state.location = resolved
+                if self.location_state:
+                    self.location_state.visit_location(resolved, self.state.turn)
+                moved_by_tag = True
+                break
+            elif not resolved:
+                logger.info("DM tagged unknown location %r — ignored", wanted)
+
+        # Keyword fallback — ONLY when the player expressed movement intent.
+        # Keying off the DM's prose alone teleported the player whenever a
+        # room was merely mentioned in narration.
         pi_lower = player_input.lower()
-        if any(v in pi_lower for v in MOVEMENT_VERBS):
+        if not moved_by_tag and any(v in pi_lower for v in MOVEMENT_VERBS):
             haystack = f"{pi_lower} {clean_response.lower()}"
             location_map = self.adventure_config.location_keywords
             for keyword, new_location in location_map.items():
@@ -1626,6 +1642,24 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
             "enemy": enemy["name"],
             "message": f"Combat started: {enemy['name']} (HP: {enemy['hp']})"
         }
+
+    def _resolve_location(self, wanted: str) -> Optional[str]:
+        """Match a DM-tagged location against the adventure's registry.
+
+        Accepts key or display name, case-insensitive; substring match as a
+        fallback ("Basement" ⊂ "the Basement"). Returns the canonical display
+        name, or None if it isn't a real place in this adventure.
+        """
+        w = wanted.strip().lower()
+        if not w:
+            return None
+        for loc in self.adventure_config.locations:
+            if w in (loc["key"].lower(), loc["name"].lower()):
+                return loc["name"]
+        for loc in self.adventure_config.locations:
+            if w in loc["name"].lower() or loc["name"].lower() in w:
+                return loc["name"]
+        return None
 
     def _infer_enemy(self, text: str) -> str:
         """Best-guess enemy key from scene text (for synthesized combat).

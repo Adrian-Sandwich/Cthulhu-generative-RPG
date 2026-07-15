@@ -170,7 +170,11 @@ ACTION RESOLUTION:
 - NEVER write "IF ROLL FAILS / IF ROLL SUCCEEDS", never pre-narrate both
   branches, never state the die result yourself.
 - NEVER print enemy stat blocks (HP/Damage/Abilities) in the prose — that is
-  the engine's job. Just describe the threat."""
+  the engine's job. Just describe the threat.
+- MOVEMENT: when the player moves to a different area, include
+  [LOCATION: <name>] using one of THIS adventure's locations (exact name).
+  The adventure's locations are the ONLY places that exist — do not invent
+  towns, libraries, or buildings beyond them."""
 
     @staticmethod
     def build_system_prompt(location: str, game_phase: str,

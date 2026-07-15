@@ -499,6 +499,7 @@ async function startGame(event) {
             setStatus('');
             document.getElementById('action-input').focus();
             startMusic();  // BEGIN click is the user gesture AudioContext needs
+            renderSuggestions('explore');
         } else {
             setStatus('Error: ' + (data.error || 'unknown'), true);
         }
@@ -601,6 +602,46 @@ function escapeHtml(s) {
     return d.innerHTML;
 }
 
+// ---- Suggested actions: guidance chips so players always know a next move.
+// Playtest feedback: total freedom paralyzes ("no le hayo"), and after a roll
+// players didn't know how to continue. Rule-based (no LLM latency); clicking
+// a chip submits it as the action — typing anything remains king.
+const SUGGESTION_POOLS = {
+    explore: [
+        'Look around carefully', 'Examine that more closely', 'Search for anything useful',
+        'Listen for sounds', 'Move deeper inside', 'Check the logs and papers',
+        'Look for a weapon', 'Head toward the stairs',
+    ],
+    shaken: ['Take a breath and steady yourself', 'Pray quietly for a moment'],
+    afterRoll: ['Press on', 'Search the area', 'Back away slowly'],
+};
+
+function renderSuggestions(kind) {
+    const box = document.getElementById('suggestions');
+    if (pendingRoll) { box.classList.add('hidden'); return; }  // dice first
+    const picks = [];
+    const pool = [...SUGGESTION_POOLS[kind === 'afterRoll' ? 'afterRoll' : 'explore']];
+    while (picks.length < 3 && pool.length) {
+        picks.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+    }
+    if (musicState.san < 50) picks[picks.length - 1] =
+        SUGGESTION_POOLS.shaken[Math.floor(Math.random() * SUGGESTION_POOLS.shaken.length)];
+    box.innerHTML = picks.map(p =>
+        `<span class="suggestion-chip" onclick="useSuggestion(this)">${escapeHtml(p)}</span>`).join('');
+    box.classList.remove('hidden');
+}
+
+function useSuggestion(el) {
+    const input = document.getElementById('action-input');
+    if (input.disabled) return;
+    input.value = el.textContent;
+    document.getElementById('action-form').requestSubmit();
+}
+
+function hideSuggestions() {
+    document.getElementById('suggestions').classList.add('hidden');
+}
+
 // Refresh game state from server (location, scene image).
 // Image generation runs server-side in the background; poll until ready.
 async function refreshGameState() {
@@ -688,6 +729,7 @@ function finishTurnUI(done, action, dmEl) {
     document.getElementById('turn-counter').textContent = done.turn;
     document.getElementById('location-display').textContent = done.location;
     if (done.pending_roll) showDiceArea(done.pending_roll);
+    else renderSuggestions('explore');
     refreshGameState();
 }
 
@@ -702,6 +744,7 @@ async function submitAction(event) {
 
     setStatus('...');
     actionInput.disabled = true;
+    hideSuggestions();
     const { turnEl, dmEl } = beginTurn(action);
 
     try {
@@ -772,6 +815,7 @@ async function submitActionFallback(action) {
             setStatus(data.sanity_recovered > 0
                 ? `Your mind steadies. +${data.sanity_recovered} SAN` : '');
             if (data.pending_roll) showDiceArea(data.pending_roll);
+            else renderSuggestions('explore');
             refreshGameState();
         } else {
             setStatus(data.error || 'Action failed', true);
@@ -820,6 +864,7 @@ function hideDiceArea() {
     const actionInput = document.getElementById('action-input');
     actionInput.disabled = false;
     actionInput.focus();
+    if (gameStarted) renderSuggestions('afterRoll');
 }
 
 // Break off combat instead of throwing the attack die.

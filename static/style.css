@@ -479,6 +479,27 @@ input:focus, select:focus {
     #game-screen.san-fx-3 #san-value { animation: none; }
 }
 
+/* ---- Suggested actions (guidance chips) ---- */
+#suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 6px 8px 0;
+}
+.suggestion-chip {
+    border: 1px solid var(--text-dim);
+    color: var(--text-dim);
+    padding: 3px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 3px;
+}
+.suggestion-chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
 /* ---- Action input ---- */
 
 #action-form {

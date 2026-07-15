@@ -449,7 +449,9 @@ async function startGame(event) {
 
     const name = document.getElementById('investigator-name').value;
     const archetype = document.getElementById('investigator-archetype').value;
-    const language = document.getElementById('game-language').value;
+    // Selector hidden while Spanish play is paused; element may not exist.
+    const langEl = document.getElementById('game-language');
+    const language = langEl ? langEl.value : 'en';
 
     // Guard against double-submit: repeated BEGIN clicks each restarted the
     // game server-side (and re-translated the intro) while the first loaded.

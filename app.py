@@ -238,9 +238,10 @@ def start_game(gs):
     data = request.get_json(silent=True) or {}
     investigator_name = data.get('name', 'Unknown Investigator')
     occupation = data.get('archetype', 'scholar')  # Called 'occupation' in game engine
-    language = data.get('language', 'en')
-    if language not in ('en', 'es', 'fr', 'de', 'pt', 'it'):
-        language = 'en'
+    # Multi-language play is PAUSED (playtests showed Spanish games get almost
+    # no dice — roll synthesis keys on English verbs — and weaker world
+    # containment). Force English until those close; engine i18n stays intact.
+    language = 'en'
 
     try:
         # Starting a new game discards any prior engine on this session.

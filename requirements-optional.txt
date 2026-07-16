@@ -1,0 +1,6 @@
+# Optional subsystems — the engine degrades gracefully without these, so they
+# are NOT installed in the default (PaaS) deploy. Install locally to enable:
+#   pip install -r requirements-optional.txt
+chromadb>=0.4.0     # semantic DM memory (use_memory=True)
+mem0ai>=0.1.16      # fact extraction for memory
+neo4j>=5.0.0        # entity relationship graph (ENABLE_ENTITY_GRAPH=1)

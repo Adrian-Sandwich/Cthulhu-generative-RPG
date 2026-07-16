@@ -1,6 +1,5 @@
-requests>=2.28.0
-chromadb>=0.4.0
-mem0ai>=0.1.16
-neo4j>=5.0.0
+# Core runtime — everything the web game needs in production.
 flask>=2.3.0
 flask-cors>=4.0.0
+requests>=2.28.0
+gunicorn>=21.2.0

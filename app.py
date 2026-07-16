@@ -22,7 +22,9 @@ from uuid import uuid4
 from core.game_generative import GenerativeGameEngine
 from core.generative_save import GenerativeSave
 from core.archetypes import get_archetype_sheets, create_investigator
-from game.game_image_integration import generate_for_location
+# NOTE: game.game_image_integration pulls in torch/diffusers; it is imported
+# lazily inside request_image_generation so the default (image-less) deploy
+# doesn't need those heavy, GPU-oriented dependencies.
 
 logger = logging.getLogger(__name__)
 
@@ -40,11 +42,14 @@ def _load_secret_key() -> str:
     key = os.environ.get('SECRET_KEY')
     if key:
         return key
-    secret_file = Path(__file__).parent / '.flask_secret'
+    # In production set SECRET_KEY; the file fallback lives under DATA_DIR so it
+    # survives restarts when a volume is mounted there.
+    secret_file = Path(os.environ.get('DATA_DIR', str(Path(__file__).parent))) / '.flask_secret'
     if secret_file.exists():
         return secret_file.read_text(encoding='utf-8').strip()
     key = secrets.token_hex(32)
     try:
+        secret_file.parent.mkdir(parents=True, exist_ok=True)
         secret_file.write_text(key, encoding='utf-8')
         logger.warning("No SECRET_KEY set; generated one in .flask_secret. "
                        "Set SECRET_KEY in the environment for production.")
@@ -239,6 +244,7 @@ def request_image_generation(location_state):
 
     def work():
         try:
+            from game.game_image_integration import generate_for_location
             generate_for_location(location_state)
         except Exception as e:
             print(f"Warning: Could not generate image for {key}: {e}")
@@ -703,8 +709,8 @@ def leave_feedback(gs):
         "location": gs.engine.state.location if gs.engine and gs.engine.state else None,
     }
     try:
-        fb_dir = Path("feedback")
-        fb_dir.mkdir(exist_ok=True)
+        fb_dir = Path(os.environ.get("DATA_DIR", ".")) / "feedback"
+        fb_dir.mkdir(parents=True, exist_ok=True)
         with open(fb_dir / "feedback.jsonl", "a", encoding="utf-8") as f:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
     except OSError:

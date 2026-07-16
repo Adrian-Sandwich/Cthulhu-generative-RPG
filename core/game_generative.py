@@ -440,8 +440,17 @@ class GenerativeGameEngine:
         import time
 
         self.ollama_endpoint = ollama_endpoint
-        self.model = model
-        self.llm = OllamaClient(endpoint=ollama_endpoint, model=model)
+        # In hosted-API mode (LLM_PROVIDER=openai/groq) the environment is the
+        # source of truth for endpoint+model; the caller's Ollama-era defaults
+        # are ignored so deploys don't need code changes.
+        from .llm_client import resolve_llm_config
+        _llm_cfg = resolve_llm_config()
+        if _llm_cfg["provider"] == "openai":
+            self.model = _llm_cfg["model"]
+            self.llm = OllamaClient()
+        else:
+            self.model = model
+            self.llm = OllamaClient(endpoint=ollama_endpoint, model=model)
         self.session_id = session_id or f"session_{int(time.time())}"
         self.language = language
         self.state: Optional[GameState] = None
@@ -2255,7 +2264,7 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
         from datetime import datetime
         from pathlib import Path as _Path
 
-        out_dir = _Path("playtests")
+        out_dir = _Path(os.environ.get("DATA_DIR", ".")) / "playtests"
         out_dir.mkdir(exist_ok=True)
         inv = self.state.investigator
         data = {

@@ -12,6 +12,7 @@ import os
 import secrets
 import threading
 import time
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from functools import wraps
@@ -54,6 +55,10 @@ def _load_secret_key() -> str:
 
 
 app.config['SECRET_KEY'] = _load_secret_key()
+# Cookie hardening: Lax blocks cross-site POST CSRF (e.g. a forged /reset that
+# would wipe a player's autosave) while still allowing normal top-level nav.
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
 
 # Frontend is served by this same app; CORS only needed for external
 # origins, configurable via comma-separated CORS_ORIGINS env var. When CORS is
@@ -141,6 +146,47 @@ def _get_session() -> GameSession:
             _sessions[sid] = gs
         gs.last_access = time.time()
         return gs
+
+
+# ---------------------------------------------------------------------------
+# Lightweight per-IP rate limiting — required before any public exposure
+# (tunnel). Sliding window per (bucket, ip); behind Cloudflare the real client
+# IP arrives in CF-Connecting-IP.
+# ---------------------------------------------------------------------------
+_rl_lock = threading.Lock()
+_rl_hits = {}
+RATE_LIMITS = {
+    "action": (20, 60),    # 20 turns/min per IP — humans type slower
+    "start": (6, 60),      # new games / loads
+    "feedback": (6, 60),
+}
+
+
+def _client_ip() -> str:
+    return (request.headers.get("CF-Connecting-IP")
+            or (request.headers.get("X-Forwarded-For") or "").split(",")[0].strip()
+            or request.remote_addr or "?")
+
+
+def rate_limited(bucket):
+    """Reject with 429 when an IP exceeds the bucket's sliding-window limit."""
+    limit, window = RATE_LIMITS[bucket]
+
+    def deco(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            ip = _client_ip()
+            now = time.time()
+            with _rl_lock:
+                dq = _rl_hits.setdefault((bucket, ip), deque())
+                while dq and now - dq[0] > window:
+                    dq.popleft()
+                if len(dq) >= limit:
+                    return jsonify({"error": "Too many requests — slow down"}), 429
+                dq.append(now)
+            return f(*args, **kwargs)
+        return wrapper
+    return deco
 
 
 def synchronized(f):
@@ -234,6 +280,7 @@ def get_archetypes():
 
 
 @app.route('/api/game/start', methods=['POST'])
+@rate_limited('start')
 @synchronized
 def start_game(gs):
     """Start a new game"""
@@ -290,6 +337,7 @@ def list_saves(gs):
 
 
 @app.route('/api/game/load', methods=['POST'])
+@rate_limited('start')
 @synchronized
 def load_saved_game(gs):
     """Resume this session's autosaved game from disk."""
@@ -357,6 +405,7 @@ def get_game_state(gs):
 
 
 @app.route('/api/game/action', methods=['POST'])
+@rate_limited('action')
 @synchronized
 def process_action(gs):
     """Process player action"""
@@ -421,6 +470,7 @@ def _finalize_turn(gs, result):
 
 
 @app.route('/api/game/action/stream', methods=['POST'])
+@rate_limited('action')
 def process_action_stream():
     """Stream the DM's narration token-by-token over Server-Sent Events.
 
@@ -520,6 +570,7 @@ def process_action_stream():
 
 
 @app.route('/api/game/roll', methods=['POST'])
+@rate_limited('action')
 @synchronized
 def execute_roll(gs):
     """Player throws the die for the pending skill check"""
@@ -628,6 +679,7 @@ def reset_game(gs):
 
 
 @app.route('/api/feedback', methods=['POST'])
+@rate_limited('feedback')
 @synchronized
 def leave_feedback(gs):
     """Store player feedback, linked to their session for later correlation
@@ -674,4 +726,9 @@ if __name__ == '__main__':
     # to open it to the LAN — anyone on your network can then play at
     # http://<your-lan-ip>:<port>. Sessions are already isolated per browser.
     host = os.environ.get('HOST', '127.0.0.1')
+    # Never run the Werkzeug debugger (RCE) on a non-loopback bind — a public
+    # tunnel behind HOST=0.0.0.0 would otherwise expose it.
+    if debug and host != '127.0.0.1':
+        logger.warning("Refusing FLASK_DEBUG=1 with non-loopback HOST — forcing debug off.")
+        debug = False
     app.run(debug=debug, host=host, port=port)

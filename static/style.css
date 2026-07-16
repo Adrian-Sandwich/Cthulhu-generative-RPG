@@ -267,6 +267,17 @@ input:focus, select:focus {
     margin: -10px -8px 10px -8px;
 }
 
+/* ---- First-roll tooltip ---- */
+#die-tip {
+    color: var(--accent);
+    font-size: 13px;
+    padding: 4px 8px;
+    animation: tip-pulse 1.2s ease-in-out infinite;
+}
+#die-tip.hidden { display: none; }
+@keyframes tip-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
+@media (prefers-reduced-motion: reduce) { #die-tip { animation: none; } }
+
 /* ---- Combat bar ---- */
 #combat-bar {
     display: flex;

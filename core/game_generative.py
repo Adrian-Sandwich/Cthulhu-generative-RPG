@@ -82,6 +82,41 @@ ROLL_KEYWORDS: Dict[str, Tuple[str, str]] = {
     'bluff': ('persuade', 'Hard'),
     'intimidate': ('persuade', 'Normal'),
     'bribe': ('persuade', 'Normal'),
+
+    # --- Spanish action verbs (playtest: ES players almost never rolled) ---
+    # physical / climb / move
+    'trepo': ('climb', 'Normal'), 'trepar': ('climb', 'Normal'),
+    'escalo': ('climb', 'Normal'), 'escalar': ('climb', 'Hard'),
+    'subo': ('climb', 'Normal'), 'trepar por': ('climb', 'Normal'),
+    'empujo': ('brawl', 'Normal'), 'empujar': ('brawl', 'Normal'),
+    'jalo': ('climb', 'Normal'), 'fuerzo': ('brawl', 'Hard'), 'forzar': ('brawl', 'Hard'),
+    'rompo': ('brawl', 'Hard'), 'romper': ('brawl', 'Hard'),
+    'salto': ('jump', 'Normal'), 'saltar': ('jump', 'Normal'),
+    'nado': ('swim', 'Normal'), 'nadar': ('swim', 'Normal'),
+    'esquivo': ('dodge', 'Normal'), 'esquivar': ('dodge', 'Normal'),
+    'corro': ('climb', 'Normal'), 'huyo': ('dodge', 'Normal'),
+    # combat
+    'ataco': ('brawl', 'Normal'), 'atacar': ('brawl', 'Normal'),
+    'golpeo': ('brawl', 'Normal'), 'golpear': ('brawl', 'Normal'),
+    'peleo': ('brawl', 'Normal'), 'pelear': ('brawl', 'Normal'),
+    'disparo': ('firearms_revolver', 'Normal'), 'disparar': ('firearms_revolver', 'Normal'),
+    'apuñalo': ('brawl', 'Normal'), 'apuñalar': ('brawl', 'Normal'),
+    # search / investigation
+    'busco': ('spot_hidden', 'Hard'), 'buscar': ('spot_hidden', 'Hard'),
+    'investigo': ('investigate', 'Normal'), 'investigar': ('investigate', 'Normal'),
+    'examino': ('investigate', 'Normal'), 'examinar': ('investigate', 'Normal'),
+    'reviso': ('investigate', 'Normal'), 'revisar': ('investigate', 'Normal'),
+    'inspecciono': ('investigate', 'Normal'), 'inspeccionar': ('investigate', 'Normal'),
+    'escucho': ('listen', 'Normal'), 'escuchar': ('listen', 'Normal'),
+    # occult / knowledge
+    'descifro': ('occult', 'Hard'), 'descifrar': ('occult', 'Hard'),
+    'leo': ('occult', 'Hard'), 'leer': ('occult', 'Hard'),
+    'interpreto': ('occult', 'Hard'), 'entiendo': ('occult', 'Hard'),
+    # social
+    'persuado': ('persuade', 'Normal'), 'persuadir': ('persuade', 'Normal'),
+    'convenzo': ('persuade', 'Normal'), 'convencer': ('persuade', 'Normal'),
+    'intimido': ('persuade', 'Normal'), 'intimidar': ('persuade', 'Normal'),
+    'engaño': ('persuade', 'Hard'), 'engañar': ('persuade', 'Hard'),
 }
 
 
@@ -555,7 +590,7 @@ class GenerativeGameEngine:
             npcs_talked_to={},
             last_roll=None,
             npc_reputation={},
-            ammo=int(self.adventure_config.resources.get("ammo", 0)),
+            ammo=0,  # start unarmed — a firearm (and its rounds) must be found
             time_limit=int(self.adventure_config.resources.get("time_limit", 0)),
         )
 
@@ -1016,7 +1051,7 @@ DO NOT output template text. Do not show IF/ELSE logic. Just tell the story.
         location_details = {
             "Point Black Lighthouse - Exterior": "salt-air smell, dark rocks, crashing waves, fog, lighthouse tower visible above",
             "Lighthouse Interior": "damp stone walls, spiral iron stairs, salt smell, cold stone, strange luminescent fungus glowing faintly green",
-            "Keeper's Quarters": "sparse furniture, dust, faded pictures on walls, musty air, old maritime books, personal effects, chemical smell",
+            "Keeper's Quarters": "sparse furniture, dust, faded pictures, musty air, old maritime books, personal effects, chemical smell; among the keeper's things a holstered .38 revolver can be found (grant it with [ITEM_FOUND: revolver] if the player searches)",
             "Lighthouse Stairs": "spiral stone stairs groaning underfoot, flickering light from above, salt smell, echoing sounds, fungus on walls",
             "Lantern Room": "bright beacon light, wide windows with ocean view, mechanical gears, heat from lamp, scattered papers with symbols",
             "Ground Floor": "solid stone floor, damp smell, darkness beyond flashlight range, echoing sounds, metal door",
@@ -1024,6 +1059,15 @@ DO NOT output template text. Do not show IF/ELSE logic. Just tell the story.
         }
 
         sensory_grounding = location_details.get(self.state.location, "You are still in the lighthouse, with its damp stone walls.")
+
+        # Early game: nudge the DM to introduce the NPC who summoned the player,
+        # so the cast actually appears (playtest: nobody ever met an NPC).
+        early_hint = ""
+        if self.state.turn <= 3 and "warner" not in self.state.npcs_talked_to:
+            early_hint = (
+                "\nEARLY GAME: Lt. William Warner (Coast Guard) is the officer who "
+                "called the investigator here — have him present or arriving nearby to "
+                "greet them, give the initial hook, and react to their questions.\n")
 
         # IMPROVED: Stronger location pinning (mentioned 3 times in prompt for emphasis)
         location_constraint = f"""
@@ -1040,7 +1084,7 @@ If the player tries to leave, describe the TRANSITION first.
 
         prompt = f"""
 {location_constraint}
-
+{early_hint}
 {state_context}
 
 Recent narrative:
@@ -1564,6 +1608,13 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
             return f"You already have {item_name}."
 
         self.state.investigator.inventory.append(item_name)
+
+        # Finding the firearm loads it with the adventure's ammo (so AMMO stops
+        # being a decorative HUD number the player can never use).
+        if item_key == "revolver" and self.state.ammo <= 0:
+            self.state.ammo = int(self.adventure_config.resources.get("ammo", 6))
+            return f"You pick up: {item_name} — loaded, {self.state.ammo} rounds."
+
         return f"You pick up: {item_name}"
 
     def drop_item(self, item_name: str) -> str:
@@ -2311,9 +2362,12 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
         remaining = -1
         if self.state.time_limit:
             remaining = max(0, self.state.time_limit - self.state.turn)
+        has_firearm = any("revolver" in i.lower() or "pistol" in i.lower()
+                          for i in self.state.investigator.inventory)
         return {
             "ammo": self.state.ammo,
-            "time_remaining": remaining,   # -1 means no clock
+            "has_firearm": has_firearm,   # HUD hides AMMO until the player is armed
+            "time_remaining": remaining,  # -1 means no clock
             "time_limit": self.state.time_limit,
         }
 

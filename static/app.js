@@ -7,6 +7,7 @@ let imagePollTimer = null;
 let archetypes = {};
 let pendingRoll = null;
 let rolling = false;
+let firstRollSeen = false;   // show the "click the die" tip only once
 
 // ---- Retro audio (synthesized, no asset files) ----
 let audioCtx = null;
@@ -494,7 +495,11 @@ async function startGame(event) {
             }
             const hintEl = document.createElement('div');
             hintEl.className = 'narrative-turn hint';
-            hintEl.textContent = 'Type what you do below — look around, examine the logs, head inside…';
+            hintEl.innerHTML =
+                'CÓMO JUGAR / HOW TO PLAY<br>' +
+                '• Escribe lo que TU personaje intenta (o usa los botones de abajo).<br>' +
+                '• Cuando aparezca el dado, haz click para tirarlo — decide si lo logras.<br>' +
+                '• El horror baja tu cordura (SAN). Sobrevive y descubre la verdad.';
             intro.appendChild(hintEl);
 
             refreshGameState();
@@ -550,11 +555,14 @@ function renderResources(res) {
     const timeStat = document.getElementById('time-stat');
     const timeVal = document.getElementById('time-value');
 
-    // Ammo: show whenever the adventure tracks it.
-    if (res.ammo !== undefined) {
+    // Ammo: only shown once the player actually has a firearm (no phantom
+    // rounds without a gun).
+    if (res.has_firearm) {
         ammoVal.textContent = res.ammo;
         ammoVal.classList.toggle('depleted', res.ammo === 0);
         ammoStat.classList.remove('hidden');
+    } else {
+        ammoStat.classList.add('hidden');
     }
     // Doom clock: time_remaining = -1 means no clock.
     if (res.time_remaining !== undefined && res.time_remaining >= 0) {
@@ -947,6 +955,8 @@ function showDiceArea(roll) {
     result.className = '';
 
     document.getElementById('dice-area').classList.remove('hidden');
+    // First time a die ever appears, point the player at it.
+    document.getElementById('die-tip').classList.toggle('hidden', firstRollSeen);
 }
 
 function hideDiceArea() {
@@ -984,6 +994,8 @@ async function flee() {
 async function rollDice() {
     if (!pendingRoll || rolling) return;
     rolling = true;
+    firstRollSeen = true;
+    document.getElementById('die-tip').classList.add('hidden');
     const roll = pendingRoll;  // capture (combat rounds re-show a new one)
 
     const die = document.getElementById('pixel-die');

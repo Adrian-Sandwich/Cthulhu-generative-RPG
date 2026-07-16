@@ -48,10 +48,10 @@
                         <option value="occultist">Occultist</option>
                         <option value="wanderer">Wanderer</option>
                     </select>
-                    <!-- Language selector temporarily disabled: Spanish play
-                         revealed gaps (no roll synthesis on Spanish verbs,
-                         weaker world containment). Re-enable when fixed —
-                         the engine i18n plumbing is intact. -->
+                    <select id="game-language" title="Narration language">
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                    </select>
                     <button type="submit" class="start-btn">BEGIN</button>
                 </div>
             </form>
@@ -162,6 +162,7 @@
 
             <div id="dice-area" class="hidden">
                 <span id="dice-label">ROLL: Dodge (Hard) — target 20</span>
+                <div id="die-tip" class="hidden">↓ ¡Haz click en el dado para tirar! / Click the die to roll!</div>
                 <div id="die-stage">
                     <div id="pixel-die" onclick="rollDice()" role="button" tabindex="0"
                          aria-label="Throw the die">

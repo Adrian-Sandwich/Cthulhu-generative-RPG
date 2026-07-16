@@ -22,6 +22,7 @@ from uuid import uuid4
 from core.game_generative import GenerativeGameEngine
 from core.generative_save import GenerativeSave
 from core.archetypes import get_archetype_sheets, create_investigator
+from core.moderation import is_allowed
 # NOTE: game.game_image_integration pulls in torch/diffusers; it is imported
 # lazily inside request_image_generation so the default (image-less) deploy
 # doesn't need those heavy, GPU-oriented dependencies.
@@ -293,10 +294,9 @@ def start_game(gs):
     data = request.get_json(silent=True) or {}
     investigator_name = data.get('name', 'Unknown Investigator')
     occupation = data.get('archetype', 'scholar')  # Called 'occupation' in game engine
-    # Multi-language play is PAUSED (playtests showed Spanish games get almost
-    # no dice — roll synthesis keys on English verbs — and weaker world
-    # containment). Force English until those close; engine i18n stays intact.
-    language = 'en'
+    language = data.get('language', 'en')
+    if language not in ('en', 'es', 'fr', 'de', 'pt', 'it'):
+        language = 'en'
 
     try:
         # Starting a new game discards any prior engine on this session.
@@ -428,6 +428,8 @@ def process_action(gs):
         return jsonify({"error": "Action cannot be empty"}), 400
     if len(player_input) > MAX_ACTION_LEN:
         return jsonify({"error": "Action too long"}), 413
+    if not is_allowed(player_input):
+        return jsonify({"error": "That action can't be processed."}), 422
 
     try:
         result = gs.engine.process_player_action(player_input)
@@ -459,11 +461,17 @@ def _finalize_turn(gs, result):
 
     _autosave(gs)
 
+    # Guard the DM's output too: if the model produced disallowed content,
+    # swap it for a safe in-fiction line rather than showing it.
+    narrative = result.get("narrative", "")
+    if narrative and not is_allowed(narrative):
+        narrative = "The scene blurs; your mind refuses to hold what you just perceived."
+
     return {
         "success": True,
         "turn": gs.engine.state.turn,
         "location": gs.engine.state.location,
-        "narrative": result.get("narrative", ""),
+        "narrative": narrative,
         "events": outcome["events"],
         "sanity_corruption": result.get("sanity_corruption", 0),
         "sanity_recovered": result.get("sanity_recovered", 0),
@@ -490,6 +498,8 @@ def process_action_stream():
         return jsonify({"error": "Action cannot be empty"}), 400
     if len(player_input) > MAX_ACTION_LEN:
         return jsonify({"error": "Action too long"}), 413
+    if not is_allowed(player_input):
+        return jsonify({"error": "That action can't be processed."}), 422
 
     def stream():
         import json as _json

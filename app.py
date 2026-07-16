@@ -294,9 +294,10 @@ def start_game(gs):
     data = request.get_json(silent=True) or {}
     investigator_name = data.get('name', 'Unknown Investigator')
     occupation = data.get('archetype', 'scholar')  # Called 'occupation' in game engine
-    language = data.get('language', 'en')
-    if language not in ('en', 'es', 'fr', 'de', 'pt', 'it'):
-        language = 'en'
+    # Spanish paused again by request — force English regardless of client.
+    # Engine i18n + Spanish roll keywords remain; flip this back to
+    # data.get('language','en') (validated) to re-enable.
+    language = 'en'
 
     try:
         # Starting a new game discards any prior engine on this session.

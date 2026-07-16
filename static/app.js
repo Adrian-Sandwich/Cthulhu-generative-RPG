@@ -502,6 +502,7 @@ async function startGame(event) {
             document.getElementById('action-input').focus();
             startMusic();  // BEGIN click is the user gesture AudioContext needs
             renderSuggestions('explore');
+            armExitFeedback();
         } else {
             setStatus('Error: ' + (data.error || 'unknown'), true);
         }
@@ -647,12 +648,58 @@ function hideSuggestions() {
 // ---- Feedback: leave your findings any time, or on the way out.
 let fbRating = 0;
 let fbThenReset = false;
+let fbGiven = false;      //已 left feedback this session → stop nagging
+let fbPrompted = false;   // one-time mid-session nudge already shown
 
 function showFeedback(thenReset) {
     fbThenReset = !!thenReset;
     setRating(0);
-    document.getElementById('feedback-panel').classList.remove('hidden');
+    const panel = document.getElementById('feedback-panel');
+    panel.classList.remove('hidden');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
     document.getElementById('feedback-text').focus();
+}
+
+// Fire once when the player tries to LEAVE (close tab / navigate away). We
+// can't hold them, so if they've written anything we ship it with
+// sendBeacon, which survives page unload. If they've engaged but written
+// nothing, pop the panel so a returning/again-closing player sees the ask.
+function armExitFeedback() {
+    window.addEventListener('beforeunload', () => {
+        if (fbGiven) return;
+        const text = (document.getElementById('feedback-text').value || '').trim();
+        if (text || fbRating) {
+            const blob = new Blob(
+                [JSON.stringify({ text: text || '(solo rating)', rating: fbRating || undefined })],
+                { type: 'application/json' });
+            navigator.sendBeacon('/api/feedback', blob);
+            fbGiven = true;
+        } else if (gameStarted && !document.getElementById('feedback-panel').classList.contains('hidden') === false) {
+            // reveal the panel for next time (can't block unload reliably)
+            document.getElementById('feedback-panel').classList.remove('hidden');
+        }
+    });
+    // Also catch tab-hide on mobile (beforeunload is unreliable there).
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden' && !fbGiven && gameStarted) {
+            const text = (document.getElementById('feedback-text').value || '').trim();
+            if (text || fbRating) {
+                const blob = new Blob(
+                    [JSON.stringify({ text: text || '(solo rating)', rating: fbRating || undefined })],
+                    { type: 'application/json' });
+                navigator.sendBeacon('/api/feedback', blob);
+                fbGiven = true;
+            }
+        }
+    });
+}
+
+// One-time nudge after the player is clearly invested.
+function maybePromptFeedback(turn) {
+    if (fbPrompted || fbGiven || turn < 8) return;
+    fbPrompted = true;
+    showFeedback(false);
+    setStatus('Llevas un rato — ¿nos dejas una reseña rápida? (o [skip])');
 }
 
 function setRating(n) {
@@ -681,6 +728,7 @@ async function submitFeedback() {
     } catch (e) {
         setStatus('No se pudo guardar el feedback', true);
     }
+    fbGiven = true;  // stop exit/visibility nags once they've sent something
     document.getElementById('feedback-text').value = '';
     closeFeedback();
 }
@@ -774,6 +822,7 @@ function finishTurnUI(done, action, dmEl) {
     if (done.pending_roll) showDiceArea(done.pending_roll);
     else renderSuggestions('explore');
     refreshGameState();
+    maybePromptFeedback(done.turn);
 }
 
 // Submit Player Action — streams the DM narration over SSE, falls back to the

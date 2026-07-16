@@ -842,16 +842,22 @@ async function submitAction(event) {
     const action = actionInput.value.trim();
     if (!action) return;
 
-    setStatus('...');
+    setStatus('The keeper considers…');
     actionInput.disabled = true;
     hideSuggestions();
     const { turnEl, dmEl } = beginTurn(action);
+
+    // Abort a stalled turn before the tunnel/proxy kills the connection (~100s),
+    // so the player gets a clean retry instead of the game appearing to close.
+    const ac = new AbortController();
+    const watchdog = setTimeout(() => ac.abort(), 90000);
 
     try {
         const resp = await fetch('/api/game/action/stream', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action })
+            body: JSON.stringify({ action }),
+            signal: ac.signal
         });
         if (!resp.ok || !resp.body) throw new Error('stream unavailable');
 
@@ -884,8 +890,15 @@ async function submitAction(event) {
         else { turnEl.remove(); throw new Error('stream ended early'); }
     } catch (error) {
         turnEl.remove();
-        await submitActionFallback(action);
+        // Streaming failed/timed out — try the plain endpoint; if THAT also
+        // fails, keep the game alive with a retry prompt (never a dead UI).
+        const ok = await submitActionFallback(action);
+        if (!ok) {
+            setStatus('The connection wavered. Your action wasn\'t lost — try again.', true);
+            renderSuggestions('explore');
+        }
     } finally {
+        clearTimeout(watchdog);
         if (!pendingRoll) {
             actionInput.disabled = false;
             actionInput.focus();
@@ -893,13 +906,17 @@ async function submitAction(event) {
     }
 }
 
-// Non-streaming fallback (original JSON endpoint).
+// Non-streaming fallback (original JSON endpoint). Returns true on success so
+// the caller can show a retry prompt if this also fails.
 async function submitActionFallback(action) {
+    const ac = new AbortController();
+    const watchdog = setTimeout(() => ac.abort(), 95000);
     try {
         const response = await fetch('/api/game/action', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action })
+            body: JSON.stringify({ action }),
+            signal: ac.signal
         });
         const data = await response.json();
         if (data.success) {
@@ -917,11 +934,14 @@ async function submitActionFallback(action) {
             if (data.pending_roll) showDiceArea(data.pending_roll);
             else renderSuggestions('explore');
             refreshGameState();
-        } else {
-            setStatus(data.error || 'Action failed', true);
+            return true;
         }
+        setStatus(data.error || 'Action failed', true);
+        return false;
     } catch (error) {
-        setStatus(error.message, true);
+        return false;
+    } finally {
+        clearTimeout(watchdog);
     }
 }
 

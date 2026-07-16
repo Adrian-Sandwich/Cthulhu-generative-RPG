@@ -33,7 +33,16 @@ if [ "${HOST}" = "0.0.0.0" ]; then
     LAN_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null)
     [ -n "${LAN_IP}" ] && echo "✓ Abierto a tu LAN: otros pueden jugar en http://${LAN_IP}:${PORT}"
 fi
-FLASK_DEBUG=0 HOST="${HOST}" PORT="${PORT}" LOG_LEVEL=WARNING python3 app.py &
+# Prefer gunicorn (gthread) — the Flask dev server buckles under several
+# concurrent players + streaming. Fall back to the dev server if unavailable.
+if python3 -c "import gunicorn" 2>/dev/null; then
+    DATA_DIR="${DATA_DIR:-.}" FLASK_DEBUG=0 python3 -m gunicorn \
+        --worker-class gthread --workers 1 --threads 16 --timeout 180 \
+        --bind "${HOST}:${PORT}" app:app &
+else
+    echo "  (gunicorn no instalado — usando dev server; instala con: pip3 install --break-system-packages gunicorn)"
+    FLASK_DEBUG=0 HOST="${HOST}" PORT="${PORT}" LOG_LEVEL=WARNING python3 app.py &
+fi
 SERVER_PID=$!
 
 # 4. Wait until it answers, then open the browser

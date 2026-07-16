@@ -82,6 +82,7 @@
                     <a onclick="showSheet()">[sheet]</a>
                     <a onclick="showHistory()">[history]</a>
                     <a id="sound-toggle" onclick="toggleSound()">[sound on]</a>
+                    <a onclick="showFeedback(false)">[feedback]</a>
                     <a onclick="resetGame()">[new game]</a>
                 </span>
             </div>
@@ -174,6 +175,20 @@
                 </div>
                 <span id="dice-result"></span>
                 <a id="flee-btn" class="hidden" onclick="flee()">[flee]</a>
+            </div>
+
+            <div id="feedback-panel" class="hidden">
+                <div class="feedback-title">LEAVE YOUR FINDINGS, INVESTIGATOR</div>
+                <textarea id="feedback-text" rows="4" maxlength="2000"
+                    placeholder="¿Qué te gustó? ¿Qué se rompió? ¿Qué no se entendió?"></textarea>
+                <div class="feedback-row">
+                    <span id="feedback-stars">
+                        <a onclick="setRating(1)">☆</a><a onclick="setRating(2)">☆</a><a onclick="setRating(3)">☆</a><a onclick="setRating(4)">☆</a><a onclick="setRating(5)">☆</a>
+                    </span>
+                    <span class="spacer"></span>
+                    <a class="fb-btn" onclick="submitFeedback()">[send]</a>
+                    <a class="fb-btn" onclick="closeFeedback()">[skip]</a>
+                </div>
             </div>
 
             <div id="suggestions" class="hidden"></div>

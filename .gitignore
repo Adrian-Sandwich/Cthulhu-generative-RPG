@@ -18,3 +18,4 @@ playtests/
 # Generated image output
 game/generated/
 game/test_generated/
+feedback/

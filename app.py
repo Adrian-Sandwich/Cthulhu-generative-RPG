@@ -6,12 +6,14 @@ Flask backend for the generative RPG
 
 from flask import Flask, render_template, request, jsonify, send_from_directory, session, Response
 from flask_cors import CORS
+import json
 import logging
 import os
 import secrets
 import threading
 import time
 from dataclasses import dataclass, field
+from datetime import datetime
 from functools import wraps
 from pathlib import Path
 from typing import Optional
@@ -623,6 +625,40 @@ def reset_game(gs):
         logger.warning("save delete failed for sid=%s", gs.sid, exc_info=True)
 
     return jsonify({"success": True, "message": "Game reset"})
+
+
+@app.route('/api/feedback', methods=['POST'])
+@synchronized
+def leave_feedback(gs):
+    """Store player feedback, linked to their session for later correlation
+    with the autosave/playtest archive."""
+    data = request.get_json(silent=True) or {}
+    text = data.get('text', '')
+    if not isinstance(text, str) or not text.strip():
+        return jsonify({"error": "Feedback cannot be empty"}), 400
+    if len(text) > 2000:
+        return jsonify({"error": "Feedback too long"}), 413
+    rating = data.get('rating')
+    rating = int(rating) if isinstance(rating, (int, float)) and 1 <= rating <= 5 else None
+
+    entry = {
+        "at": datetime.now().isoformat(),
+        "sid": gs.sid,
+        "text": text.strip(),
+        "rating": rating,
+        "turn": gs.engine.state.turn if gs.engine and gs.engine.state else None,
+        "investigator": gs.investigator.name if gs.investigator else None,
+        "location": gs.engine.state.location if gs.engine and gs.engine.state else None,
+    }
+    try:
+        fb_dir = Path("feedback")
+        fb_dir.mkdir(exist_ok=True)
+        with open(fb_dir / "feedback.jsonl", "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except OSError:
+        logger.warning("feedback write failed", exc_info=True)
+        return jsonify({"error": "Could not save feedback"}), 500
+    return jsonify({"success": True, "message": "Thank you, investigator."})
 
 
 @app.route('/api/health', methods=['GET'])

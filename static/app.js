@@ -644,6 +644,47 @@ function hideSuggestions() {
     document.getElementById('suggestions').classList.add('hidden');
 }
 
+// ---- Feedback: leave your findings any time, or on the way out.
+let fbRating = 0;
+let fbThenReset = false;
+
+function showFeedback(thenReset) {
+    fbThenReset = !!thenReset;
+    setRating(0);
+    document.getElementById('feedback-panel').classList.remove('hidden');
+    document.getElementById('feedback-text').focus();
+}
+
+function setRating(n) {
+    fbRating = n;
+    document.querySelectorAll('#feedback-stars a').forEach((a, i) => {
+        a.textContent = i < n ? '★' : '☆';
+        a.classList.toggle('lit', i < n);
+    });
+}
+
+function closeFeedback() {
+    document.getElementById('feedback-panel').classList.add('hidden');
+    if (fbThenReset) { fbThenReset = false; doReset(); }
+}
+
+async function submitFeedback() {
+    const text = document.getElementById('feedback-text').value.trim();
+    if (!text && !fbRating) { closeFeedback(); return; }
+    try {
+        await fetch('/api/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text || '(solo rating)', rating: fbRating || undefined })
+        });
+        setStatus('Feedback guardado — gracias, investigador.');
+    } catch (e) {
+        setStatus('No se pudo guardar el feedback', true);
+    }
+    document.getElementById('feedback-text').value = '';
+    closeFeedback();
+}
+
 // Refresh game state from server (location, scene image).
 // Image generation runs server-side in the background; poll until ready.
 async function refreshGameState() {
@@ -1039,7 +1080,11 @@ function showNarrative() {
 // Reset Game
 function resetGame() {
     if (!confirm('Reset the game? All progress will be lost.')) return;
+    // Ask for feedback on the way out (skip is one click); then reset.
+    showFeedback(true);
+}
 
+function doReset() {
     gameStarted = false;
     gameHistory = [];
     pendingRoll = null;

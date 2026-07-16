@@ -267,6 +267,17 @@ input:focus, select:focus {
     margin: -10px -8px 10px -8px;
 }
 
+/* ---- First-roll tooltip ---- */
+#die-tip {
+    color: var(--accent);
+    font-size: 13px;
+    padding: 4px 8px;
+    animation: tip-pulse 1.2s ease-in-out infinite;
+}
+#die-tip.hidden { display: none; }
+@keyframes tip-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
+@media (prefers-reduced-motion: reduce) { #die-tip { animation: none; } }
+
 /* ---- Combat bar ---- */
 #combat-bar {
     display: flex;
@@ -477,6 +488,54 @@ input:focus, select:focus {
     #game-screen.san-fx-3 #narrative-content,
     #game-screen.san-fx-2 #san-value,
     #game-screen.san-fx-3 #san-value { animation: none; }
+}
+
+/* ---- Feedback panel ---- */
+#feedback-panel {
+    border-top: 1px solid var(--accent);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+#feedback-panel.hidden { display: none; }
+.feedback-title { color: var(--accent); letter-spacing: 2px; font-size: 12px; }
+#feedback-text {
+    background: #061414;
+    border: 1px solid var(--text-dim);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 6px;
+    resize: vertical;
+}
+#feedback-text:focus { border-color: var(--accent); outline: none; }
+.feedback-row { display: flex; align-items: center; gap: 12px; }
+.feedback-row .spacer { flex: 1; }
+#feedback-stars a { cursor: pointer; font-size: 16px; color: var(--text-dim); padding: 0 2px; }
+#feedback-stars a.lit { color: var(--accent); }
+.fb-btn { cursor: pointer; color: var(--accent); }
+.fb-btn:hover { color: #fff; }
+
+/* ---- Suggested actions (guidance chips) ---- */
+#suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 6px 8px 0;
+}
+.suggestion-chip {
+    border: 1px solid var(--text-dim);
+    color: var(--text-dim);
+    padding: 3px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 3px;
+}
+.suggestion-chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 /* ---- Action input ---- */

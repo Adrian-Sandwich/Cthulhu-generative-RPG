@@ -32,6 +32,10 @@ class AdventureConfig:
     # DM-facing adventure brief (setting, mystery, threat) injected into the
     # system prompt. Optional: engine falls back to its legacy constant.
     description: str = ""
+    # Pre-authored translations of story_seed, keyed by language code. Using a
+    # static translation makes non-English starts instant and deterministic
+    # (no LLM translation, no re-translation on repeated starts).
+    story_seed_i18n: Dict[str, str] = field(default_factory=dict)
     locations: List[Dict] = field(default_factory=list)        # {key, name, description}
     location_keywords: Dict[str, str] = field(default_factory=dict)  # narrative keyword -> location name
     npcs: Dict[str, Dict] = field(default_factory=dict)         # key -> {name, role, knows, ...}
@@ -79,6 +83,7 @@ class AdventureConfig:
             story_seed=data["story_seed"],
             start_location=data["start_location"],
             description=data.get("description", ""),
+            story_seed_i18n=data.get("story_seed_i18n", {}) or {},
             locations=data.get("locations", []) or [],
             location_keywords=data.get("location_keywords", {}) or {},
             npcs=data.get("npcs", {}) or {},

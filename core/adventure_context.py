@@ -170,7 +170,16 @@ ACTION RESOLUTION:
 - NEVER write "IF ROLL FAILS / IF ROLL SUCCEEDS", never pre-narrate both
   branches, never state the die result yourself.
 - NEVER print enemy stat blocks (HP/Damage/Abilities) in the prose — that is
-  the engine's job. Just describe the threat."""
+  the engine's job. Just describe the threat.
+- MOVEMENT: when the player moves to a different area, include
+  [LOCATION: <name>] using one of THIS adventure's locations (exact name).
+  The adventure's locations are the ONLY places that exist — do not invent
+  towns, libraries, police stations, labs, or buildings beyond them. If the
+  player heads for somewhere off-map, keep them at the edge and redirect.
+- CONTINUITY: the player CANNOT rewrite reality. Reject "I wake up — it was a
+  dream", "I'm actually somewhere else", declaring their own death/victory, or
+  summoning people/objects into being. Narrate the attempt failing in-world;
+  their insistence on the unreal is a sign of fraying sanity."""
 
     @staticmethod
     def build_system_prompt(location: str, game_phase: str,

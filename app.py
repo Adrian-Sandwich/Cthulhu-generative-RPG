@@ -6,12 +6,15 @@ Flask backend for the generative RPG
 
 from flask import Flask, render_template, request, jsonify, send_from_directory, session, Response
 from flask_cors import CORS
+import json
 import logging
 import os
 import secrets
 import threading
 import time
+from collections import deque
 from dataclasses import dataclass, field
+from datetime import datetime
 from functools import wraps
 from pathlib import Path
 from typing import Optional
@@ -19,7 +22,10 @@ from uuid import uuid4
 from core.game_generative import GenerativeGameEngine
 from core.generative_save import GenerativeSave
 from core.archetypes import get_archetype_sheets, create_investigator
-from game.game_image_integration import generate_for_location
+from core.moderation import is_allowed
+# NOTE: game.game_image_integration pulls in torch/diffusers; it is imported
+# lazily inside request_image_generation so the default (image-less) deploy
+# doesn't need those heavy, GPU-oriented dependencies.
 
 logger = logging.getLogger(__name__)
 
@@ -37,11 +43,14 @@ def _load_secret_key() -> str:
     key = os.environ.get('SECRET_KEY')
     if key:
         return key
-    secret_file = Path(__file__).parent / '.flask_secret'
+    # In production set SECRET_KEY; the file fallback lives under DATA_DIR so it
+    # survives restarts when a volume is mounted there.
+    secret_file = Path(os.environ.get('DATA_DIR', str(Path(__file__).parent))) / '.flask_secret'
     if secret_file.exists():
         return secret_file.read_text(encoding='utf-8').strip()
     key = secrets.token_hex(32)
     try:
+        secret_file.parent.mkdir(parents=True, exist_ok=True)
         secret_file.write_text(key, encoding='utf-8')
         logger.warning("No SECRET_KEY set; generated one in .flask_secret. "
                        "Set SECRET_KEY in the environment for production.")
@@ -52,6 +61,10 @@ def _load_secret_key() -> str:
 
 
 app.config['SECRET_KEY'] = _load_secret_key()
+# Cookie hardening: Lax blocks cross-site POST CSRF (e.g. a forged /reset that
+# would wipe a player's autosave) while still allowing normal top-level nav.
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
 
 # Frontend is served by this same app; CORS only needed for external
 # origins, configurable via comma-separated CORS_ORIGINS env var. When CORS is
@@ -141,6 +154,47 @@ def _get_session() -> GameSession:
         return gs
 
 
+# ---------------------------------------------------------------------------
+# Lightweight per-IP rate limiting — required before any public exposure
+# (tunnel). Sliding window per (bucket, ip); behind Cloudflare the real client
+# IP arrives in CF-Connecting-IP.
+# ---------------------------------------------------------------------------
+_rl_lock = threading.Lock()
+_rl_hits = {}
+RATE_LIMITS = {
+    "action": (20, 60),    # 20 turns/min per IP — humans type slower
+    "start": (6, 60),      # new games / loads
+    "feedback": (6, 60),
+}
+
+
+def _client_ip() -> str:
+    return (request.headers.get("CF-Connecting-IP")
+            or (request.headers.get("X-Forwarded-For") or "").split(",")[0].strip()
+            or request.remote_addr or "?")
+
+
+def rate_limited(bucket):
+    """Reject with 429 when an IP exceeds the bucket's sliding-window limit."""
+    limit, window = RATE_LIMITS[bucket]
+
+    def deco(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            ip = _client_ip()
+            now = time.time()
+            with _rl_lock:
+                dq = _rl_hits.setdefault((bucket, ip), deque())
+                while dq and now - dq[0] > window:
+                    dq.popleft()
+                if len(dq) >= limit:
+                    return jsonify({"error": "Too many requests — slow down"}), 429
+                dq.append(now)
+            return f(*args, **kwargs)
+        return wrapper
+    return deco
+
+
 def synchronized(f):
     """Resolve the caller's GameSession and serialize the handler on its lock.
 
@@ -191,6 +245,7 @@ def request_image_generation(location_state):
 
     def work():
         try:
+            from game.game_image_integration import generate_for_location
             generate_for_location(location_state)
         except Exception as e:
             print(f"Warning: Could not generate image for {key}: {e}")
@@ -232,15 +287,17 @@ def get_archetypes():
 
 
 @app.route('/api/game/start', methods=['POST'])
+@rate_limited('start')
 @synchronized
 def start_game(gs):
     """Start a new game"""
     data = request.get_json(silent=True) or {}
     investigator_name = data.get('name', 'Unknown Investigator')
     occupation = data.get('archetype', 'scholar')  # Called 'occupation' in game engine
-    language = data.get('language', 'en')
-    if language not in ('en', 'es', 'fr', 'de', 'pt', 'it'):
-        language = 'en'
+    # Spanish paused again by request — force English regardless of client.
+    # Engine i18n + Spanish roll keywords remain; flip this back to
+    # data.get('language','en') (validated) to re-enable.
+    language = 'en'
 
     try:
         # Starting a new game discards any prior engine on this session.
@@ -287,6 +344,7 @@ def list_saves(gs):
 
 
 @app.route('/api/game/load', methods=['POST'])
+@rate_limited('start')
 @synchronized
 def load_saved_game(gs):
     """Resume this session's autosaved game from disk."""
@@ -354,6 +412,7 @@ def get_game_state(gs):
 
 
 @app.route('/api/game/action', methods=['POST'])
+@rate_limited('action')
 @synchronized
 def process_action(gs):
     """Process player action"""
@@ -370,6 +429,8 @@ def process_action(gs):
         return jsonify({"error": "Action cannot be empty"}), 400
     if len(player_input) > MAX_ACTION_LEN:
         return jsonify({"error": "Action too long"}), 413
+    if not is_allowed(player_input):
+        return jsonify({"error": "That action can't be processed."}), 422
 
     try:
         result = gs.engine.process_player_action(player_input)
@@ -392,13 +453,26 @@ def _finalize_turn(gs, result):
     if outcome["pending_roll"] and not gs.pending_roll:
         gs.pending_roll = outcome["pending_roll"]
 
+    # A reached ending archives the playthrough automatically.
+    if gs.engine.state.ending_reached:
+        try:
+            gs.engine.export_playtest("ending")
+        except Exception:
+            logger.warning("playtest export on ending failed", exc_info=True)
+
     _autosave(gs)
+
+    # Guard the DM's output too: if the model produced disallowed content,
+    # swap it for a safe in-fiction line rather than showing it.
+    narrative = result.get("narrative", "")
+    if narrative and not is_allowed(narrative):
+        narrative = "The scene blurs; your mind refuses to hold what you just perceived."
 
     return {
         "success": True,
         "turn": gs.engine.state.turn,
         "location": gs.engine.state.location,
-        "narrative": result.get("narrative", ""),
+        "narrative": narrative,
         "events": outcome["events"],
         "sanity_corruption": result.get("sanity_corruption", 0),
         "sanity_recovered": result.get("sanity_recovered", 0),
@@ -411,6 +485,7 @@ def _finalize_turn(gs, result):
 
 
 @app.route('/api/game/action/stream', methods=['POST'])
+@rate_limited('action')
 def process_action_stream():
     """Stream the DM's narration token-by-token over Server-Sent Events.
 
@@ -424,6 +499,8 @@ def process_action_stream():
         return jsonify({"error": "Action cannot be empty"}), 400
     if len(player_input) > MAX_ACTION_LEN:
         return jsonify({"error": "Action too long"}), 413
+    if not is_allowed(player_input):
+        return jsonify({"error": "That action can't be processed."}), 422
 
     def stream():
         import json as _json
@@ -510,6 +587,7 @@ def process_action_stream():
 
 
 @app.route('/api/game/roll', methods=['POST'])
+@rate_limited('action')
 @synchronized
 def execute_roll(gs):
     """Player throws the die for the pending skill check"""
@@ -530,7 +608,8 @@ def execute_roll(gs):
         consequence = None
         if roll.get("combat"):
             # Combat round: resolve mechanically (your attack + enemy counter).
-            combat_res = gs.engine.resolve_combat_round(result["success"])
+            combat_res = gs.engine.resolve_combat_round(
+                result["success"], critical=result.get("critical"))
             narrative = combat_res.get("narrative", "")
             if not combat_res.get("combat_over") and gs.engine.state.active_combat:
                 # Fight continues — queue the next attack throw.
@@ -597,6 +676,12 @@ def flee_combat(gs):
 @synchronized
 def reset_game(gs):
     """Reset this session's game to start, releasing its resources."""
+    # Archive the run first — every playthrough is data to learn from.
+    if gs.engine and gs.engine.state:
+        try:
+            gs.engine.export_playtest("reset")
+        except Exception:
+            logger.warning("playtest export on reset failed", exc_info=True)
     _cleanup_session(gs)
     gs.engine = None
     gs.investigator = None
@@ -610,6 +695,41 @@ def reset_game(gs):
     return jsonify({"success": True, "message": "Game reset"})
 
 
+@app.route('/api/feedback', methods=['POST'])
+@rate_limited('feedback')
+@synchronized
+def leave_feedback(gs):
+    """Store player feedback, linked to their session for later correlation
+    with the autosave/playtest archive."""
+    data = request.get_json(silent=True) or {}
+    text = data.get('text', '')
+    if not isinstance(text, str) or not text.strip():
+        return jsonify({"error": "Feedback cannot be empty"}), 400
+    if len(text) > 2000:
+        return jsonify({"error": "Feedback too long"}), 413
+    rating = data.get('rating')
+    rating = int(rating) if isinstance(rating, (int, float)) and 1 <= rating <= 5 else None
+
+    entry = {
+        "at": datetime.now().isoformat(),
+        "sid": gs.sid,
+        "text": text.strip(),
+        "rating": rating,
+        "turn": gs.engine.state.turn if gs.engine and gs.engine.state else None,
+        "investigator": gs.investigator.name if gs.investigator else None,
+        "location": gs.engine.state.location if gs.engine and gs.engine.state else None,
+    }
+    try:
+        fb_dir = Path(os.environ.get("DATA_DIR", ".")) / "feedback"
+        fb_dir.mkdir(parents=True, exist_ok=True)
+        with open(fb_dir / "feedback.jsonl", "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except OSError:
+        logger.warning("feedback write failed", exc_info=True)
+        return jsonify({"error": "Could not save feedback"}), 500
+    return jsonify({"success": True, "message": "Thank you, investigator."})
+
+
 @app.route('/api/health', methods=['GET'])
 def health():
     return jsonify({"status": "ok", "sessions": len(_sessions)})
@@ -619,4 +739,13 @@ if __name__ == '__main__':
     logging.basicConfig(level=os.environ.get('LOG_LEVEL', 'INFO'))
     debug = os.environ.get('FLASK_DEBUG', '0') == '1'
     port = int(os.environ.get('PORT', '5000'))
-    app.run(debug=debug, port=port)
+    # Default: loopback only (no one else can reach the game). Set HOST=0.0.0.0
+    # to open it to the LAN — anyone on your network can then play at
+    # http://<your-lan-ip>:<port>. Sessions are already isolated per browser.
+    host = os.environ.get('HOST', '127.0.0.1')
+    # Never run the Werkzeug debugger (RCE) on a non-loopback bind — a public
+    # tunnel behind HOST=0.0.0.0 would otherwise expose it.
+    if debug and host != '127.0.0.1':
+        logger.warning("Refusing FLASK_DEBUG=1 with non-loopback HOST — forcing debug off.")
+        debug = False
+    app.run(debug=debug, host=host, port=port)

@@ -7,6 +7,7 @@ let imagePollTimer = null;
 let archetypes = {};
 let pendingRoll = null;
 let rolling = false;
+let firstRollSeen = false;   // show the "click the die" tip only once
 
 // ---- Retro audio (synthesized, no asset files) ----
 let audioCtx = null;
@@ -69,7 +70,300 @@ function toggleSound() {
     soundOn = !soundOn;
     const el = document.getElementById('sound-toggle');
     if (el) el.textContent = soundOn ? '[sound on]' : '[sound off]';
-    if (!soundOn) stopHeartbeat();
+    if (!soundOn) { stopHeartbeat(); stopMusic(); }
+    else if (gameStarted) startMusic();
+}
+
+// ---- Adaptive ambient music (synthesized drone, no asset files) ----
+// A low Lovecraftian drone that reacts to the game: dissonance swells as
+// sanity fails, a pulse enters during combat, and everything sharpens when
+// the doom clock nears zero.
+let music = null;
+const musicState = { corruption: 0, inCombat: false, timeRemaining: -1, turn: 1, san: 99 };
+
+// Gradual dread 0..1 — the longer you play and the worse you're doing, the
+// more uncomfortable the score gets (independent of the discrete triggers).
+// Built on horror psychoacoustics: roughness, sub-bass, dissonance, and
+// timing unpredictability all scale with this.
+function computeDread() {
+    const turnPart = Math.min(musicState.turn / 25, 1) * 0.35;
+    const sanPart = (1 - Math.max(0, Math.min(musicState.san, 99)) / 99) * 0.45;
+    const doomPart = (musicState.timeRemaining >= 0
+        ? Math.max(0, Math.min((6 - musicState.timeRemaining) / 6, 1)) : 0) * 0.2;
+    return Math.min(1, turnPart + sanPart + doomPart);
+}
+
+function startMusic() {
+    if (music || !soundOn) return;
+    const ctx = getAudio();
+    if (!ctx) return;
+
+    const master = ctx.createGain();
+    master.gain.value = 0;
+    master.connect(ctx.destination);
+    master.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 4); // slow fade-in
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 220;
+    filter.connect(master);
+
+    // Two detuned low saws = the sea's drone
+    const o1 = ctx.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = 55;
+    const o2 = ctx.createOscillator(); o2.type = 'sawtooth'; o2.frequency.value = 55.7;
+    const g1 = ctx.createGain(); g1.gain.value = 0.5;
+    const g2 = ctx.createGain(); g2.gain.value = 0.4;
+    o1.connect(g1); g1.connect(filter);
+    o2.connect(g2); g2.connect(filter);
+
+    // Very slow LFO sweeping the filter — the swell of the tide
+    const lfo = ctx.createOscillator(); lfo.frequency.value = 0.05;
+    const lfoGain = ctx.createGain(); lfoGain.gain.value = 80;
+    lfo.connect(lfoGain); lfoGain.connect(filter.frequency);
+
+    // Dissonant tritone layer — silent while sane, rises with corruption
+    const diss = ctx.createOscillator(); diss.type = 'triangle'; diss.frequency.value = 77.8;
+    const dissGain = ctx.createGain(); dissGain.gain.value = 0;
+    diss.connect(dissGain); dissGain.connect(filter);
+
+    // Sub-bass layer (~28Hz, felt more than heard — the "Irreversible" trick).
+    // Silent at first; emerges as dread grows.
+    const sub = ctx.createOscillator(); sub.type = 'sine'; sub.frequency.value = 28;
+    const subGain = ctx.createGain(); subGain.gain.value = 0;
+    sub.connect(subGain); subGain.connect(master);
+
+    // Roughness layer: a tone whose amplitude flutters at 40-60Hz — the
+    // acoustic signature of a distress scream. Deeply aversive at low volume.
+    const rough = ctx.createOscillator(); rough.type = 'triangle'; rough.frequency.value = 110;
+    const roughGain = ctx.createGain(); roughGain.gain.value = 0;
+    const tremolo = ctx.createOscillator(); tremolo.frequency.value = 40;
+    const tremGain = ctx.createGain(); tremGain.gain.value = 0;   // depth follows dread
+    tremolo.connect(tremGain); tremGain.connect(roughGain.gain);
+    rough.connect(roughGain); roughGain.connect(filter);
+
+    o1.start(); o2.start(); lfo.start(); diss.start(); sub.start(); rough.start(); tremolo.start();
+    music = { ctx, master, filter, o1, o2, lfo, diss, dissGain,
+              sub, subGain, rough, roughGain, tremolo, tremGain, riser: null,
+              pulseTimer: null, swellTimer: null, boomTimer: null, whisperTimer: null };
+    updateMusic();
+    scheduleSwell();
+    scheduleBoom();
+    scheduleWhisper();
+}
+
+// Position a source around the listener's head (HRTF = real "behind you" on
+// headphones). angle 0 = front, PI = directly behind.
+function spatial(ctx, angle, dist = 1.5) {
+    try {
+        const p = ctx.createPanner();
+        p.panningModel = 'HRTF';
+        p.distanceModel = 'inverse';
+        p.refDistance = 1;
+        p.setPosition(Math.sin(angle) * dist, 0, -Math.cos(angle) * dist);
+        return p;
+    } catch (e) { return null; }
+}
+
+// Pick where a sound appears: calm → mostly in front/sides; high dread →
+// increasingly BEHIND the listener.
+function dreadAngle(dread) {
+    const spread = Math.PI * (0.5 + dread);          // 90° .. 270° of arc
+    const bias = dread * Math.PI;                     // center drifts to the back
+    const a = bias + (Math.random() - 0.5) * spread;
+    return Math.random() < 0.5 ? a : -a;
+}
+
+// Swells: a soft tone rises and falls somewhere around your head. While sane
+// it draws from a minor scale in front of you; as dread grows the notes turn
+// dissonant (minor 2nds, the tritone) and drift BEHIND you, on ever more
+// erratic timing (unpredictability is the point).
+function scheduleSwell() {
+    if (!music) return;
+    const dread = computeDread();
+    const base = 25000 - dread * 12000;
+    const jitter = (45000 + dread * 30000) * Math.random();
+    music.swellTimer = setTimeout(() => {
+        if (!music) return;
+        const ctx = music.ctx;
+        const d = computeDread();
+        const calm = [82.4, 98, 110, 130.8, 164.8];       // E2 G2 A2 C3 E3
+        const wrong = [116.5, 155.6, 103.8, 58.3];        // Bb2 Eb3 Ab2 Bb1 — semitone/tritone vs A
+        const pool = Math.random() < d ? wrong : calm;
+        const f = pool[Math.floor(Math.random() * pool.length)]
+                  * (1 + (Math.random() - 0.5) * (0.012 + d * 0.02));  // detune worsens
+        const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+        const g = ctx.createGain(); g.gain.value = 0;
+        const pan = spatial(ctx, dreadAngle(d));
+        o.connect(g);
+        if (pan) { g.connect(pan); pan.connect(music.filter); }
+        else { g.connect(music.filter); }
+        const t = ctx.currentTime;
+        g.gain.linearRampToValueAtTime(0.16, t + 4);
+        g.gain.linearRampToValueAtTime(0.0001, t + 11);
+        o.start(t); o.stop(t + 11.5);
+        scheduleSwell();
+    }, base + jitter);
+}
+
+// Something enormous shifts far below. At higher dread it is preceded by a
+// strategic near-silence — the quiet is what makes the impact land.
+function scheduleBoom() {
+    if (!music) return;
+    music.boomTimer = setTimeout(() => {
+        if (!music) return;
+        const ctx = music.ctx;
+        const d = computeDread();
+        const fire = () => {
+            if (!music) return;
+            const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = 36;
+            const g = ctx.createGain();
+            o.connect(g); g.connect(music.master);
+            const t = ctx.currentTime;
+            g.gain.setValueAtTime(0.12 + d * 0.06, t);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 2.5);
+            o.start(t); o.stop(t + 2.6);
+        };
+        if (d > 0.3 && Math.random() < 0.6) {
+            // duck to near-silence, hold, then the deep shift
+            const t = ctx.currentTime;
+            const hold = 3 + Math.random() * 3;
+            music.master.gain.linearRampToValueAtTime(0.006, t + 2);
+            setTimeout(() => {
+                if (!music) return;
+                fire();
+                music.master.gain.linearRampToValueAtTime(0.05, music.ctx.currentTime + 3);
+            }, (2 + hold) * 1000);
+        } else {
+            fire();
+        }
+        scheduleBoom();
+    }, 60000 + Math.random() * 120000);
+}
+
+// Headphone moment: a breath of filtered noise at one ear — or behind you.
+// Only once dread has set in, and never on a schedule you could predict.
+function scheduleWhisper() {
+    if (!music) return;
+    music.whisperTimer = setTimeout(() => {
+        if (!music) { return; }
+        const d = computeDread();
+        if (d > 0.35) {
+            const ctx = music.ctx;
+            const len = 1.5;
+            const buf = ctx.createBuffer(1, ctx.sampleRate * len, ctx.sampleRate);
+            const ch = buf.getChannelData(0);
+            for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+            const src = ctx.createBufferSource(); src.buffer = buf;
+            const bp = ctx.createBiquadFilter();
+            bp.type = 'bandpass'; bp.frequency.value = 2100; bp.Q.value = 2.5;
+            const g = ctx.createGain(); g.gain.value = 0;
+            // hard to one side, close to the head — or right behind it
+            const angle = Math.random() < 0.4 ? Math.PI + (Math.random() - 0.5) * 0.6
+                                              : (Math.random() < 0.5 ? 1 : -1) * (1.2 + Math.random() * 0.4);
+            const pan = spatial(ctx, angle, 0.6);
+            src.connect(bp); bp.connect(g);
+            if (pan) { g.connect(pan); pan.connect(music.master); }
+            else { g.connect(music.master); }
+            const t = ctx.currentTime;
+            // two breath-like puffs
+            g.gain.linearRampToValueAtTime(0.05 + d * 0.03, t + 0.25);
+            g.gain.linearRampToValueAtTime(0.008, t + 0.6);
+            g.gain.linearRampToValueAtTime(0.045 + d * 0.03, t + 0.9);
+            g.gain.linearRampToValueAtTime(0.0001, t + len);
+            src.start(t); src.stop(t + len);
+        }
+        scheduleWhisper();
+    }, 45000 + Math.random() * 90000);
+}
+
+function stopMusic() {
+    if (!music) return;
+    const m = music;
+    music = null;
+    try {
+        m.master.gain.linearRampToValueAtTime(0.0001, m.ctx.currentTime + 1);
+        if (m.pulseTimer) clearInterval(m.pulseTimer);
+        if (m.swellTimer) clearTimeout(m.swellTimer);
+        if (m.boomTimer) clearTimeout(m.boomTimer);
+        if (m.whisperTimer) clearTimeout(m.whisperTimer);
+        if (m.riser) { if (m.riser.timer) clearTimeout(m.riser.timer); try { m.riser.osc.stop(); } catch (e) {} }
+        setTimeout(() => {
+            try { [m.o1, m.o2, m.lfo, m.diss, m.sub, m.rough, m.tremolo].forEach(o => o.stop()); } catch (e) {}
+        }, 1200);
+    } catch (e) { /* context already gone */ }
+}
+
+function updateMusic() {
+    if (!music) return;
+    const t = music.ctx.currentTime;
+    const dread = computeDread();
+
+    // Madness: the tritone rises out of the drone
+    const dissLevels = [0, 0.12, 0.25, 0.4];
+    music.dissGain.gain.linearRampToValueAtTime(
+        dissLevels[Math.min(musicState.corruption, 3)], t + 2);
+
+    // Gradual dread: sub-bass emerges, scream-roughness flutters in, and the
+    // two drones drift apart (beating gets harsher the worse things go).
+    music.subGain.gain.linearRampToValueAtTime(dread * 0.14, t + 4);
+    music.roughGain.gain.linearRampToValueAtTime(dread * dread * 0.05, t + 4);
+    music.tremGain.gain.linearRampToValueAtTime(dread * dread * 0.05, t + 4);
+    music.tremolo.frequency.linearRampToValueAtTime(40 + dread * 25, t + 4);
+
+    // Doom near: everything a half-step sharper, tide moves faster
+    const doom = musicState.timeRemaining >= 0 && musicState.timeRemaining <= 3;
+    const base = doom ? 58.27 : 55;
+    music.o1.frequency.linearRampToValueAtTime(base, t + 2);
+    music.o2.frequency.linearRampToValueAtTime(base + 0.7 + dread * 1.8, t + 2);
+    music.lfo.frequency.linearRampToValueAtTime((doom ? 0.15 : 0.05) + dread * 0.05, t + 2);
+
+    // Deep dread: a Shepard-like riser — a pitch that climbs for 25s, resets
+    // inaudibly, climbs again. Tension that never resolves.
+    if (dread > 0.6 && !music.riser) startRiser();
+    else if (dread <= 0.55 && music.riser) stopRiser();
+
+    // Combat: a low pulse under everything
+    if (musicState.inCombat && !music.pulseTimer) {
+        music.pulseTimer = setInterval(() => {
+            if (soundOn && music) blip(110, 0.09, 'square', 0.04);
+        }, 480);
+    } else if (!musicState.inCombat && music.pulseTimer) {
+        clearInterval(music.pulseTimer);
+        music.pulseTimer = null;
+    }
+}
+
+function startRiser() {
+    if (!music || music.riser) return;
+    const ctx = music.ctx;
+    const o = ctx.createOscillator(); o.type = 'sine';
+    const g = ctx.createGain(); g.gain.value = 0;
+    o.connect(g); g.connect(music.filter);
+    o.start();
+    const cycle = () => {
+        if (!music || !music.riser) return;
+        const t = ctx.currentTime;
+        o.frequency.setValueAtTime(55, t);
+        o.frequency.linearRampToValueAtTime(110, t + 25);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.linearRampToValueAtTime(0.09, t + 8);
+        g.gain.setValueAtTime(0.09, t + 18);
+        g.gain.linearRampToValueAtTime(0.0001, t + 25);
+        music.riser.timer = setTimeout(cycle, 25000);
+    };
+    music.riser = { osc: o, gain: g, timer: null };
+    cycle();
+}
+
+function stopRiser() {
+    if (!music || !music.riser) return;
+    const r = music.riser;
+    music.riser = null;
+    if (r.timer) clearTimeout(r.timer);
+    try {
+        r.gain.gain.linearRampToValueAtTime(0.0001, music.ctx.currentTime + 2);
+        setTimeout(() => { try { r.osc.stop(); } catch (e) {} }, 2500);
+    } catch (e) {}
 }
 
 // Load archetype stat blocks and show the initial preview
@@ -156,7 +450,16 @@ async function startGame(event) {
 
     const name = document.getElementById('investigator-name').value;
     const archetype = document.getElementById('investigator-archetype').value;
-    const language = document.getElementById('game-language').value;
+    // Selector hidden while Spanish play is paused; element may not exist.
+    const langEl = document.getElementById('game-language');
+    const language = langEl ? langEl.value : 'en';
+
+    // Guard against double-submit: repeated BEGIN clicks each restarted the
+    // game server-side (and re-translated the intro) while the first loaded.
+    const startBtn = document.querySelector('.start-btn');
+    if (startBtn.disabled) return;
+    startBtn.disabled = true;
+    startBtn.textContent = '...';
 
     try {
         const response = await fetch('/api/game/start', {
@@ -192,17 +495,27 @@ async function startGame(event) {
             }
             const hintEl = document.createElement('div');
             hintEl.className = 'narrative-turn hint';
-            hintEl.textContent = 'Type what you do below — look around, examine the logs, head inside…';
+            hintEl.innerHTML =
+                'CÓMO JUGAR / HOW TO PLAY<br>' +
+                '• Escribe lo que TU personaje intenta (o usa los botones de abajo).<br>' +
+                '• Cuando aparezca el dado, haz click para tirarlo — decide si lo logras.<br>' +
+                '• El horror baja tu cordura (SAN). Sobrevive y descubre la verdad.';
             intro.appendChild(hintEl);
 
             refreshGameState();
             setStatus('');
             document.getElementById('action-input').focus();
+            startMusic();  // BEGIN click is the user gesture AudioContext needs
+            renderSuggestions('explore');
+            armExitFeedback();
         } else {
             setStatus('Error: ' + (data.error || 'unknown'), true);
         }
     } catch (error) {
         setStatus('Connection error: ' + error.message, true);
+    } finally {
+        startBtn.disabled = false;
+        startBtn.textContent = 'BEGIN';
     }
 }
 
@@ -218,11 +531,16 @@ function updateStats(stats) {
     document.getElementById('hp-value').textContent = stats.HP + '/' + maxHP;
     document.getElementById('san-value').textContent = stats.SAN + '/99';
     document.getElementById('luck-value').textContent = stats.Luck;
+    musicState.san = stats.SAN;
+    musicState.turn = parseInt(document.getElementById('turn-counter').textContent, 10) || musicState.turn;
+    updateMusic();
 }
 
 // Show the current enemy and its HP while fighting.
 function renderCombat(combat) {
     const bar = document.getElementById('combat-bar');
+    musicState.inCombat = !!combat;
+    updateMusic();
     if (!combat) { bar.classList.add('hidden'); return; }
     document.getElementById('combat-name').textContent = combat.name;
     document.getElementById('combat-hp').textContent = `HP ${combat.hp}`;
@@ -237,11 +555,14 @@ function renderResources(res) {
     const timeStat = document.getElementById('time-stat');
     const timeVal = document.getElementById('time-value');
 
-    // Ammo: show whenever the adventure tracks it.
-    if (res.ammo !== undefined) {
+    // Ammo: only shown once the player actually has a firearm (no phantom
+    // rounds without a gun).
+    if (res.has_firearm) {
         ammoVal.textContent = res.ammo;
         ammoVal.classList.toggle('depleted', res.ammo === 0);
         ammoStat.classList.remove('hidden');
+    } else {
+        ammoStat.classList.add('hidden');
     }
     // Doom clock: time_remaining = -1 means no clock.
     if (res.time_remaining !== undefined && res.time_remaining >= 0) {
@@ -249,6 +570,8 @@ function renderResources(res) {
         timeVal.classList.toggle('depleted', res.time_remaining <= 3);
         timeStat.classList.remove('hidden');
     }
+    musicState.timeRemaining = (res.time_remaining !== undefined) ? res.time_remaining : -1;
+    updateMusic();
 }
 
 // Render the dossier of NPCs the player has met, with how they regard you.
@@ -280,12 +603,142 @@ function applySanityFx(level) {
     screen.classList.remove('san-fx-1', 'san-fx-2', 'san-fx-3');
     if (level >= 1) screen.classList.add('san-fx-' + Math.min(level, 3));
     startHeartbeat(level);  // pulse loop kicks in at level 2+
+    musicState.corruption = level;
+    updateMusic();
 }
 
 function escapeHtml(s) {
     const d = document.createElement('div');
     d.textContent = s == null ? '' : s;
     return d.innerHTML;
+}
+
+// ---- Suggested actions: guidance chips so players always know a next move.
+// Playtest feedback: total freedom paralyzes ("no le hayo"), and after a roll
+// players didn't know how to continue. Rule-based (no LLM latency); clicking
+// a chip submits it as the action — typing anything remains king.
+const SUGGESTION_POOLS = {
+    explore: [
+        'Look around carefully', 'Examine that more closely', 'Search for anything useful',
+        'Listen for sounds', 'Move deeper inside', 'Check the logs and papers',
+        'Look for a weapon', 'Head toward the stairs',
+    ],
+    shaken: ['Take a breath and steady yourself', 'Pray quietly for a moment'],
+    afterRoll: ['Press on', 'Search the area', 'Back away slowly'],
+};
+
+function renderSuggestions(kind) {
+    const box = document.getElementById('suggestions');
+    if (pendingRoll) { box.classList.add('hidden'); return; }  // dice first
+    const picks = [];
+    const pool = [...SUGGESTION_POOLS[kind === 'afterRoll' ? 'afterRoll' : 'explore']];
+    while (picks.length < 3 && pool.length) {
+        picks.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+    }
+    if (musicState.san < 50) picks[picks.length - 1] =
+        SUGGESTION_POOLS.shaken[Math.floor(Math.random() * SUGGESTION_POOLS.shaken.length)];
+    box.innerHTML = picks.map(p =>
+        `<span class="suggestion-chip" onclick="useSuggestion(this)">${escapeHtml(p)}</span>`).join('');
+    box.classList.remove('hidden');
+}
+
+function useSuggestion(el) {
+    const input = document.getElementById('action-input');
+    if (input.disabled) return;
+    input.value = el.textContent;
+    document.getElementById('action-form').requestSubmit();
+}
+
+function hideSuggestions() {
+    document.getElementById('suggestions').classList.add('hidden');
+}
+
+// ---- Feedback: leave your findings any time, or on the way out.
+let fbRating = 0;
+let fbThenReset = false;
+let fbGiven = false;      //已 left feedback this session → stop nagging
+let fbPrompted = false;   // one-time mid-session nudge already shown
+
+function showFeedback(thenReset) {
+    fbThenReset = !!thenReset;
+    setRating(0);
+    const panel = document.getElementById('feedback-panel');
+    panel.classList.remove('hidden');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.getElementById('feedback-text').focus();
+}
+
+// Fire once when the player tries to LEAVE (close tab / navigate away). We
+// can't hold them, so if they've written anything we ship it with
+// sendBeacon, which survives page unload. If they've engaged but written
+// nothing, pop the panel so a returning/again-closing player sees the ask.
+function armExitFeedback() {
+    window.addEventListener('beforeunload', () => {
+        if (fbGiven) return;
+        const text = (document.getElementById('feedback-text').value || '').trim();
+        if (text || fbRating) {
+            const blob = new Blob(
+                [JSON.stringify({ text: text || '(solo rating)', rating: fbRating || undefined })],
+                { type: 'application/json' });
+            navigator.sendBeacon('/api/feedback', blob);
+            fbGiven = true;
+        } else if (gameStarted && !document.getElementById('feedback-panel').classList.contains('hidden') === false) {
+            // reveal the panel for next time (can't block unload reliably)
+            document.getElementById('feedback-panel').classList.remove('hidden');
+        }
+    });
+    // Also catch tab-hide on mobile (beforeunload is unreliable there).
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden' && !fbGiven && gameStarted) {
+            const text = (document.getElementById('feedback-text').value || '').trim();
+            if (text || fbRating) {
+                const blob = new Blob(
+                    [JSON.stringify({ text: text || '(solo rating)', rating: fbRating || undefined })],
+                    { type: 'application/json' });
+                navigator.sendBeacon('/api/feedback', blob);
+                fbGiven = true;
+            }
+        }
+    });
+}
+
+// One-time nudge after the player is clearly invested.
+function maybePromptFeedback(turn) {
+    if (fbPrompted || fbGiven || turn < 8) return;
+    fbPrompted = true;
+    showFeedback(false);
+    setStatus('Llevas un rato — ¿nos dejas una reseña rápida? (o [skip])');
+}
+
+function setRating(n) {
+    fbRating = n;
+    document.querySelectorAll('#feedback-stars a').forEach((a, i) => {
+        a.textContent = i < n ? '★' : '☆';
+        a.classList.toggle('lit', i < n);
+    });
+}
+
+function closeFeedback() {
+    document.getElementById('feedback-panel').classList.add('hidden');
+    if (fbThenReset) { fbThenReset = false; doReset(); }
+}
+
+async function submitFeedback() {
+    const text = document.getElementById('feedback-text').value.trim();
+    if (!text && !fbRating) { closeFeedback(); return; }
+    try {
+        await fetch('/api/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text || '(solo rating)', rating: fbRating || undefined })
+        });
+        setStatus('Feedback guardado — gracias, investigador.');
+    } catch (e) {
+        setStatus('No se pudo guardar el feedback', true);
+    }
+    fbGiven = true;  // stop exit/visibility nags once they've sent something
+    document.getElementById('feedback-text').value = '';
+    closeFeedback();
 }
 
 // Refresh game state from server (location, scene image).
@@ -375,7 +828,9 @@ function finishTurnUI(done, action, dmEl) {
     document.getElementById('turn-counter').textContent = done.turn;
     document.getElementById('location-display').textContent = done.location;
     if (done.pending_roll) showDiceArea(done.pending_roll);
+    else renderSuggestions('explore');
     refreshGameState();
+    maybePromptFeedback(done.turn);
 }
 
 // Submit Player Action — streams the DM narration over SSE, falls back to the
@@ -387,15 +842,22 @@ async function submitAction(event) {
     const action = actionInput.value.trim();
     if (!action) return;
 
-    setStatus('...');
+    setStatus('The keeper considers…');
     actionInput.disabled = true;
+    hideSuggestions();
     const { turnEl, dmEl } = beginTurn(action);
+
+    // Abort a stalled turn before the tunnel/proxy kills the connection (~100s),
+    // so the player gets a clean retry instead of the game appearing to close.
+    const ac = new AbortController();
+    const watchdog = setTimeout(() => ac.abort(), 90000);
 
     try {
         const resp = await fetch('/api/game/action/stream', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action })
+            body: JSON.stringify({ action }),
+            signal: ac.signal
         });
         if (!resp.ok || !resp.body) throw new Error('stream unavailable');
 
@@ -428,8 +890,15 @@ async function submitAction(event) {
         else { turnEl.remove(); throw new Error('stream ended early'); }
     } catch (error) {
         turnEl.remove();
-        await submitActionFallback(action);
+        // Streaming failed/timed out — try the plain endpoint; if THAT also
+        // fails, keep the game alive with a retry prompt (never a dead UI).
+        const ok = await submitActionFallback(action);
+        if (!ok) {
+            setStatus('The connection wavered. Your action wasn\'t lost — try again.', true);
+            renderSuggestions('explore');
+        }
     } finally {
+        clearTimeout(watchdog);
         if (!pendingRoll) {
             actionInput.disabled = false;
             actionInput.focus();
@@ -437,13 +906,17 @@ async function submitAction(event) {
     }
 }
 
-// Non-streaming fallback (original JSON endpoint).
+// Non-streaming fallback (original JSON endpoint). Returns true on success so
+// the caller can show a retry prompt if this also fails.
 async function submitActionFallback(action) {
+    const ac = new AbortController();
+    const watchdog = setTimeout(() => ac.abort(), 95000);
     try {
         const response = await fetch('/api/game/action', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action })
+            body: JSON.stringify({ action }),
+            signal: ac.signal
         });
         const data = await response.json();
         if (data.success) {
@@ -459,12 +932,16 @@ async function submitActionFallback(action) {
             setStatus(data.sanity_recovered > 0
                 ? `Your mind steadies. +${data.sanity_recovered} SAN` : '');
             if (data.pending_roll) showDiceArea(data.pending_roll);
+            else renderSuggestions('explore');
             refreshGameState();
-        } else {
-            setStatus(data.error || 'Action failed', true);
+            return true;
         }
+        setStatus(data.error || 'Action failed', true);
+        return false;
     } catch (error) {
-        setStatus(error.message, true);
+        return false;
+    } finally {
+        clearTimeout(watchdog);
     }
 }
 
@@ -498,6 +975,8 @@ function showDiceArea(roll) {
     result.className = '';
 
     document.getElementById('dice-area').classList.remove('hidden');
+    // First time a die ever appears, point the player at it.
+    document.getElementById('die-tip').classList.toggle('hidden', firstRollSeen);
 }
 
 function hideDiceArea() {
@@ -507,6 +986,7 @@ function hideDiceArea() {
     const actionInput = document.getElementById('action-input');
     actionInput.disabled = false;
     actionInput.focus();
+    if (gameStarted) renderSuggestions('afterRoll');
 }
 
 // Break off combat instead of throwing the attack die.
@@ -534,6 +1014,8 @@ async function flee() {
 async function rollDice() {
     if (!pendingRoll || rolling) return;
     rolling = true;
+    firstRollSeen = true;
+    document.getElementById('die-tip').classList.add('hidden');
     const roll = pendingRoll;  // capture (combat rounds re-show a new one)
 
     const die = document.getElementById('pixel-die');
@@ -679,12 +1161,18 @@ function showNarrative() {
 // Reset Game
 function resetGame() {
     if (!confirm('Reset the game? All progress will be lost.')) return;
+    // Ask for feedback on the way out (skip is one click); then reset.
+    showFeedback(true);
+}
 
+function doReset() {
     gameStarted = false;
     gameHistory = [];
     pendingRoll = null;
     clearTimeout(imagePollTimer);
     stopHeartbeat();
+    stopMusic();
+    musicState.corruption = 0; musicState.inCombat = false; musicState.timeRemaining = -1;
     document.getElementById('game-screen').classList.remove('san-fx-1', 'san-fx-2', 'san-fx-3');
     document.getElementById('combat-bar').classList.add('hidden');
     document.getElementById('dice-area').classList.add('hidden');

@@ -82,6 +82,41 @@ ROLL_KEYWORDS: Dict[str, Tuple[str, str]] = {
     'bluff': ('persuade', 'Hard'),
     'intimidate': ('persuade', 'Normal'),
     'bribe': ('persuade', 'Normal'),
+
+    # --- Spanish action verbs (playtest: ES players almost never rolled) ---
+    # physical / climb / move
+    'trepo': ('climb', 'Normal'), 'trepar': ('climb', 'Normal'),
+    'escalo': ('climb', 'Normal'), 'escalar': ('climb', 'Hard'),
+    'subo': ('climb', 'Normal'), 'trepar por': ('climb', 'Normal'),
+    'empujo': ('brawl', 'Normal'), 'empujar': ('brawl', 'Normal'),
+    'jalo': ('climb', 'Normal'), 'fuerzo': ('brawl', 'Hard'), 'forzar': ('brawl', 'Hard'),
+    'rompo': ('brawl', 'Hard'), 'romper': ('brawl', 'Hard'),
+    'salto': ('jump', 'Normal'), 'saltar': ('jump', 'Normal'),
+    'nado': ('swim', 'Normal'), 'nadar': ('swim', 'Normal'),
+    'esquivo': ('dodge', 'Normal'), 'esquivar': ('dodge', 'Normal'),
+    'corro': ('climb', 'Normal'), 'huyo': ('dodge', 'Normal'),
+    # combat
+    'ataco': ('brawl', 'Normal'), 'atacar': ('brawl', 'Normal'),
+    'golpeo': ('brawl', 'Normal'), 'golpear': ('brawl', 'Normal'),
+    'peleo': ('brawl', 'Normal'), 'pelear': ('brawl', 'Normal'),
+    'disparo': ('firearms_revolver', 'Normal'), 'disparar': ('firearms_revolver', 'Normal'),
+    'apuñalo': ('brawl', 'Normal'), 'apuñalar': ('brawl', 'Normal'),
+    # search / investigation
+    'busco': ('spot_hidden', 'Hard'), 'buscar': ('spot_hidden', 'Hard'),
+    'investigo': ('investigate', 'Normal'), 'investigar': ('investigate', 'Normal'),
+    'examino': ('investigate', 'Normal'), 'examinar': ('investigate', 'Normal'),
+    'reviso': ('investigate', 'Normal'), 'revisar': ('investigate', 'Normal'),
+    'inspecciono': ('investigate', 'Normal'), 'inspeccionar': ('investigate', 'Normal'),
+    'escucho': ('listen', 'Normal'), 'escuchar': ('listen', 'Normal'),
+    # occult / knowledge
+    'descifro': ('occult', 'Hard'), 'descifrar': ('occult', 'Hard'),
+    'leo': ('occult', 'Hard'), 'leer': ('occult', 'Hard'),
+    'interpreto': ('occult', 'Hard'), 'entiendo': ('occult', 'Hard'),
+    # social
+    'persuado': ('persuade', 'Normal'), 'persuadir': ('persuade', 'Normal'),
+    'convenzo': ('persuade', 'Normal'), 'convencer': ('persuade', 'Normal'),
+    'intimido': ('persuade', 'Normal'), 'intimidar': ('persuade', 'Normal'),
+    'engaño': ('persuade', 'Hard'), 'engañar': ('persuade', 'Hard'),
 }
 
 
@@ -112,10 +147,32 @@ MENTAL_SKILLS = {
 # clearly attacks a present threat but the DM didn't formally start a fight.
 ATTACK_VERBS = {
     "attack", "fight", "hit", "punch", "kick", "shoot", "fire", "stab", "strike",
-    "kill", "slash", "swing", "shoot at", "gun down",
+    "kill", "slash", "swing", "shoot at", "gun down", "engage", "combat",
+    "charge at", "lunge at", "confront",
     "ataco", "atacar", "ataca", "disparo", "disparar", "dispara", "golpeo",
     "golpear", "golpea", "pelear", "peleo", "mato", "matar", "apuñalo",
-    "apuñalar", "embisto", "embestir", "le pego", "disparale",
+    "apuñalar", "embisto", "embestir", "le pego", "disparale", "combate",
+    "enfrento", "enfrentar", "me enfrento",
+}
+
+# Ambush: the DM narrates something physically seizing/attacking the PLAYER.
+# Combat should start even though the player never declared an attack.
+AMBUSH_CUES = {
+    "grabs you", "grabs your", "grasps your", "grasps you", "seizes you",
+    "lunges at you", "attacks you", "strikes at you", "charges at you",
+    "wraps around you", "pounces on you", "drags you", "claws at you",
+    "te agarra", "te ataca", "se abalanza sobre ti", "te embiste",
+    "te arrastra", "te sujeta",
+}
+
+# Movement intent — location auto-detect only fires when the PLAYER tries to
+# move. Matching location keywords against the DM's prose alone teleported the
+# player whenever the DM merely mentioned a room ("the hidden chamber above").
+MOVEMENT_VERBS = {
+    "go", "enter", "climb", "descend", "head", "walk", "move", "step", "run to",
+    "approach", "leave", "exit", "sneak", "crawl", "follow", "return",
+    "entro", "entrar", "subo", "subir", "bajo", "bajar", "voy", "camino",
+    "me dirijo", "avanzo", "salgo", "salir", "regreso", "vuelvo", "sigo",
 }
 
 # Deliberate recovery: resting/praying steadies the mind. Costs the turn (the
@@ -128,6 +185,17 @@ REST_KEYWORDS = {
 }
 REST_COOLDOWN_TURNS = 3
 REST_RECOVERY = (1, 2)  # random range of SAN recovered per rest
+
+# STRICT cues for a major horror reveal in the DM's OWN prose (a demon
+# unleashed, an entity manifesting). Deliberately narrow — unlike
+# SANITY_TRIGGERS (keyed off the player's words), matching the DM's prose too
+# loosely would bleed SAN on mere atmosphere. Big reveals must cost sanity.
+ESCALATION_CUES = {
+    "unleashed", "has awakened", "awakens", "demon", "manifests before",
+    "rises from the deep", "sea monster", "it has claimed", "will not rest",
+    "demonio", "liberado", "ha despertado", "se manifiesta", "monstruo marino",
+    "no descansará",
+}
 
 # Witnessing the unnatural costs Sanity. If the DM narrates horror but forgets
 # the mechanic, the engine forces a Sanity check on these cues.
@@ -407,12 +475,26 @@ class GenerativeGameEngine:
         import time
 
         self.ollama_endpoint = ollama_endpoint
-        self.model = model
-        self.llm = OllamaClient(endpoint=ollama_endpoint, model=model)
+        # In hosted-API mode (LLM_PROVIDER=openai/groq) the environment is the
+        # source of truth for endpoint+model; the caller's Ollama-era defaults
+        # are ignored so deploys don't need code changes.
+        from .llm_client import resolve_llm_config
+        _llm_cfg = resolve_llm_config()
+        if _llm_cfg["provider"] == "openai":
+            self.model = _llm_cfg["model"]
+            self.llm = OllamaClient()
+        else:
+            self.model = model
+            self.llm = OllamaClient(endpoint=ollama_endpoint, model=model)
         self.session_id = session_id or f"session_{int(time.time())}"
         self.language = language
         self.state: Optional[GameState] = None
         self.rules = CoC7eRulesEngine()
+
+        # Tool-calling is OFF by default: it is non-streaming, so the player
+        # stares at nothing for the whole generation. The tag path streams from
+        # the first token and the engine synthesizes any missing mechanics.
+        self.use_tools = os.environ.get("DM_USE_TOOLS", "0") == "1"
 
         # Load adventure content from data (story seed, locations, NPCs,
         # factions, relationships, keywords) instead of engine constants.
@@ -508,7 +590,7 @@ class GenerativeGameEngine:
             npcs_talked_to={},
             last_roll=None,
             npc_reputation={},
-            ammo=int(self.adventure_config.resources.get("ammo", 0)),
+            ammo=0,  # start unarmed — a firearm (and its rounds) must be found
             time_limit=int(self.adventure_config.resources.get("time_limit", 0)),
         )
 
@@ -626,10 +708,17 @@ class GenerativeGameEngine:
             f"(Respond only in {self._LANG_NAMES.get(self.language, self.language)}.)")
 
     def localized_intro(self) -> str:
-        """The opening story seed, translated to the narration language (cached)."""
+        """The opening story seed in the narration language.
+
+        Prefers a pre-authored translation from the adventure config (instant,
+        deterministic); falls back to a cached one-off LLM translation.
+        """
         seed = self.STORY_SEED.strip()
         if self.language == "en":
             return seed
+        static = self.adventure_config.story_seed_i18n.get(self.language)
+        if static:
+            return static.strip()
         if getattr(self, "_intro_cache", None):
             return self._intro_cache
         name = self._LANG_NAMES.get(self.language, self.language)
@@ -645,7 +734,7 @@ class GenerativeGameEngine:
         self._intro_cache = translated or seed
         return self._intro_cache
 
-    def _call_ollama(self, prompt: str, max_tokens: int = 200, on_chunk=None) -> str:
+    def _call_ollama(self, prompt: str, max_tokens: int = 150, on_chunk=None) -> str:
         """
         Call Ollama with adventure context and conversation history.
         Delegates transport, retries and fallbacks to OllamaClient.
@@ -700,6 +789,32 @@ class GenerativeGameEngine:
         if context:
             return f"{context}\n"
         return ""
+
+    def _retry_if_repetitive(self, dm_prompt: str, dm_response: str) -> str:
+        """
+        Echo-trap guard: weak models often copy their own previous reply almost
+        verbatim (same handle, same lantern click, twice). If the new response
+        is >55% similar to the last DM beat, regenerate once demanding
+        something new. The retry is silent (not streamed); on the web the final
+        text replaces the stream, on the terminal the stored narrative wins.
+        """
+        from difflib import SequenceMatcher
+
+        last_dm = next((line[4:] for line in reversed(self.state.narrative)
+                        if line.startswith("DM: ")), "")
+        if not last_dm or len(dm_response) < 40:
+            return dm_response
+        ratio = SequenceMatcher(None, dm_response.lower(), last_dm.lower()).ratio()
+        if ratio < 0.55:
+            return dm_response
+
+        logger.info("repetitive DM reply (%.0f%% match); retrying once", ratio * 100)
+        retry = self._call_ollama(
+            dm_prompt + "\n\nIMPORTANT: Your previous reply repeated the last scene "
+            "almost verbatim. Write something NEW — advance the scene, reveal a "
+            "change, or escalate the threat. Do not reuse prior sentences.",
+            max_tokens=150)
+        return retry or dm_response
 
     def _build_dm_system_prompt(self) -> str:
         """
@@ -936,7 +1051,7 @@ DO NOT output template text. Do not show IF/ELSE logic. Just tell the story.
         location_details = {
             "Point Black Lighthouse - Exterior": "salt-air smell, dark rocks, crashing waves, fog, lighthouse tower visible above",
             "Lighthouse Interior": "damp stone walls, spiral iron stairs, salt smell, cold stone, strange luminescent fungus glowing faintly green",
-            "Keeper's Quarters": "sparse furniture, dust, faded pictures on walls, musty air, old maritime books, personal effects, chemical smell",
+            "Keeper's Quarters": "sparse furniture, dust, faded pictures, musty air, old maritime books, personal effects, chemical smell; among the keeper's things a holstered .38 revolver can be found (grant it with [ITEM_FOUND: revolver] if the player searches)",
             "Lighthouse Stairs": "spiral stone stairs groaning underfoot, flickering light from above, salt smell, echoing sounds, fungus on walls",
             "Lantern Room": "bright beacon light, wide windows with ocean view, mechanical gears, heat from lamp, scattered papers with symbols",
             "Ground Floor": "solid stone floor, damp smell, darkness beyond flashlight range, echoing sounds, metal door",
@@ -944,6 +1059,15 @@ DO NOT output template text. Do not show IF/ELSE logic. Just tell the story.
         }
 
         sensory_grounding = location_details.get(self.state.location, "You are still in the lighthouse, with its damp stone walls.")
+
+        # Early game: nudge the DM to introduce the NPC who summoned the player,
+        # so the cast actually appears (playtest: nobody ever met an NPC).
+        early_hint = ""
+        if self.state.turn <= 3 and "warner" not in self.state.npcs_talked_to:
+            early_hint = (
+                "\nEARLY GAME: Lt. William Warner (Coast Guard) is the officer who "
+                "called the investigator here — have him present or arriving nearby to "
+                "greet them, give the initial hook, and react to their questions.\n")
 
         # IMPROVED: Stronger location pinning (mentioned 3 times in prompt for emphasis)
         location_constraint = f"""
@@ -960,7 +1084,7 @@ If the player tries to leave, describe the TRANSITION first.
 
         prompt = f"""
 {location_constraint}
-
+{early_hint}
 {state_context}
 
 Recent narrative:
@@ -969,8 +1093,11 @@ Recent narrative:
 === PLAYER ACTION THIS TURN ===
 {player_action}
 
-Respond with the IMMEDIATE narrative outcome of this action. Stay in location.
-Write 2-4 complete sentences and always finish your final sentence.
+Respond DIRECTLY to THIS action — do NOT continue your previous scene as if
+the player had said nothing. If the action is impossible or absurd, narrate
+the attempt itself failing in-world (the gesture, the silence after it).
+Stay in location. Write 2-3 SHORT sentences and always finish your final sentence.
+NO headers, NO notes, NO lists, NO "Respuesta:"/"Nota:" labels — just prose.
 Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
 """
         return prompt
@@ -1089,7 +1216,7 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
         npc_dialogue = []
         clean_response = ""
 
-        if self.model in TOOL_CAPABLE_MODELS:
+        if self.use_tools and self.model in TOOL_CAPABLE_MODELS:
             # Build narrative context for tool calling
             if self.memory and self.memory.enabled:
                 semantic_hits = self.memory.query_relevant_facts(player_input, n=5)
@@ -1128,6 +1255,7 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
                 # Tool calling failed or returned empty - fall back to tag-based system
                 dm_prompt = self._build_dm_prompt(player_input)
                 dm_response = self._call_ollama(dm_prompt, on_chunk=on_chunk)
+                dm_response = self._retry_if_repetitive(dm_prompt, dm_response)
 
                 parsed = parse_dm_response(dm_response)
                 rolls_requested = parsed["rolls_requested"]
@@ -1141,6 +1269,7 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
             # Model doesn't support tool calling - use tag-based system
             dm_prompt = self._build_dm_prompt(player_input)
             dm_response = self._call_ollama(dm_prompt, on_chunk=on_chunk)
+            dm_response = self._retry_if_repetitive(dm_prompt, dm_response)
 
             parsed = parse_dm_response(dm_response)
             rolls_requested = parsed["rolls_requested"]
@@ -1165,6 +1294,10 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
             if (any(v in pi for v in ATTACK_VERBS)
                     and any(w in scene for w in SANITY_TRIGGERS)):
                 combat_start.append(self._infer_enemy(scene))
+            # Ambush: the DM narrated something seizing/attacking the player —
+            # the fight starts whether they wanted it or not.
+            elif any(cue in clean_response.lower() for cue in AMBUSH_CUES):
+                combat_start.append(self._infer_enemy(scene))
 
         # Phase 2e Fix C: Synthesize roll if LLM omitted one for a physical action
         if not rolls_requested and not combat_start and not sanity_checks:
@@ -1182,6 +1315,12 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
         # prose) so atmospheric narration doesn't bleed SAN every turn.
         if not sanity_checks and any(w in player_input.lower() for w in SANITY_TRIGGERS):
             sanity_checks.append(str(random.randint(2, 5)))
+
+        # Escalation enforcement: if the DM's own prose delivers a MAJOR horror
+        # reveal (strict cues only) without charging for it, the engine bills
+        # the sanity cost — epic reveals can't be free.
+        if not sanity_checks and any(cue in clean_response.lower() for cue in ESCALATION_CUES):
+            sanity_checks.append(str(random.randint(3, 6)))
 
         # Deliberate recovery: resting/praying steadies the mind. Resting is a
         # deliberately SAFE action — it overrides any roll the DM requested for
@@ -1230,15 +1369,35 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
         # Update sanity system (reduce disorder durations, etc.)
         self.update_sanity_system()
 
-        # Auto-detect location changes from narrative (keywords from adventure config)
-        narrative_lower = clean_response.lower()
-        location_map = self.adventure_config.location_keywords
-        for keyword, new_location in location_map.items():
-            if keyword in narrative_lower and new_location != self.state.location:
-                self.state.location = new_location
+        # Explicit scene change: the DM emitted [LOCATION: name]. Validated
+        # against the adventure's registered locations — language-independent
+        # (fixes Spanish players never matching English keywords) and rejects
+        # invented off-map places (containment).
+        moved_by_tag = False
+        for wanted in parsed.get("location_moves", []):
+            resolved = self._resolve_location(wanted)
+            if resolved and resolved != self.state.location:
+                self.state.location = resolved
                 if self.location_state:
-                    self.location_state.visit_location(new_location, self.state.turn)
+                    self.location_state.visit_location(resolved, self.state.turn)
+                moved_by_tag = True
                 break
+            elif not resolved:
+                logger.info("DM tagged unknown location %r — ignored", wanted)
+
+        # Keyword fallback — ONLY when the player expressed movement intent.
+        # Keying off the DM's prose alone teleported the player whenever a
+        # room was merely mentioned in narration.
+        pi_lower = player_input.lower()
+        if not moved_by_tag and any(v in pi_lower for v in MOVEMENT_VERBS):
+            haystack = f"{pi_lower} {clean_response.lower()}"
+            location_map = self.adventure_config.location_keywords
+            for keyword, new_location in location_map.items():
+                if keyword in haystack and new_location != self.state.location:
+                    self.state.location = new_location
+                    if self.location_state:
+                        self.location_state.visit_location(new_location, self.state.turn)
+                    break
 
         # If a new roll is requested, clear the previous roll record
         # (DM has now responded to the consequences)
@@ -1449,6 +1608,13 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
             return f"You already have {item_name}."
 
         self.state.investigator.inventory.append(item_name)
+
+        # Finding the firearm loads it with the adventure's ammo (so AMMO stops
+        # being a decorative HUD number the player can never use).
+        if item_key == "revolver" and self.state.ammo <= 0:
+            self.state.ammo = int(self.adventure_config.resources.get("ammo", 6))
+            return f"You pick up: {item_name} — loaded, {self.state.ammo} rounds."
+
         return f"You pick up: {item_name}"
 
     def drop_item(self, item_name: str) -> str:
@@ -1537,14 +1703,38 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
             "message": f"Combat started: {enemy['name']} (HP: {enemy['hp']})"
         }
 
+    def _resolve_location(self, wanted: str) -> Optional[str]:
+        """Match a DM-tagged location against the adventure's registry.
+
+        Accepts key or display name, case-insensitive; substring match as a
+        fallback ("Basement" ⊂ "the Basement"). Returns the canonical display
+        name, or None if it isn't a real place in this adventure.
+        """
+        w = wanted.strip().lower()
+        if not w:
+            return None
+        for loc in self.adventure_config.locations:
+            if w in (loc["key"].lower(), loc["name"].lower()):
+                return loc["name"]
+        for loc in self.adventure_config.locations:
+            if w in loc["name"].lower() or loc["name"].lower() in w:
+                return loc["name"]
+        return None
+
     def _infer_enemy(self, text: str) -> str:
-        """Best-guess enemy key from scene text (for synthesized combat)."""
+        """Best-guess enemy key from scene text (for synthesized combat).
+
+        Cues must be SPECIFIC: "lurking in the shadows" is everyday horror
+        phrasing and must not summon the deadliest enemy in the roster —
+        only an explicitly shadow-natured creature does.
+        """
         t = text.lower()
-        if any(w in t for w in ("deep one", "fish", "amphib", "scaled", "gill")):
+        if any(w in t for w in ("deep one", "fish", "amphib", "scaled", "gill", "seaweed")):
             return "deep_one_hybrid"
-        if any(w in t for w in ("corpse", "dead", "cadaver", "cadáver", "rotting", "zombie")):
+        if any(w in t for w in ("corpse", "dead body", "cadaver", "cadáver", "rotting", "zombie")):
             return "animated_corpse"
-        if any(w in t for w in ("shadow", "sombra", "darkness given", "shade")):
+        if any(w in t for w in ("shadow entity", "shadow thing", "living shadow",
+                                "made of shadow", "sombra viviente", "criatura de sombra")):
             return "shadow_thing"
         return "deep_one_hybrid"
 
@@ -1581,25 +1771,36 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
         pending["combat"] = True
         return pending
 
-    def resolve_combat_round(self, player_roll_success: bool) -> Dict:
-        """Resolve one round of combat: player attack, then enemy counter."""
+    def resolve_combat_round(self, player_roll_success: bool,
+                             critical: Optional[str] = None) -> Dict:
+        """Resolve one round of combat: player attack, then enemy counter.
+
+        Crits matter: a CRITICAL SUCCESS (d100 <= 5) deals double damage and
+        the staggered enemy loses its counter-attack; a CRITICAL FAILURE
+        (>= 96) leaves an opening — the enemy's counter hits automatically.
+        """
         if not self.state.active_combat:
             return {"error": "Not in combat"}
 
         enemy = self.state.active_combat
-        result = {"player_hit": False, "enemy_hit": False}
+        result = {"player_hit": False, "enemy_hit": False, "critical": critical}
         lines = []
+        crit_success = critical == "CRITICAL SUCCESS"
+        crit_failure = critical == "CRITICAL FAILURE"
 
         # Firearms consume a round when used as the attack.
         # (Ammo already spent in execute_skill_check before we get here.)
 
         # Player attacks
         if player_roll_success:
-            damage = random.randint(2, 6)
+            damage = random.randint(2, 6) * (2 if crit_success else 1)
             enemy["hp"] -= damage
             result["player_hit"] = True
             result["player_damage"] = damage
-            lines.append(f"You strike — {enemy['name']} takes {damage} damage.")
+            if crit_success:
+                lines.append(f"CRITICAL! A devastating blow — {enemy['name']} takes {damage} damage.")
+            else:
+                lines.append(f"You strike — {enemy['name']} takes {damage} damage.")
 
             if enemy["hp"] <= 0:
                 self.state.active_combat = None
@@ -1610,24 +1811,29 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
                     "enemy_hp": 0, "narrative": " ".join(lines),
                 }
         else:
-            lines.append("Your attack goes wide.")
+            lines.append("Your attack goes wide." if not crit_failure
+                         else "FUMBLE! You stumble, wide open.")
 
-        # Enemy counter-attacks
-        enemy_roll = self.rules.roll_d100()
-        if enemy_roll <= enemy["skill"]:
-            damage = random.randint(1, enemy.get("damage", 4))
-            hp_res = self.apply_hp_damage(damage)
-            result["enemy_hit"] = True
-            result["enemy_damage"] = damage
-            lines.append(f"{enemy['name']} strikes back — you take {damage} damage.")
-            if hp_res.get("state") == "DEAD":
-                self.state.active_combat = None
-                return {
-                    **result, "combat_over": True, "player_dead": True,
-                    "enemy_hp": enemy["hp"], "narrative": " ".join(lines),
-                }
+        # Enemy counter-attacks — skipped when staggered by a critical hit;
+        # automatic when the player fumbled.
+        if crit_success:
+            lines.append(f"{enemy['name']} reels, too staggered to strike back.")
         else:
-            lines.append(f"{enemy['name']} lunges, but misses.")
+            enemy_roll = 0 if crit_failure else self.rules.roll_d100()
+            if enemy_roll <= enemy["skill"]:
+                damage = random.randint(1, enemy.get("damage", 4))
+                hp_res = self.apply_hp_damage(damage)
+                result["enemy_hit"] = True
+                result["enemy_damage"] = damage
+                lines.append(f"{enemy['name']} strikes back — you take {damage} damage.")
+                if hp_res.get("state") == "DEAD":
+                    self.state.active_combat = None
+                    return {
+                        **result, "combat_over": True, "player_dead": True,
+                        "enemy_hp": enemy["hp"], "narrative": " ".join(lines),
+                    }
+            else:
+                lines.append(f"{enemy['name']} lunges, but misses.")
 
         result["combat_over"] = False
         result["enemy_hp"] = enemy["hp"]
@@ -1813,7 +2019,7 @@ Make the failure matter and hard to undo. Do NOT contradict the mechanical outco
 NO NEW ROLLS. NO TAGS. Just the outcome."""
 
         # Get DM response for the consequence
-        consequence_response = self._call_ollama(consequence_prompt, max_tokens=200, on_chunk=on_chunk)
+        consequence_response = self._call_ollama(consequence_prompt, max_tokens=120, on_chunk=on_chunk)
 
         # Parse tags only to strip them; the engine already owns any damage so
         # we must NOT re-apply LLM-emitted HP/SAN here (would double-count).
@@ -2093,6 +2299,62 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
 
         return {"events": events, "pending_roll": pending_roll}
 
+    def export_playtest(self, reason: str = "manual") -> Optional[str]:
+        """
+        Archive the full session to playtests/ for post-mortem analysis.
+
+        Captures the complete narrative plus metadata (actions, locations,
+        stats trajectory endpoints, NPCs, companions, resources, ending) so
+        past games can be studied to tune the DM and mechanics.
+
+        Args:
+            reason: why it was archived — "reset", "ending", or "manual".
+        """
+        if not self.state:
+            return None
+        from datetime import datetime
+        from pathlib import Path as _Path
+
+        out_dir = _Path(os.environ.get("DATA_DIR", ".")) / "playtests"
+        out_dir.mkdir(exist_ok=True)
+        inv = self.state.investigator
+        data = {
+            "archived_at": datetime.now().isoformat(),
+            "reason": reason,
+            "session_id": self.session_id,
+            "adventure": self.adventure_name,
+            "language": self.language,
+            "model": self.model,
+            "turns": self.state.turn,
+            "game_phase": self.state.game_phase,
+            "ending": self.state.ending_reached,
+            "final_location": self.state.location,
+            "investigator": {
+                "name": inv.name,
+                "occupation": inv.occupation,
+                "HP": inv.characteristics.get("HP"),
+                "SAN": inv.characteristics.get("SAN"),
+                "inventory": inv.inventory,
+                "visited_locations": inv.visited_locations,
+                "sanity_breaks": inv.sanity_breaks,
+            },
+            "resources": self.resources_status(),
+            "npcs": self.get_npc_status(),
+            "companions": self.companions.to_dict() if self.companions else None,
+            "recent_actions": self.state.recent_actions,
+            "narrative": self.state.narrative,
+        }
+        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_sid = re.sub(r"[^A-Za-z0-9_-]", "", self.session_id)[:12] or "anon"
+        path = out_dir / f"{stamp}_{safe_sid}.json"
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+        except OSError:
+            logger.warning("playtest export failed", exc_info=True)
+            return None
+        return str(path)
+
     def resources_status(self) -> Dict:
         """Finite stakes for the HUD: rounds left and turns until doom."""
         if not self.state:
@@ -2100,9 +2362,12 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
         remaining = -1
         if self.state.time_limit:
             remaining = max(0, self.state.time_limit - self.state.turn)
+        has_firearm = any("revolver" in i.lower() or "pistol" in i.lower()
+                          for i in self.state.investigator.inventory)
         return {
             "ammo": self.state.ammo,
-            "time_remaining": remaining,   # -1 means no clock
+            "has_firearm": has_firearm,   # HUD hides AMMO until the player is armed
+            "time_remaining": remaining,  # -1 means no clock
             "time_limit": self.state.time_limit,
         }
 

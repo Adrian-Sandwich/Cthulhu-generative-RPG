@@ -48,10 +48,10 @@
                         <option value="occultist">Occultist</option>
                         <option value="wanderer">Wanderer</option>
                     </select>
-                    <select id="game-language" title="Narration language">
-                        <option value="en">English</option>
-                        <option value="es">Español</option>
-                    </select>
+                    <!-- Language selector hidden again by request. Engine i18n
+                         + Spanish roll keywords stay in place; re-enable by
+                         restoring this select and the language line in
+                         start_game. -->
                     <button type="submit" class="start-btn">BEGIN</button>
                 </div>
             </form>
@@ -82,6 +82,7 @@
                     <a onclick="showSheet()">[sheet]</a>
                     <a onclick="showHistory()">[history]</a>
                     <a id="sound-toggle" onclick="toggleSound()">[sound on]</a>
+                    <a onclick="showFeedback(false)">[feedback]</a>
                     <a onclick="resetGame()">[new game]</a>
                 </span>
             </div>
@@ -161,6 +162,7 @@
 
             <div id="dice-area" class="hidden">
                 <span id="dice-label">ROLL: Dodge (Hard) — target 20</span>
+                <div id="die-tip" class="hidden">↓ ¡Haz click en el dado para tirar! / Click the die to roll!</div>
                 <div id="die-stage">
                     <div id="pixel-die" onclick="rollDice()" role="button" tabindex="0"
                          aria-label="Throw the die">
@@ -175,6 +177,22 @@
                 <span id="dice-result"></span>
                 <a id="flee-btn" class="hidden" onclick="flee()">[flee]</a>
             </div>
+
+            <div id="feedback-panel" class="hidden">
+                <div class="feedback-title">LEAVE YOUR FINDINGS, INVESTIGATOR</div>
+                <textarea id="feedback-text" rows="4" maxlength="2000"
+                    placeholder="¿Qué te gustó? ¿Qué se rompió? ¿Qué no se entendió?"></textarea>
+                <div class="feedback-row">
+                    <span id="feedback-stars">
+                        <a onclick="setRating(1)">☆</a><a onclick="setRating(2)">☆</a><a onclick="setRating(3)">☆</a><a onclick="setRating(4)">☆</a><a onclick="setRating(5)">☆</a>
+                    </span>
+                    <span class="spacer"></span>
+                    <a class="fb-btn" onclick="submitFeedback()">[send]</a>
+                    <a class="fb-btn" onclick="closeFeedback()">[skip]</a>
+                </div>
+            </div>
+
+            <div id="suggestions" class="hidden"></div>
 
             <form id="action-form" onsubmit="submitAction(event)">
                 <span class="prompt">&gt;</span>

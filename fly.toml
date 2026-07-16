@@ -1,0 +1,36 @@
+# Fly.io deploy config for The Lighthouse.
+# First run:  fly launch --no-deploy   (creates the app + edits this file)
+# then:       fly volume create data --size 1
+#             fly secrets set SECRET_KEY=$(openssl rand -hex 32) LLM_API_KEY=<groq-key>
+#             fly deploy
+app = "the-lighthouse"          # change to your unique app name
+primary_region = "dfw"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  HOST = "0.0.0.0"
+  PORT = "8080"
+  FLASK_DEBUG = "0"
+  DATA_DIR = "/data"
+  LLM_PROVIDER = "openai"
+  LLM_BASE_URL = "https://api.groq.com/openai/v1"
+  LLM_MODEL = "llama-3.3-70b-versatile"
+  # Secrets (SECRET_KEY, LLM_API_KEY) via `fly secrets set` — never in this file.
+
+[[mounts]]
+  source = "data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0        # scale-to-zero when idle (cheap)
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 40
+    soft_limit = 25

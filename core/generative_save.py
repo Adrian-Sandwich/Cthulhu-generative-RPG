@@ -5,6 +5,7 @@ Handles serialization and recovery of complete game sessions
 """
 
 import json
+import os
 import re
 from pathlib import Path
 from datetime import datetime
@@ -12,7 +13,9 @@ from typing import Tuple, Dict, List, Optional
 from dataclasses import asdict
 
 
-SAVES_DIR = Path("saves/generative")
+# DATA_DIR lets a PaaS deploy point all persistence at a mounted volume
+# (ephemeral container FS otherwise loses saves on every restart).
+SAVES_DIR = Path(os.environ.get("DATA_DIR", ".")) / "saves" / "generative"
 _SAFE_ID_RE = re.compile(r"[^A-Za-z0-9_-]")
 _MAX_ID_LEN = 128
 

@@ -507,7 +507,8 @@ def _run_game_loop(engine: GenerativeGameEngine, model: str):
 
                 if pending.get("combat") and engine.state.active_combat:
                     combat_round = engine.resolve_combat_round(
-                        bool(roll_result and roll_result.get("success")))
+                        bool(roll_result and roll_result.get("success")),
+                        critical=roll_result.get("critical") if roll_result else None)
                     if "error" not in combat_round:
                         clear()
                         print_header("COMBAT ROUND")

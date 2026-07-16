@@ -1286,6 +1286,14 @@ Do not prefix lines with "DM:" or "Player:" and do not echo roll results.
         for found in parsed.get("ammo_found", []):
             self._grant_ammo(found)
 
+        # Authored endings: the DM may declare a story ending with [ENDING: x]
+        # for outcomes the engine can't detect from stats (escape/victory/
+        # destruction). Only known ending types are honored.
+        for etype in parsed.get("endings", []):
+            if etype in self.ENDINGS and not self.state.ending_reached:
+                self.state.ending_reached = etype
+                break
+
         # Combat synthesis: the player clearly attacks a present threat but the
         # DM didn't emit [COMBAT_START]. Start the fight so it's mechanized.
         if not combat_start and not self.state.active_combat:
@@ -2400,6 +2408,28 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             return f"\n{ending['name'].upper()}\n{ending['description']}"
 
         return None
+
+    def ending_status(self) -> Optional[Dict]:
+        """
+        Full ending payload for the UI, or None if the game is ongoing.
+
+        Generates the rich ending narrative once (LLM), falling back to the
+        static description. Safe to call every turn.
+        """
+        etype = self.state.ending_reached
+        if not etype:
+            return None
+        meta = self.ENDINGS.get(etype, {})
+        if not self.state.ending_narrative:
+            try:
+                self._generate_ending_narrative(etype)
+            except Exception:
+                logger.warning("ending narrative generation failed", exc_info=True)
+        return {
+            "type": etype,
+            "name": meta.get("name", etype.title()),
+            "narrative": self.state.ending_narrative or meta.get("description", ""),
+        }
 
     def save_game(self, app_state: Optional[Dict] = None) -> str:
         """

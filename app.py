@@ -479,6 +479,7 @@ def _finalize_turn(gs, result):
         "npcs": result.get("npc_status", []),
         "resources": gs.engine.resources_status(),
         "combat": gs.engine.combat_status(),
+        "ending": gs.engine.ending_status(),
         "pending_roll": gs.pending_roll,
         "state": _investigator_stats(gs.investigator)
     }
@@ -636,6 +637,7 @@ def execute_roll(gs):
             "empty": result.get("empty", False),
             "resources": gs.engine.resources_status(),
             "combat": gs.engine.combat_status(),
+            "ending": gs.engine.ending_status(),
             "pending_roll": gs.pending_roll,
             "turn": gs.engine.state.turn,
             "location": gs.engine.state.location,

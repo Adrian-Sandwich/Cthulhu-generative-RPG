@@ -547,6 +547,28 @@ function renderCombat(combat) {
     bar.classList.remove('hidden');
 }
 
+let gameOver = false;
+
+// The story has ended — show the game-over screen and lock further input.
+function showEnding(ending) {
+    if (!ending || gameOver) return;
+    gameOver = true;
+    document.getElementById('ending-name').textContent = (ending.name || 'THE END').toUpperCase();
+    document.getElementById('ending-text').textContent = ending.narrative || '';
+    document.getElementById('ending-screen').classList.remove('hidden');
+    document.getElementById('ending-screen').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Lock the game: no more actions, hide the dice/suggestions.
+    document.getElementById('action-input').disabled = true;
+    hideDiceArea();
+    hideSuggestions();
+    document.getElementById('combat-bar').classList.add('hidden');
+    stopHeartbeat();
+    // let the dread music resolve into silence
+    setTimeout(stopMusic, 4000);
+    // one last feedback ask on the way out
+    if (typeof fbGiven !== 'undefined' && !fbGiven) setTimeout(() => showFeedback(false), 1500);
+}
+
 // Show finite stakes (ammo, doom clock) in the HUD.
 function renderResources(res) {
     if (!res) return;
@@ -825,6 +847,7 @@ function finishTurnUI(done, action, dmEl) {
     renderResources(done.resources);
     renderCombat(done.combat);
     applySanityFx(done.sanity_corruption || 0);
+    if (done.ending) showEnding(done.ending);
     document.getElementById('turn-counter').textContent = done.turn;
     document.getElementById('location-display').textContent = done.location;
     if (done.pending_roll) showDiceArea(done.pending_roll);
@@ -926,6 +949,7 @@ async function submitActionFallback(action) {
             renderResources(data.resources);
             renderCombat(data.combat);
             applySanityFx(data.sanity_corruption || 0);
+            if (data.ending) showEnding(data.ending);
             document.getElementById('turn-counter').textContent = data.turn;
             document.getElementById('location-display').textContent = data.location;
             document.getElementById('action-input').value = '';
@@ -1066,6 +1090,7 @@ async function rollDice() {
         updateStats(data.state);
         renderResources(data.resources);
         renderCombat(data.combat);
+        if (data.ending) showEnding(data.ending);
         document.getElementById('turn-counter').textContent = data.turn;
         document.getElementById('location-display').textContent = data.location;
 
@@ -1172,6 +1197,9 @@ function doReset() {
     clearTimeout(imagePollTimer);
     stopHeartbeat();
     stopMusic();
+    gameOver = false;
+    document.getElementById('ending-screen').classList.add('hidden');
+    document.getElementById('action-input').disabled = false;
     musicState.corruption = 0; musicState.inCombat = false; musicState.timeRemaining = -1;
     document.getElementById('game-screen').classList.remove('san-fx-1', 'san-fx-2', 'san-fx-3');
     document.getElementById('combat-bar').classList.add('hidden');

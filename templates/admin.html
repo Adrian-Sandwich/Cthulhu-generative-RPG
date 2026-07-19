@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lighthouse — Monitor</title>
+<style>
+  :root { --bg:#000; --text:#55ffff; --dim:#2a8080; --accent:#ffff55; --danger:#ff5555; --good:#55ff55; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:ui-monospace,Menlo,Consolas,monospace; padding:16px; }
+  h1 { font-size:16px; letter-spacing:3px; color:var(--accent); margin:0 0 4px; }
+  .sub { color:var(--dim); font-size:12px; margin-bottom:16px; }
+  .cards { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:20px; }
+  .card { border:1px solid var(--dim); border-radius:4px; padding:10px 14px; min-width:110px; }
+  .card .n { font-size:28px; font-weight:bold; }
+  .card .l { font-size:11px; color:var(--dim); letter-spacing:1px; }
+  .card.live .n { color:var(--good); }
+  .card.hot .n { color:var(--accent); }
+  table { width:100%; border-collapse:collapse; font-size:13px; margin-bottom:20px; }
+  th { text-align:left; color:var(--dim); border-bottom:1px solid var(--dim); padding:4px 8px; font-weight:normal; }
+  td { padding:4px 8px; border-bottom:1px solid #111; }
+  tr.played td:first-child { color:var(--good); }
+  .bad { color:var(--danger); }
+  .pill { border:1px solid var(--dim); border-radius:3px; padding:1px 6px; font-size:11px; }
+  .section { color:var(--accent); letter-spacing:2px; font-size:12px; margin:18px 0 8px; }
+  .fb { border-left:2px solid var(--dim); padding:4px 10px; margin:6px 0; }
+  .fb .meta { color:var(--dim); font-size:11px; }
+  .stars { color:var(--accent); }
+  #err { color:var(--danger); }
+  .updated { color:var(--dim); font-size:11px; }
+</style>
+</head>
+<body>
+  <h1>🕯️ THE LIGHTHOUSE — LIVE MONITOR</h1>
+  <div class="sub">auto-refresh 15s · <span id="err"></span><span class="updated" id="updated"></span></div>
+
+  <div class="cards">
+    <div class="card live"><div class="n" id="c-active">–</div><div class="l">PLAYING NOW</div></div>
+    <div class="card hot"><div class="n" id="c-played">–</div><div class="l">PLAYERS (acted)</div></div>
+    <div class="card"><div class="n" id="c-players">–</div><div class="l">OPENED</div></div>
+    <div class="card"><div class="n" id="c-opened">–</div><div class="l">BOUNCED</div></div>
+    <div class="card"><div class="n" id="c-rating">–</div><div class="l">AVG RATING</div></div>
+    <div class="card"><div class="n" id="c-fb">–</div><div class="l">REVIEWS</div></div>
+  </div>
+
+  <div class="section">SESSIONS</div>
+  <table>
+    <thead><tr><th>Investigator</th><th>Actions</th><th>Turn</th><th>HP</th><th>SAN</th><th>Location</th><th>Ending</th></tr></thead>
+    <tbody id="rows"><tr><td colspan="7" class="updated">loading…</td></tr></tbody>
+  </table>
+
+  <div class="section">FEEDBACK</div>
+  <div id="feedback"><div class="updated">none yet</div></div>
+
+<script>
+const token = new URLSearchParams(location.search).get('token') || '';
+function stars(n){ return n ? '★'.repeat(n) + '☆'.repeat(5-n) : ''; }
+function esc(s){ const d=document.createElement('div'); d.textContent=s==null?'':s; return d.innerHTML; }
+
+async function refresh(){
+  try {
+    const r = await fetch('/api/admin/stats?token=' + encodeURIComponent(token));
+    if (!r.ok) { document.getElementById('err').textContent = 'auth error ('+r.status+') '; return; }
+    document.getElementById('err').textContent = '';
+    const d = await r.json();
+    document.getElementById('c-active').textContent = d.active_sessions;
+    document.getElementById('c-played').textContent = d.played;
+    document.getElementById('c-players').textContent = d.players;
+    document.getElementById('c-opened').textContent = d.opened_only;
+    document.getElementById('c-rating').textContent = d.avg_rating ?? '–';
+    document.getElementById('c-fb').textContent = d.feedback_count;
+
+    document.getElementById('rows').innerHTML = (d.sessions||[]).map(s => `
+      <tr class="${s.actions>0?'played':''}">
+        <td>${esc(s.name)}</td>
+        <td>${s.actions}</td>
+        <td>${s.turn}</td>
+        <td>${s.hp}</td>
+        <td class="${s.san<40?'bad':''}">${s.san}</td>
+        <td>${esc(s.location)}</td>
+        <td>${s.ending ? '<span class="pill">'+esc(s.ending)+'</span>' : ''}</td>
+      </tr>`).join('') || '<tr><td colspan="7" class="updated">no sessions yet</td></tr>';
+
+    document.getElementById('feedback').innerHTML = (d.feedback||[]).slice().reverse().map(f => `
+      <div class="fb">
+        <span class="stars">${stars(f.rating)}</span> ${esc(f.text)}
+        <div class="meta">${esc(f.investigator||'?')} · turn ${f.turn ?? '?'} · ${esc((f.at||'').slice(0,16))}</div>
+      </div>`).join('') || '<div class="updated">none yet</div>';
+
+    document.getElementById('updated').textContent = ' · updated ' + new Date().toLocaleTimeString();
+  } catch(e){ document.getElementById('err').textContent = 'network error '; }
+}
+refresh();
+setInterval(refresh, 15000);
+</script>
+</body>
+</html>

@@ -737,6 +737,86 @@ def health():
     return jsonify({"status": "ok", "sessions": len(_sessions)})
 
 
+# ---------------------------------------------------------------------------
+# Admin monitoring dashboard — token-gated. Set ADMIN_TOKEN to enable.
+#   fly secrets set ADMIN_TOKEN=$(openssl rand -hex 16)
+#   open  https://<app>/admin?token=<that>
+# EXCLUDE_NAMES (comma list, e.g. "alex") drops your own test sessions.
+# ---------------------------------------------------------------------------
+ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "")
+_EXCLUDE = {n.strip().lower() for n in os.environ.get("EXCLUDE_NAMES", "").split(",") if n.strip()}
+
+
+def _admin_authorized() -> bool:
+    return bool(ADMIN_TOKEN) and request.args.get("token") == ADMIN_TOKEN
+
+
+def _playtest_stats() -> dict:
+    import glob
+    data = os.environ.get("DATA_DIR", ".")
+    sessions = []
+    for p in glob.glob(os.path.join(data, "saves/generative/*.json")):
+        try:
+            with open(p, encoding="utf-8") as f:
+                d = json.load(f)
+        except Exception:
+            continue
+        st = d.get("game_state", {})
+        inv = st.get("investigator", {})
+        narr = st.get("narrative", [])
+        acts = [l for l in narr if l.startswith("Player:")]
+        sessions.append({
+            "name": inv.get("name", "?"),
+            "actions": len(acts),
+            "turn": st.get("turn", 0),
+            "san": inv.get("characteristics", {}).get("SAN", 99),
+            "hp": inv.get("characteristics", {}).get("HP", 0),
+            "location": st.get("location", "?"),
+            "ending": st.get("ending_reached"),
+            "mtime": os.path.getmtime(p),
+        })
+    real = [s for s in sessions if s["name"].strip().lower() not in _EXCLUDE]
+    played = [s for s in real if s["actions"] > 0]
+    real.sort(key=lambda s: (-s["actions"], -s["mtime"]))
+
+    feedback = []
+    fb = os.path.join(data, "feedback", "feedback.jsonl")
+    if os.path.exists(fb):
+        for line in open(fb, encoding="utf-8"):
+            if line.strip():
+                try:
+                    feedback.append(json.loads(line))
+                except Exception:
+                    pass
+    ratings = [f["rating"] for f in feedback if f.get("rating")]
+
+    return {
+        "active_sessions": len(_sessions),
+        "total_saves": len(sessions),
+        "players": len(real),
+        "played": len(played),
+        "opened_only": len(real) - len(played),
+        "avg_rating": round(sum(ratings) / len(ratings), 1) if ratings else None,
+        "feedback_count": len(feedback),
+        "sessions": real[:40],
+        "feedback": feedback[-20:],
+    }
+
+
+@app.route("/api/admin/stats", methods=["GET"])
+def admin_stats():
+    if not _admin_authorized():
+        return jsonify({"error": "unauthorized"}), 401
+    return jsonify(_playtest_stats())
+
+
+@app.route("/admin", methods=["GET"])
+def admin_dashboard():
+    if not _admin_authorized():
+        return "Unauthorized — append ?token=YOUR_ADMIN_TOKEN", 401
+    return render_template("admin.html", token=request.args.get("token", ""))
+
+
 if __name__ == '__main__':
     logging.basicConfig(level=os.environ.get('LOG_LEVEL', 'INFO'))
     debug = os.environ.get('FLASK_DEBUG', '0') == '1'

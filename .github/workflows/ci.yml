@@ -29,6 +29,9 @@ jobs:
       - name: Run fast unit/smoke tests (no LLM)
         env:
           DATA_DIR: ${{ runner.temp }}/cthulhu-data
+          # tests/test_frontend.py skips without node, and a skip is a silent
+          # pass. CI sets this so a missing node fails the job instead.
+          CI: "true"
         run: |
           mkdir -p "$DATA_DIR"
-          pytest tests/test_smoke.py tests/test_engine_units.py -q
+          pytest tests/test_smoke.py tests/test_engine_units.py tests/test_frontend.py -q

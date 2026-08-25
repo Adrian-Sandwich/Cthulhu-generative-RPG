@@ -1,0 +1,114 @@
+[
+  {
+    "rule": "/",
+    "endpoint": "index",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "rule": "/admin",
+    "endpoint": "admin_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "rule": "/api/admin/stats",
+    "endpoint": "admin_stats",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "rule": "/api/archetypes",
+    "endpoint": "get_archetypes",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "rule": "/api/feedback",
+    "endpoint": "leave_feedback",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "rule": "/api/game/action",
+    "endpoint": "process_action",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "rule": "/api/game/action/stream",
+    "endpoint": "process_action_stream",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "rule": "/api/game/flee",
+    "endpoint": "flee_combat",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "rule": "/api/game/load",
+    "endpoint": "load_saved_game",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "rule": "/api/game/reset",
+    "endpoint": "reset_game",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "rule": "/api/game/roll",
+    "endpoint": "execute_roll",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "rule": "/api/game/saves",
+    "endpoint": "list_saves",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "rule": "/api/game/start",
+    "endpoint": "start_game",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "rule": "/api/game/state",
+    "endpoint": "get_game_state",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "rule": "/api/health",
+    "endpoint": "health",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "rule": "/images/<path:filename>",
+    "endpoint": "serve_generated_image",
+    "methods": [
+      "GET"
+    ]
+  }
+]

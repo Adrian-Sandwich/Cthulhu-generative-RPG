@@ -14,7 +14,8 @@ import json
 import time
 sys.path.insert(0, '.')
 
-from core.game_generative import GenerativeGameEngine, InvestigatorState
+from core.game_generative import GenerativeGameEngine
+from core.state import InvestigatorState
 
 def create_test_investigator():
     """Create a simple test character"""
@@ -37,8 +38,8 @@ def create_test_investigator():
         sanity_breaks=[]
     )
 
-def test_model(model_name):
-    """Test a complete game session with given model"""
+def _run_model_test(model_name):
+    """Test a complete game session with given model (manual/script runner only)."""
     print(f"\n{'='*80}")
     print(f"TESTING: {model_name.upper()}")
     print(f"{'='*80}\n")
@@ -185,7 +186,7 @@ def main():
     results = {}
     for model_id, model_name in models:
         try:
-            success = test_model(model_id)
+            success = _run_model_test(model_id)
             results[model_id] = "✓ PASS"
         except Exception as e:
             results[model_id] = f"✗ FAIL: {str(e)[:50]}"

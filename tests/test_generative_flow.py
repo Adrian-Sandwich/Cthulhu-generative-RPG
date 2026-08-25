@@ -5,7 +5,8 @@ Quick test of generative game flow (non-interactive)
 import sys
 sys.path.insert(0, '.')
 
-from core.game_generative import GenerativeGameEngine, InvestigatorState
+from core.game_generative import GenerativeGameEngine
+from core.state import InvestigatorState
 
 def test_game_flow():
     """Test a complete game flow"""

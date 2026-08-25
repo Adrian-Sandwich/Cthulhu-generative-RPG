@@ -9,7 +9,8 @@ import time
 import random
 sys.path.insert(0, '.')
 
-from core.game_generative import GenerativeGameEngine, InvestigatorState
+from core.game_generative import GenerativeGameEngine
+from core.state import InvestigatorState
 
 def create_test_investigator(name="Morgan", occupation="Detective"):
     """Create a test character"""

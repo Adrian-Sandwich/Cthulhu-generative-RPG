@@ -23,6 +23,49 @@ Then:
 
 ---
 
+## 🌐 Web Game (recommended)
+
+The full experience — 3D dice, adaptive horror music, combat, sanity
+corruption — runs in the browser.
+
+```bash
+# Local (Ollama at localhost:11434):
+./launch.command          # macOS: double-click; opens http://127.0.0.1:5001
+# or:
+PORT=5001 python3 -m gunicorn --worker-class gthread --workers 1 \
+    --threads 16 --bind 0.0.0.0:5001 app:app
+```
+
+Open **http://127.0.0.1:5001** (use `127.0.0.1`, not `localhost`).
+
+- **LAN play**: `LAN=1 ./launch.command` → others join at `http://<your-ip>:5001`.
+- **Run under gunicorn** (not the Flask dev server) for multiple players — the
+  dev server buckles under concurrent streaming.
+
+### Configuration (env)
+| Var | Purpose |
+|-----|---------|
+| `LLM_PROVIDER` | `ollama` (default) or `openai` (Groq / any OpenAI-compatible API) |
+| `LLM_BASE_URL` / `LLM_MODEL` / `LLM_API_KEY` | hosted-API settings |
+| `LLM_ENDPOINTS` | comma list for the multi-GPU pool (`url@model` per box) |
+| `DATA_DIR` | where saves / feedback / playtests are written (volume in prod) |
+| `SECRET_KEY` | stable Flask cookie key (set in production) |
+| `MODERATION` | `local` (default) / `off` / `api` |
+
+Full env reference: [`.env.example`](.env.example).
+
+### Deploy to production
+Fly.io + a hosted LLM (Groq): see **[docs/DEPLOY.md](docs/DEPLOY.md)**.
+Security & rate-limit notes: **[docs/ABUSE_POLICY.md](docs/ABUSE_POLICY.md)**.
+
+### Tests & analytics
+```bash
+python3 -m pytest tests/test_smoke.py -q     # fast regression suite (no Ollama)
+python3 tools/analyze_playtests.py           # summarize saves + feedback
+```
+
+---
+
 ## What Is This?
 
 A text-based RPG where:

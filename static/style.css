@@ -278,6 +278,32 @@ input:focus, select:focus {
 @keyframes tip-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
 @media (prefers-reduced-motion: reduce) { #die-tip { animation: none; } }
 
+/* ---- Ending / game over ---- */
+#ending-screen {
+    border: 1px solid var(--danger);
+    padding: 24px 18px;
+    margin: 14px 0;
+    text-align: center;
+    background: rgba(20, 0, 0, 0.4);
+}
+#ending-screen.hidden { display: none; }
+#ending-name {
+    color: var(--danger);
+    font-size: 22px;
+    letter-spacing: 6px;
+    margin-bottom: 14px;
+    text-shadow: 0 0 8px var(--danger);
+}
+#ending-text {
+    color: var(--text);
+    line-height: 1.6;
+    max-width: 60ch;
+    margin: 0 auto 18px;
+    white-space: pre-wrap;
+}
+.ending-btn { cursor: pointer; color: var(--accent); letter-spacing: 1px; }
+.ending-btn:hover { color: #fff; }
+
 /* ---- Combat bar ---- */
 #combat-bar {
     display: flex;

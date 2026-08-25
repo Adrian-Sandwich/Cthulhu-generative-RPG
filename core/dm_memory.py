@@ -141,7 +141,7 @@ class DMMemory:
 
         try:
             # Create deterministic ID based on content
-            doc_id = f"turn_{turn}_{hashlib.md5(text[:100].encode()).hexdigest()[:8]}"
+            doc_id = f"turn_{turn}_{hashlib.md5(text[:100].encode(), usedforsecurity=False).hexdigest()[:8]}"
 
             # Prepare metadata
             meta = metadata or {}

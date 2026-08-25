@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Standalone experiment script — nothing in the app imports it (fan-in 0).
+# Scope: image-generation experiments. See docs/TECH_DEBT.md ("Dead
+# standalone scripts"). Delete once the image-gen experiments conclude.
 """
 Debug script to test image generation with different prompts and settings.
 """

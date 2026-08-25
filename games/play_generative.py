@@ -11,7 +11,8 @@ import json
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core.game_generative import GenerativeGameEngine, InvestigatorState, CoC7eRulesEngine
+from core.game_generative import GenerativeGameEngine, CoC7eRulesEngine
+from core.state import InvestigatorState
 from ui.keeper_thinking import show_keeper_thinking, KeeperThinking
 from ui.history_viewer import HistoryViewer
 

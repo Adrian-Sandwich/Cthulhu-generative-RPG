@@ -4,9 +4,13 @@ Test generative game with character selection
 """
 import sys
 import json
+
+import pytest
+
 sys.path.insert(0, '.')
 
-from core.game_generative import GenerativeGameEngine, InvestigatorState
+from core.game_generative import GenerativeGameEngine
+from core.state import InvestigatorState
 from games.play_generative import load_prebuilt_investigators, json_to_investigator
 
 
@@ -54,6 +58,8 @@ def select_investigator_cli():
         print("Invalid choice. Try again.")
 
 
+@pytest.mark.skipif(not sys.stdin.isatty(),
+                    reason="interactive playtest: needs a TTY for investigator selection")
 def test_game_flow():
     """Test a complete game flow"""
 

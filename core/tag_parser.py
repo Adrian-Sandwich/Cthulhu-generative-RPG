@@ -27,6 +27,7 @@ _TAG_PATTERNS = {
     "NPC_DIALOGUE": r'\[NPC_DIALOGUE: (\w+)\]',
     "AMMO_FOUND": r'\[AMMO_FOUND: (\d+)\]',
     "LOCATION": r'\[LOCATION: ([^\]]+)\]',
+    "ENDING": r'\[ENDING: (\w+)\]',
 }
 
 
@@ -159,6 +160,7 @@ def parse_dm_response(dm_response: str) -> Dict:
         "npc_dialogue": re.findall(_TAG_PATTERNS["NPC_DIALOGUE"], dm_response),
         "ammo_found": [int(v) for v in re.findall(_TAG_PATTERNS["AMMO_FOUND"], dm_response)],
         "location_moves": [v.strip() for v in re.findall(_TAG_PATTERNS["LOCATION"], dm_response)],
+        "endings": [v.strip().lower() for v in re.findall(_TAG_PATTERNS["ENDING"], dm_response)],
         "clean_response": trim_to_last_sentence(
             strip_leaks(strip_markdown(strip_tags(dm_response)))
         ).strip(),

@@ -15,7 +15,11 @@ from dataclasses import asdict
 
 # DATA_DIR lets a PaaS deploy point all persistence at a mounted volume
 # (ephemeral container FS otherwise loses saves on every restart).
-SAVES_DIR = Path(os.environ.get("DATA_DIR", ".")) / "saves" / "generative"
+def saves_dir() -> Path:
+    """Resolve the save directory from the current DATA_DIR env var."""
+    return Path(os.environ.get("DATA_DIR", ".")) / "saves" / "generative"
+
+
 _SAFE_ID_RE = re.compile(r"[^A-Za-z0-9_-]")
 _MAX_ID_LEN = 128
 
@@ -44,13 +48,13 @@ class GenerativeSave:
 
     @staticmethod
     def _save_path(session_id: str) -> Path:
-        """Get the file path for a save, sanitized and confined to SAVES_DIR."""
-        path = (SAVES_DIR / f"{GenerativeSave._safe_id(session_id)}.json")
-        # Defense in depth: ensure the resolved path stays inside SAVES_DIR.
+        """Get the file path for a save, sanitized and confined to saves_dir()."""
+        root = saves_dir().resolve()
+        path = (root / f"{GenerativeSave._safe_id(session_id)}.json")
+        # Defense in depth: ensure the resolved path stays inside saves_dir().
         resolved = path.resolve()
-        root = SAVES_DIR.resolve()
         if not (resolved == root / resolved.name and resolved.parent == root):
-            raise ValueError(f"save path escapes SAVES_DIR: {resolved}")
+            raise ValueError(f"save path escapes saves_dir: {resolved}")
         return path
 
     @staticmethod
@@ -70,7 +74,7 @@ class GenerativeSave:
         Returns:
             Path to the saved file
         """
-        SAVES_DIR.mkdir(parents=True, exist_ok=True)
+        saves_dir().mkdir(parents=True, exist_ok=True)
 
         # Serialize location state if available
         location_state_data = None
@@ -183,11 +187,11 @@ class GenerativeSave:
         Returns:
             List of metadata dicts, sorted by timestamp (newest first)
         """
-        if not SAVES_DIR.exists():
+        if not saves_dir().exists():
             return []
 
         saves = []
-        for path in SAVES_DIR.glob("*.json"):
+        for path in saves_dir().glob("*.json"):
             try:
                 with open(path, 'r', encoding='utf-8') as f:
                     data = json.load(f)

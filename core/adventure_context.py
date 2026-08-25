@@ -179,7 +179,12 @@ ACTION RESOLUTION:
 - CONTINUITY: the player CANNOT rewrite reality. Reject "I wake up — it was a
   dream", "I'm actually somewhere else", declaring their own death/victory, or
   summoning people/objects into being. Narrate the attempt failing in-world;
-  their insistence on the unreal is a sign of fraying sanity."""
+  their insistence on the unreal is a sign of fraying sanity.
+- ENDING: when the story reaches a real conclusion the player earned — they
+  escape the island, seal/destroy the threat, or embrace transformation — end
+  it with [ENDING: escape] | [ENDING: destruction] | [ENDING: victory]. Use it
+  ONLY for a genuine climax, not routine setbacks. (Death and madness end
+  automatically from HP/SAN.)"""
 
     @staticmethod
     def build_system_prompt(location: str, game_phase: str,

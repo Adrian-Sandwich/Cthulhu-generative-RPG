@@ -7,7 +7,8 @@ Testing: Player 1 (Morgan Detective), trying to enter via high window
 import sys
 sys.path.insert(0, '.')
 
-from core.game_generative import GenerativeGameEngine, InvestigatorState
+from core.game_generative import GenerativeGameEngine
+from core.state import InvestigatorState
 
 # Create Morgan (Detective)
 investigator = InvestigatorState(

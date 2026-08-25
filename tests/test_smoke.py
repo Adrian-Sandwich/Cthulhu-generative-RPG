@@ -398,3 +398,189 @@ def test_admin_stats_telemetry_handles_saves_without_it(tmp_path):
     assert t["rolls_offered"] == 0
     assert t["throw_rate"] is None          # no division by zero
     assert t["dm_roll_compliance"] is None
+
+
+# --- endpoints that had no coverage ----------------------------------------
+# 8 of 16 routes were never exercised by a test. These close that gap before
+# app.py is refactored, so the refactor has a net under it — the last two
+# refactors of this file shipped three regressions between them.
+
+def test_index_serves_the_game_shell(client):
+    r = client.get("/")
+    assert r.status_code == 200
+    assert b"action-input" in r.data          # the game actually renders
+
+
+def test_health_reports_session_count(client):
+    r = client.get("/api/health")
+    assert r.status_code == 200
+    body = r.get_json()
+    assert body["status"] == "ok"
+    assert isinstance(body["sessions"], int)
+
+
+def test_archetypes_expose_playable_sheets(client):
+    r = client.get("/api/archetypes")
+    assert r.status_code == 200
+    arch = r.get_json()["archetypes"]
+    assert {"scholar", "detective", "occultist", "wanderer"} <= set(arch)
+    scholar = arch["scholar"]
+    # The startup screen previews stats and skills from this payload.
+    assert scholar["characteristics"]["INT"] > 0
+    assert scholar["skills"]
+
+
+def test_saves_empty_then_populated(client):
+    assert client.get("/api/game/saves").get_json()["saves"] == []
+    _start(client)
+    client.post("/api/game/action", json={"action": "look around"})
+    saves = client.get("/api/game/saves").get_json()["saves"]
+    assert len(saves) == 1
+    assert saves[0]["investigator"] == "Tester"
+
+
+def test_load_without_a_save_is_404(client):
+    assert client.post("/api/game/load").status_code == 404
+
+
+def test_load_resumes_the_autosave(client):
+    _start(client)
+    client.post("/api/game/action", json={"action": "look around"})
+    before = client.get("/api/game/state").get_json()
+
+    r = client.post("/api/game/load")
+    assert r.status_code == 200
+    body = r.get_json()
+    assert body["success"]
+    assert body["turn"] == before["turn"]
+    assert body["location"] == before["location"]
+    assert body["state"]["HP"] > 0
+
+
+def test_flee_requires_a_game_and_a_fight(client):
+    assert client.post("/api/game/flee").status_code == 400   # no game
+    _start(client)
+    r = client.post("/api/game/flee")
+    assert r.status_code == 400                                # not in combat
+    assert "combat" in r.get_json()["error"].lower()
+
+
+def test_flee_breaks_off_combat(tmp_path):
+    """Start a real fight through the DM, then break off through the API."""
+    fight = "A shape rises from the water. [COMBAT_START: deep_one_hybrid]"
+
+    def fake_chat(self, *a, **k):
+        if k.get("on_chunk"):
+            k["on_chunk"](fight)
+        return fight
+
+    with patch("core.llm_client.LLMClient.chat", fake_chat), \
+         patch("core.llm_client.LLMClient.chat_with_tools",
+               lambda *a, **k: {"narrative": "", "tool_calls": [], "fallback": True}):
+        c = _make_app(tmp_path).test_client()
+        c.post("/api/game/start", json={"name": "Runner", "archetype": "scholar"})
+        turn = c.post("/api/game/action", json={"action": "approach the water"}).get_json()
+        assert turn["combat"] is not None, "the fight never started"
+
+        r = c.post("/api/game/flee")
+        assert r.status_code == 200, r.get_data(as_text=True)
+        body = r.get_json()
+        assert body["success"]
+        assert body["combat"] is None      # the fight is over
+
+        # And it stays over: fleeing twice is refused, not a second escape.
+        assert c.post("/api/game/flee").status_code == 400
+
+
+def test_feedback_validates_input(client):
+    _start(client)
+    assert client.post("/api/feedback", json={"text": "   "}).status_code == 400
+    assert client.post("/api/feedback", json={}).status_code == 400
+    assert client.post("/api/feedback", json={"text": "x" * 2001}).status_code == 413
+
+
+def test_feedback_is_stored_and_reaches_admin(tmp_path):
+    """Feedback must survive to the dashboard — it is the only qualitative signal."""
+    import app as app_module
+    app_obj = app_module.create_app({"DATA_DIR": str(tmp_path), "ADMIN_TOKEN": "s3cret"})
+    c = app_obj.test_client()
+    with patch("core.llm_client.LLMClient.chat", lambda self, *a, **k: CANNED_DM), \
+         patch("core.llm_client.LLMClient.chat_with_tools",
+               lambda *a, **k: {"narrative": "", "tool_calls": [], "fallback": True}):
+        c.post("/api/game/start", json={"name": "Rater", "archetype": "scholar"})
+        r = c.post("/api/feedback", json={"text": "está chulo", "rating": 5})
+    assert r.status_code == 200 and r.get_json()["success"]
+
+    body = c.get("/api/admin/stats?token=s3cret").get_json()
+    assert body["feedback_count"] == 1
+    assert body["avg_rating"] == 5
+    entry = body["feedback"][0]
+    assert entry["text"] == "está chulo"
+    assert entry["investigator"] == "Rater"
+
+
+def test_feedback_rating_out_of_range_is_dropped_not_stored(tmp_path):
+    import app as app_module
+    c = app_module.create_app({"DATA_DIR": str(tmp_path), "ADMIN_TOKEN": "s3cret"}).test_client()
+    assert c.post("/api/feedback", json={"text": "ok", "rating": 99}).status_code == 200
+    body = c.get("/api/admin/stats?token=s3cret").get_json()
+    assert body["feedback"][0]["rating"] is None
+    assert body["avg_rating"] is None
+
+
+def test_images_reject_traversal(client):
+    """The image route joins a user-controlled path — traversal must not escape."""
+    for attack in ("../../etc/passwd", "..%2f..%2fetc%2fpasswd", "....//etc/passwd"):
+        r = client.get(f"/images/{attack}")
+        assert r.status_code in (400, 403, 404), (attack, r.status_code)
+        assert b"root:" not in r.data
+
+
+def test_images_missing_file_is_404(client):
+    assert client.get("/images/nope.png").status_code == 404
+
+
+def test_rate_limit_returns_429(tmp_path):
+    """Six starts a minute is the configured budget; the seventh must be refused."""
+    import app as app_module
+    c = app_module.create_app({"DATA_DIR": str(tmp_path)}).test_client()
+    with patch("core.llm_client.LLMClient.chat", lambda self, *a, **k: CANNED_DM), \
+         patch("core.llm_client.LLMClient.chat_with_tools",
+               lambda *a, **k: {"narrative": "", "tool_calls": [], "fallback": True}):
+        codes = [c.post("/api/game/start",
+                        json={"name": "Flood", "archetype": "scholar"}).status_code
+                 for _ in range(8)]
+    assert 429 in codes, codes
+    assert codes.index(429) >= 6, codes    # the budget is spent first, not early
+
+
+def test_state_reports_active_combat(tmp_path):
+    """/api/game/state must carry combat, or the HUD dies on every refresh.
+
+    The client calls renderCombat(data.combat) from refreshGameState(), which
+    runs right after each turn. With combat absent from the payload that is
+    renderCombat(undefined) — it hides the combat bar and stops the combat
+    music one tick after the turn showed them, and a page reload mid-fight
+    shows no fight at all while the engine still has an enemy active.
+    """
+    fight = "A shape rises from the water. [COMBAT_START: deep_one_hybrid]"
+
+    def fake_chat(self, *a, **k):
+        if k.get("on_chunk"):
+            k["on_chunk"](fight)
+        return fight
+
+    with patch("core.llm_client.LLMClient.chat", fake_chat), \
+         patch("core.llm_client.LLMClient.chat_with_tools",
+               lambda *a, **k: {"narrative": "", "tool_calls": [], "fallback": True}):
+        c = _make_app(tmp_path).test_client()
+        c.post("/api/game/start", json={"name": "Fighter", "archetype": "scholar"})
+        turn = c.post("/api/game/action", json={"action": "approach the water"}).get_json()
+        assert turn["combat"] is not None
+
+        state = c.get("/api/game/state").get_json()
+        assert state.get("combat") is not None, "combat missing from state"
+        assert state["combat"]["name"] == turn["combat"]["name"]
+
+        c.post("/api/game/flee")
+        assert c.get("/api/game/state").get_json()["combat"] is None

@@ -2,7 +2,7 @@
 """
 Frontend checks, run through pytest so `pytest` stays the single entry point.
 
-static/app.js is 1247 lines with no other automated coverage. Two regressions
+The client is five classic scripts with no other automated coverage. Two regressions
 in a row (the deleted location resolver, the invalid `request.is_disconnected`)
 shipped because a test existed but could not reach the code that mattered, so
 these checks assert behavior rather than presence wherever they can.
@@ -40,10 +40,23 @@ def _run(*args):
     )
 
 
-def test_app_js_parses():
-    """A syntax error in app.js takes the whole client down silently."""
-    res = _run("--check", "static/app.js")
+CLIENT_FILES = [f"static/js/{n}.js" for n in ("state", "audio", "ui", "turn", "dice")]
+
+
+@pytest.mark.parametrize("script", CLIENT_FILES)
+def test_client_script_parses(script):
+    """A syntax error in any of them takes the whole client down silently."""
+    assert (REPO / script).exists(), f"{script} is referenced but missing"
+    res = _run("--check", script)
     assert res.returncode == 0, res.stderr
+
+
+def test_index_loads_every_client_script_in_order():
+    """The browser sees these as one program; load order is the contract."""
+    html = (REPO / "templates" / "index.html").read_text()
+    positions = [html.index(f"js/{n}.js") for n in
+                 ("state", "audio", "ui", "turn", "dice")]
+    assert positions == sorted(positions), "scripts are out of dependency order"
 
 
 def test_frontend_behavior_checks():

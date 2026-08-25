@@ -161,30 +161,52 @@ ACTION RESOLUTION:
     # Single source of truth for the roll protocol. Referenced by BOTH DM
     # system prompts (this narrative/tag path and the tool-calling path in
     # game_generative) so the two brains can't drift apart.
-    ROLL_PROTOCOL = """=== ROLL PROTOCOL (CRITICAL) ===
-- When an action needs a check, emit ONE tag and STOP. Do NOT describe the
-  result — the engine rolls and narrates the outcome next turn.
-  • skill: [ROLL: skill/Difficulty]   (e.g. [ROLL: climb/Hard])
-  • combat: [COMBAT_START: enemy_key]  (then stop; the engine runs the fight)
-  • witnessing horror/the unnatural: [SANITY_CHECK: n]  (n = 1-6)
+    # Split by what the instruction depends on, not by topic.
+    #
+    # NARRATIVE_PROTOCOL is behaviour every model must follow, whether or not it
+    # can emit tags: stop at the moment of uncertainty, do not pre-narrate both
+    # branches, do not print stat blocks, do not invent places off the map, do
+    # not let the player rewrite reality. Those rules are load-bearing — they
+    # are what closed the world-containment and dream-reset findings from the
+    # LAN playtest — so they ship on every turn.
+    #
+    # TAG_PROTOCOL is the machine-readable half, and it only ships to models
+    # measured as capable of emitting it (see cthulhu_tools.TOOL_CAPABLE_MODELS).
+    # Telemetry over real turns showed local models emitting zero tags, so for
+    # them these lines were pure cost: tokens spent every turn asking for a
+    # format that never arrived, competing for attention with the rules above.
+    # The engine's keyword fallbacks drive the mechanics instead.
+    NARRATIVE_PROTOCOL = """=== NARRATIVE PROTOCOL (CRITICAL) ===
+- When an action needs a check, describe the attempt and STOP at the moment of
+  uncertainty. Do NOT describe the result — the engine resolves it and you
+  narrate the outcome next turn.
 - NEVER write "IF ROLL FAILS / IF ROLL SUCCEEDS", never pre-narrate both
   branches, never state the die result yourself.
 - NEVER print enemy stat blocks (HP/Damage/Abilities) in the prose — that is
   the engine's job. Just describe the threat.
-- MOVEMENT: when the player moves to a different area, include
-  [LOCATION: <name>] using one of THIS adventure's locations (exact name).
-  The adventure's locations are the ONLY places that exist — do not invent
-  towns, libraries, police stations, labs, or buildings beyond them. If the
-  player heads for somewhere off-map, keep them at the edge and redirect.
+- MOVEMENT: the adventure's locations are the ONLY places that exist — do not
+  invent towns, libraries, police stations, labs, or buildings beyond them. If
+  the player heads for somewhere off-map, keep them at the edge and redirect.
 - CONTINUITY: the player CANNOT rewrite reality. Reject "I wake up — it was a
   dream", "I'm actually somewhere else", declaring their own death/victory, or
   summoning people/objects into being. Narrate the attempt failing in-world;
-  their insistence on the unreal is a sign of fraying sanity.
+  their insistence on the unreal is a sign of fraying sanity."""
+
+    TAG_PROTOCOL = """=== MECHANIC TAGS ===
+- Emit ONE tag and STOP; the engine takes it from there.
+  • skill: [ROLL: skill/Difficulty]   (e.g. [ROLL: climb/Hard])
+  • combat: [COMBAT_START: enemy_key]  (then stop; the engine runs the fight)
+  • witnessing horror/the unnatural: [SANITY_CHECK: n]  (n = 1-6)
+- MOVEMENT: when the player moves to a different area, include
+  [LOCATION: <name>] using one of THIS adventure's locations (exact name).
 - ENDING: when the story reaches a real conclusion the player earned — they
   escape the island, seal/destroy the threat, or embrace transformation — end
   it with [ENDING: escape] | [ENDING: destruction] | [ENDING: victory]. Use it
   ONLY for a genuine climax, not routine setbacks. (Death and madness end
   automatically from HP/SAN.)"""
+
+    # Kept so nothing that imported the old name breaks; it is the full protocol.
+    ROLL_PROTOCOL = NARRATIVE_PROTOCOL + "\n" + TAG_PROTOCOL
 
     @staticmethod
     def build_system_prompt(location: str, game_phase: str,

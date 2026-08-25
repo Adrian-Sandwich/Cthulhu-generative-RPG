@@ -1,9 +1,9 @@
-// Frontend checks for static/app.js — run by tests/test_frontend.py, or
+// Frontend checks for the client scripts — run by tests/test_frontend.py, or
 // directly with `node tests/frontend_checks.mjs`.
 //
-// app.js is loaded by a <script> tag, not as a module, so there is nothing to
-// import. These checks read the source and evaluate the specific pure values
-// they assert on. That is deliberate: if a constant is renamed or removed the
+// They are classic <script> tags, not modules, so there is nothing to import.
+// These checks read the sources and evaluate the specific pure values they
+// assert on. That is deliberate: if a constant is renamed or removed the
 // extraction fails loudly here instead of the suite passing on nothing.
 
 import { readFileSync } from 'node:fs';
@@ -11,7 +11,15 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const src = readFileSync(join(root, 'static/app.js'), 'utf8');
+
+// The client is five classic scripts sharing one top-level scope (see
+// templates/index.html). They are checked as one program, in load order,
+// because that is how the browser sees them.
+export const CLIENT_FILES = ['state', 'audio', 'ui', 'turn', 'dice']
+    .map(n => `static/js/${n}.js`);
+const src = CLIENT_FILES
+    .map(f => readFileSync(join(root, f), 'utf8'))
+    .join('\n');
 
 let failures = 0;
 let checks = 0;
@@ -31,7 +39,7 @@ function tryExtract(re) {
 
 function missing(label) {
     failures++;
-    console.error(`FAIL  could not find ${label} in static/app.js — renamed or removed?`);
+    console.error(`FAIL  could not find ${label} in the client scripts — renamed or removed?`);
 }
 
 // --- ROLL_REQUEST_RE ---------------------------------------------------------

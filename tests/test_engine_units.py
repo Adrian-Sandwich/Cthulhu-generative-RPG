@@ -491,3 +491,68 @@ def test_dm_tag_still_wins_over_the_fallback(engine):
     assert "Rope (30ft)" in engine.state.investigator.inventory
     # Tagged, not synthesized — the counter must tell them apart.
     assert engine.telemetry_summary().get("items_synthesized", 0) == 0
+
+
+# --- prompt composed by measured capability ----------------------------------
+# Telemetry over real turns showed the local models emitting zero mechanic tags,
+# so for them the tag directives were tokens spent every turn asking for a format
+# that never arrived. They now ship only to models measured as able to emit them.
+# What must NOT be conditional is the behaviour that closed playtest findings:
+# world containment and the anti-dream-reset rule.
+
+import re as _re
+
+TAG_DIRECTIVE = _re.compile(r"\[[A-Z_]+:")
+
+
+def _prompt_for(model, tmp_path):
+    os.environ["DATA_DIR"] = str(tmp_path)
+    e = GenerativeGameEngine(model=model, use_memory=False,
+                             use_entity_graph=False, session_id=f"p{abs(hash(model))}")
+    e.create_game(create_investigator("T", "scholar"))
+    return e._build_dm_system_prompt()
+
+
+def test_tagless_model_gets_no_tag_directives(tmp_path):
+    prompt = _prompt_for("mistral", tmp_path)
+    leftovers = [l for l in prompt.splitlines() if TAG_DIRECTIVE.search(l)]
+    assert leftovers == [], leftovers
+
+
+def test_tag_capable_model_still_gets_the_protocol(tmp_path):
+    from core.cthulhu_tools import TOOL_CAPABLE_MODELS
+    model = sorted(TOOL_CAPABLE_MODELS)[0]
+    prompt = _prompt_for(model, tmp_path)
+    assert TAG_DIRECTIVE.search(prompt), "a capable model lost its tag protocol"
+    for tag in ("[ROLL:", "[ITEM_FOUND:", "[COMBAT_START:", "[LOCATION:"):
+        assert tag in prompt, tag
+
+
+def test_containment_rules_ship_to_every_model(tmp_path):
+    """These closed playtest findings #2 and #3 — they are not optional."""
+    for model in ("mistral", "qwen2.5:7b"):
+        # Collapse wrapping: the prompt hard-wraps mid-sentence.
+        low = " ".join(_prompt_for(model, tmp_path).lower().split())
+        assert "do not invent" in low, model          # world containment
+        assert "cannot rewrite reality" in low, model  # anti-dream-reset
+        assert "dream" in low, model
+        assert "stat blocks" in low, model
+
+
+def test_dropping_tags_shrinks_the_prompt(tmp_path):
+    tagless = _prompt_for("mistral", tmp_path)
+    tagged = _prompt_for("qwen2.5:7b", tmp_path)
+    assert len(tagless) < len(tagged)
+
+
+def test_unmatched_action_is_counted(engine):
+    """A turn with no check is a gap in ROLL_KEYWORDS, not a quiet non-event."""
+    from unittest.mock import patch
+    with patch.object(engine, "_call_ollama", return_value="The fog drifts past."):
+        engine.process_player_action("contemplo el horizonte en silencio")
+    assert engine.telemetry_summary()["actions_without_check"] == 1
+
+    with patch.object(engine, "_call_ollama", return_value="You haul yourself up."):
+        engine.process_player_action("trepo por la escalera")
+    # A matched action must not be counted as a gap.
+    assert engine.telemetry_summary()["actions_without_check"] == 1

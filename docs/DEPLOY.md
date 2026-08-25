@@ -17,7 +17,7 @@ by a hosted **OpenAI-compatible API** (Groq by default). No Ollama, no GPU.
 |-----|-------|-------|
 | `LLM_PROVIDER` | `openai` | switches the client off Ollama |
 | `LLM_BASE_URL` | `https://api.groq.com/openai/v1` | any OpenAI-compatible host |
-| `LLM_MODEL` | `llama-3.3-70b-versatile` | pick a Groq model |
+| `LLM_MODEL` | `openai/gpt-oss-120b` | pick a Groq model |
 | `LLM_API_KEY` | *(secret)* | Groq API key |
 | `SECRET_KEY` | *(secret)* | `openssl rand -hex 32`; **must be stable** or sessions/resume break |
 | `DATA_DIR` | `/data` | volume mount point |

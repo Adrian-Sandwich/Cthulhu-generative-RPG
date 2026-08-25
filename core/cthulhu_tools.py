@@ -11,7 +11,12 @@ Enables the DM to invoke game mechanics directly via structured function calls.
 # "take the revolver" prompt; they narrate the action in prose instead. Listing
 # a model here that does not comply costs a wasted round trip per turn before
 # the engine falls back to tag parsing.
-TOOL_CAPABLE_MODELS = {"qwen2.5:7b", "qwen3:8b"}
+TOOL_CAPABLE_MODELS = {
+    "qwen2.5:7b", "qwen3:8b",              # local, via Ollama
+    "openai/gpt-oss-120b", "openai/gpt-oss-20b",  # Groq; both returned
+                                           # pickup_item for an unambiguous
+                                           # "take the revolver"
+}
 
 # Ollama tool calling schema for CoC 7e mechanics
 CTHULHU_TOOLS = [

@@ -16,6 +16,19 @@ from core.state import InvestigatorState
 from core.archetypes import create_investigator
 
 
+@pytest.fixture(autouse=True)
+def _reset_llm_degradation():
+    """The degraded-turn counter is process-wide by design (it answers "is the
+    model answering at all", not a per-session question), which makes tests
+    order-dependent unless it is reset."""
+    from core.llm_client import LLMClient
+    LLMClient.degraded_turns = 0
+    LLMClient.last_error = None
+    yield
+    LLMClient.degraded_turns = 0
+    LLMClient.last_error = None
+
+
 def _fresh_engine(session_id):
     """Build an engine with memory/entity_graph disabled so nothing external runs."""
     return GenerativeGameEngine(
@@ -556,3 +569,56 @@ def test_unmatched_action_is_counted(engine):
         engine.process_player_action("trepo por la escalera")
     # A matched action must not be counted as a gap.
     assert engine.telemetry_summary()["actions_without_check"] == 1
+
+
+# --- LLM transport: reasoning budget and loud degradation --------------------
+# Production ran for weeks on a model the provider had retired. Every turn
+# 404'd, the engine swallowed it and served a canned sentence, and /api/health
+# still said "ok" because it never calls the model. Two guards come from that.
+
+def test_reasoning_models_get_a_low_effort_hint():
+    """A reasoning model spends the completion budget thinking before it writes.
+
+    Measured on Groq with gpt-oss-120b and this game's ~2000-token system
+    prompt: at the engine's 150-token cap it produced 664 characters of
+    reasoning and ZERO characters of narration, so every turn degraded to the
+    fallback. Asking for low effort returns the same narration in 48 tokens
+    instead of 281.
+    """
+    from core.llm_client import LLMClient
+
+    def opts(model):
+        return LLMClient(model=model, provider="openai",
+                         endpoint="http://x", api_key="k")._reasoning_options()
+
+    for model in ("openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3.6-27b"):
+        assert opts(model) == {"reasoning_effort": "low"}, model
+
+    # Non-reasoning models must not receive the field: providers reject
+    # unknown parameters outright.
+    for model in ("mistral", "llama-3.3-70b-versatile"):
+        assert opts(model) == {}, model
+
+
+def test_degraded_turns_are_counted_not_swallowed():
+    """A fallback must leave a trace, or a dead config looks like normal play."""
+    from core.llm_client import LLMClient
+
+    before = LLMClient.degraded_turns
+    out = LLMClient._degrade("model_not_found", LLMClient.GENERIC_FALLBACK)
+
+    assert out == LLMClient.GENERIC_FALLBACK       # the turn stays playable
+    assert LLMClient.degraded_turns == before + 1  # but it is visible
+    assert LLMClient.last_error == "model_not_found"
+
+
+def test_tool_capable_models_are_the_measured_ones():
+    """This set is measured, not assumed — it was inverted once already."""
+    from core.cthulhu_tools import TOOL_CAPABLE_MODELS
+
+    # Returned pickup_item for an unambiguous "take the revolver".
+    assert "openai/gpt-oss-120b" in TOOL_CAPABLE_MODELS
+    assert "qwen2.5:7b" in TOOL_CAPABLE_MODELS
+    # Returned zero tool calls and narrated it in prose instead.
+    for model in ("mistral", "neural-chat", "llama3"):
+        assert model not in TOOL_CAPABLE_MODELS, model

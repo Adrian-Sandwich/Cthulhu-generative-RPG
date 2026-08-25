@@ -113,8 +113,27 @@ class LLMClient:
         "The world around you seems to pause. You take a moment to "
         "collect yourself and continue your investigation."
     )
+    # These keep a turn playable when the model hiccups. They are also how a
+    # dead configuration hides: a retired model name returns 404, the engine
+    # swallows it, and every turn comes back as the same canned sentence with
+    # HTTP 200. That is exactly what happened in production — the deployed
+    # LLM_MODEL had been retired by the provider and nobody noticed, because
+    # /api/health never calls the model. So the fallbacks now keep a counter,
+    # and /api/health reports it.
     GENERIC_FALLBACK = "Something feels wrong. You steady yourself and push forward."
     EMPTY_FALLBACK = "You pause, thinking..."
+
+    # Process-wide, deliberately: it answers "is the model answering at all",
+    # which is not a per-session question.
+    degraded_turns = 0
+    last_error = None
+
+    @classmethod
+    def _degrade(cls, why: str, fallback: str) -> str:
+        cls.degraded_turns += 1
+        cls.last_error = why
+        logger.error("LLM degraded turn (%s): %s", cls.degraded_turns, why)
+        return fallback
 
     def __init__(self, endpoint: str = None, model: str = None, timeout: int = 120,
                  provider: str = None, api_key: str = None):
@@ -158,6 +177,7 @@ class LLMClient:
                 "model": self.model, "messages": msgs, "stream": True,
                 "temperature": temperature, "max_tokens": max_tokens,
             }
+            payload.update(self._reasoning_options())
         else:
             payload = {
                 "model": self.model, "messages": msgs, "stream": True,
@@ -183,7 +203,9 @@ class LLMClient:
                 response.raise_for_status()
                 full = self._consume_stream(response, on_chunk)
                 _release_endpoint(ep, True)
-                return full.strip() if full.strip() else self.EMPTY_FALLBACK
+                if full.strip():
+                    return full.strip()
+                return self._degrade('empty completion', self.EMPTY_FALLBACK)
             except (requests.Timeout, requests.ConnectionError):
                 _release_endpoint(ep, False)
                 tried = ep["url"]
@@ -191,14 +213,31 @@ class LLMClient:
                 if attempt < attempts - 1:
                     continue
                 return self.NETWORK_FALLBACK
-            except Exception:
+            except Exception as exc:
                 _release_endpoint(ep, False)
                 tried = ep["url"]
                 logger.warning("LLM chat unexpected error on %s (attempt %d)", ep["url"], attempt, exc_info=True)
                 if attempt < attempts - 1:
                     continue
-                return self.GENERIC_FALLBACK
-        return self.EMPTY_FALLBACK
+                return self._degrade(str(exc)[:200], self.GENERIC_FALLBACK)
+        return self._degrade('all endpoints failed', self.EMPTY_FALLBACK)
+
+    # Reasoning models spend the completion budget thinking before they write.
+    # Measured on Groq with gpt-oss-120b and this game's ~2000-token system
+    # prompt: at the engine's 150-token cap the model produced 664 characters
+    # of reasoning and ZERO characters of narration, so every turn degraded to
+    # the in-fiction fallback and the game had no Keeper. Asking for low effort
+    # yields the same narration in 48 completion tokens instead of 281.
+    #
+    # Sent only to models known to accept it; other providers reject unknown
+    # fields outright.
+    REASONING_MODELS = ("gpt-oss", "o1", "o3", "o4", "qwen3", "deepseek-r")
+
+    def _reasoning_options(self) -> dict:
+        model = (self.model or "").lower()
+        if any(tag in model for tag in self.REASONING_MODELS):
+            return {"reasoning_effort": "low"}
+        return {}
 
     def _consume_stream(self, response, on_chunk) -> str:
         """Parse a streamed response for either provider into full text."""
@@ -247,6 +286,7 @@ class LLMClient:
                 "model": self.model, "messages": messages, "tools": tools,
                 "stream": False, "temperature": temperature, "max_tokens": max_tokens,
             }
+            payload.update(self._reasoning_options())
         else:
             payload = {
                 "model": self.model, "messages": messages, "tools": tools,

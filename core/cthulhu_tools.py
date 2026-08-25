@@ -5,7 +5,13 @@ Enables the DM to invoke game mechanics directly via structured function calls.
 """
 
 # Tool calling support for models
-TOOL_CAPABLE_MODELS = {"mistral", "neural-chat", "qwen3:8b"}
+# Models that actually return tool_calls, measured against a local Ollama with
+# the CTHULHU_TOOLS schema below — not the models that claim support. mistral,
+# llama3 and neural-chat all returned zero tool calls for an unambiguous
+# "take the revolver" prompt; they narrate the action in prose instead. Listing
+# a model here that does not comply costs a wasted round trip per turn before
+# the engine falls back to tag parsing.
+TOOL_CAPABLE_MODELS = {"qwen2.5:7b", "qwen3:8b"}
 
 # Ollama tool calling schema for CoC 7e mechanics
 CTHULHU_TOOLS = [

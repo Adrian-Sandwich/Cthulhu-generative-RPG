@@ -91,14 +91,39 @@ cierra, para no volver a planificar trabajo hecho.
 | 2. Contención de mundo + anti-dream-reset | `core/adventure_context.py:175-182` — reglas MOVEMENT ("las locations de la aventura son los ÚNICOS lugares que existen") y CONTINUITY ("el jugador NO puede reescribir la realidad") en el system prompt |
 | 4. Warner se presenta temprano | `core/prompts.py:326` (directiva EARLY GAME con `turn <= 3`) + `available_turns: range(1, 10)` en `NPC_DEFINITIONS` |
 | 3. Mini-tutorial | `static/app.js:498-503` — 3 líneas bilingües "CÓMO JUGAR / HOW TO PLAY" en el intro, más el tooltip pulsante `#die-tip` ("¡Haz click en el dado!") que se muestra la primera vez que aparece un dado, más la pantalla `[help]` completa (`templates/index.html:115`) |
-| 5. Camino al arma | `core/prompts.py:314` siembra el .38 en Keeper's Quarters con instrucción explícita de emitir `[ITEM_FOUND: revolver]`; `pick_up_item` (`core/game_generative.py:957`) carga la munición de la aventura al recogerlo |
+| 5. Camino al arma | **estuvo mal marcado como cerrado** — la plomería estaba completa pero nada la disparaba. Ver abajo |
 
-Sobre el cuchillo de Pao ("agarro un cuchillo" concedido de palabra, inventario
-vacío): el pipeline de items está completo y validado — `[ITEM_FOUND: key]` →
-`apply_turn_consequences` (`core/game_generative.py:1472`) → `pick_up_item` →
-valida contra el registro `ITEMS` (`core/game_generative.py:80`, 8 items). Un
-cuchillo no está en el registro, así que hoy se rechaza por diseño. No falta
-protocolo; lo que falló fue narración sin tag.
+### El ítem 5 estuvo mal marcado como cerrado (corregido 2026-08-25)
+
+Lo di por hecho leyendo `core/prompts.py:314` y `pick_up_item`, sin probar si el
+modelo dispara el tag. **No lo dispara.** Medido con la telemetría recién
+agregada, sobre turnos reales:
+
+- `dm_roll_compliance = 0.0` — el DM pidió 0 de 6 tiradas; las seis las inyectó
+  el keyword fallback.
+- Capturando la salida cruda: mistral **no emite ningún tag**, de ningún tipo.
+- El camino de tool-calling tampoco: mistral, llama3 y neural-chat devuelven
+  `tool_calls: []` ante un "take the revolver" inequívoco. Solo `qwen2.5:7b`
+  llama `pickup_item` — y no estaba en `TOOL_CAPABLE_MODELS`, mientras que dos
+  que no cumplen sí estaban. Lista corregida por medición.
+
+El juego funcionaba igual porque el motor tiene fallback de keywords para
+tiradas, combate, cordura y movimiento. **Items y munición eran las dos únicas
+mecánicas sin fallback** — exactamente las dos que el playtest reportó ausentes
+("0 armas encontradas", "AMMO 6 inútil en todas las partidas"). Verificado antes
+del arreglo: parado en Keeper's Quarters, pidiendo el arma de tres formas en dos
+idiomas, el inventario quedaba vacío y `ammo` en 0.
+
+Cerrado con `_infer_item_pickup`, mismo patrón que la síntesis de tiradas, con
+tres puertas: verbo de tomar **del jugador** (nunca de la prosa del DM — ese es
+el error que teletransportaba jugadores con `[LOCATION:]`), sustantivo que mapea
+a un item del registro, y ubicación correcta para items que la aventura coloca
+(`item_locations` en el config; el revólver vive en Keeper's Quarters). Match por
+palabra completa: con substring, "I take the shotgun" concedía el revólver
+porque "gun" está dentro de "shotgun".
+
+Sobre el cuchillo de Pao: sigue rechazándose, y eso es correcto — un cuchillo no
+está en el registro `ITEMS`. Esa negativa es la contención funcionando.
 
 ### Regresión encontrada y corregida durante la auditoría
 

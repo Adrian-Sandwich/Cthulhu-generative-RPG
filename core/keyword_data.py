@@ -162,6 +162,41 @@ MOVEMENT_VERBS = {
     "me dirijo", "avanzo", "salgo", "salir", "regreso", "vuelvo", "sigo",
 }
 
+# Item pickup intent. The DM is supposed to emit [ITEM_FOUND: key] (or call the
+# pickup_item tool) when the player takes something, and in practice it does
+# neither: measured over real turns, the local models emit no mechanic tags at
+# all and return no tool calls. Rolls, combat, sanity and movement all survive
+# that because the engine has keyword fallbacks for them — items were the one
+# mechanic with no fallback, which is why the LAN playtest recorded "0 armas
+# encontradas" and AMMO 6 that no one could ever spend.
+#
+# Gated on the PLAYER's words, never the DM's prose: the same mistake on
+# [LOCATION:] teleported players whenever a room was merely mentioned.
+TAKE_VERBS = {
+    "agarro", "agarrar", "tomo", "tomar", "recojo", "recoger", "cojo", "coger",
+    "saco", "sacar", "guardo", "guardar", "me llevo", "llevo", "empuño",
+    "take", "takes", "grab", "grabs", "pick up", "picks up", "pocket",
+    "collect", "retrieve", "i take", "i grab",
+}
+
+# Noun -> key in GenerativeGameEngine.ITEMS. Only registry items can be granted,
+# so a player asking for a knife still gets nothing — that rejection is the
+# containment working, not a gap.
+ITEM_KEYWORDS = {
+    "revolver": "revolver", "revólver": "revolver", "pistola": "revolver",
+    "pistol": "revolver", "gun": "revolver", "firearm": "revolver",
+    "arma": "revolver", ".38": "revolver",
+    "linterna": "flashlight", "flashlight": "flashlight", "torch": "flashlight",
+    "cuerda": "rope", "soga": "rope", "rope": "rope",
+    "diario": "logbook", "bitácora": "logbook", "bitacora": "logbook",
+    "logbook": "logbook", "registro": "logbook", "log": "logbook",
+    "libreta": "notebook", "cuaderno": "notebook", "notebook": "notebook",
+    "dinamita": "dynamite", "dynamite": "dynamite", "explosivo": "dynamite",
+    "agua bendita": "holy_water", "holy water": "holy_water",
+    "texto antiguo": "ancient_text", "ancient text": "ancient_text",
+    "manuscrito": "ancient_text", "tome": "ancient_text",
+}
+
 # Deliberate recovery: resting/praying steadies the mind. Costs the turn (the
 # doom clock keeps ticking), gated by a cooldown so it can't be spammed.
 REST_KEYWORDS = {
@@ -196,6 +231,8 @@ SANITY_TRIGGERS = {
 
 __all__ = [
     "ROLL_KEYWORDS",
+    "TAKE_VERBS",
+    "ITEM_KEYWORDS",
     "MAX_PLAYER_INPUT",
     "MAX_HP_DAMAGE",
     "MAX_SAN_DAMAGE",

@@ -45,6 +45,9 @@ class AdventureConfig:
     roll_keywords: Optional[Dict[str, List[str]]] = None
     # finite stakes: {"ammo": int, "time_limit": int (turn doom arrives, 0=off)}
     resources: Dict = field(default_factory=dict)
+    # item key -> location display name. A placed item can only be taken in that
+    # room; anything absent here can be found wherever the DM narrates it.
+    item_locations: Dict[str, str] = field(default_factory=dict)
 
     @classmethod
     def from_name(cls, name: str) -> "AdventureConfig":
@@ -91,6 +94,7 @@ class AdventureConfig:
             relationships=data.get("relationships", []) or [],
             roll_keywords=data.get("roll_keywords"),
             resources=data.get("resources", {}) or {},
+            item_locations=data.get("item_locations", {}) or {},
         )
 
     def resolve_location(self, wanted: str) -> Optional[str]:

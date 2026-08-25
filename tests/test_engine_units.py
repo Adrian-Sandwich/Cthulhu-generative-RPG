@@ -404,3 +404,90 @@ def test_telemetry_never_breaks_a_turn(engine):
 
     engine.state = None
     engine._track("actions")                  # still must not raise
+
+
+# --- item pickup fallback ----------------------------------------------------
+# Measured against real turns, the local models emit no mechanic tags and return
+# no tool calls, so [ITEM_FOUND: key] never fires. Rolls, combat, sanity and
+# movement all survive that because they have keyword fallbacks; items had none,
+# which is why the LAN playtest recorded "0 armas encontradas" with an AMMO
+# counter nobody could spend. These tests pin the fallback and its guards.
+
+def _in_quarters(engine):
+    engine.state.location = "Keeper's Quarters"
+    return engine
+
+
+def test_item_pickup_requires_taking_intent(engine):
+    _in_quarters(engine)
+    # Naming the revolver is not taking it.
+    assert engine._infer_item_pickup("miro el revólver sobre la mesa") is None
+    assert engine._infer_item_pickup("there is a revolver in the holster") is None
+    assert engine._infer_item_pickup("agarro el revólver") == "revolver"
+    assert engine._infer_item_pickup("I take the revolver") == "revolver"
+
+
+def test_item_pickup_is_bilingual(engine):
+    _in_quarters(engine)
+    for phrase in ("agarro la pistola", "tomo el arma", "recojo el revólver",
+                   "I grab the gun", "I pick up the firearm"):
+        assert engine._infer_item_pickup(phrase) == "revolver", phrase
+
+
+def test_item_pickup_respects_placement(engine):
+    """A placed item exists in one room; reaching for it elsewhere gets nothing."""
+    engine.state.location = "Lighthouse Interior"
+    assert engine._infer_item_pickup("agarro el revólver") is None
+    _in_quarters(engine)
+    assert engine._infer_item_pickup("agarro el revólver") == "revolver"
+
+
+def test_item_pickup_ignores_unplaced_item_location(engine):
+    """Items the adventure does not place can be taken wherever they are found."""
+    engine.state.location = "Lighthouse Interior"
+    assert engine._infer_item_pickup("recojo la cuerda") == "rope"
+
+
+def test_item_pickup_will_not_regrant(engine):
+    _in_quarters(engine)
+    engine.pick_up_item("revolver")
+    assert engine._infer_item_pickup("agarro el revólver") is None
+
+
+def test_item_pickup_rejects_unregistered_items(engine):
+    """Pao asked for a knife the adventure has no item for — that must stay a no."""
+    _in_quarters(engine)
+    assert engine._infer_item_pickup("agarro un cuchillo de la mesa") is None
+    assert engine._infer_item_pickup("I take the shotgun") is None
+
+
+def test_item_pickup_end_to_end_loads_the_firearm(engine):
+    """The whole point: AMMO stops being a number the player can never spend."""
+    from unittest.mock import patch
+    _in_quarters(engine)
+    assert engine.resources_status()["has_firearm"] is False
+
+    # A DM that emits no tags at all — which is what the real models do.
+    with patch.object(engine, "_call_ollama",
+                      return_value="You rummage through the keeper's effects."):
+        result = engine.process_player_action("registro los efectos y agarro el revólver")
+    engine.apply_turn_consequences(result)
+
+    assert "Revolver (.38)" in engine.state.investigator.inventory
+    assert engine.state.ammo == 6
+    assert engine.resources_status()["has_firearm"] is True
+    assert engine.telemetry_summary().get("items_synthesized") == 1
+
+
+def test_dm_tag_still_wins_over_the_fallback(engine):
+    """The fallback is a backstop; a DM that does tag items keeps control."""
+    from unittest.mock import patch
+    _in_quarters(engine)
+    dm = "A coil of rope hangs by the door. [ITEM_FOUND: rope]"
+    with patch.object(engine, "_call_ollama", return_value=dm):
+        result = engine.process_player_action("miro alrededor")
+    engine.apply_turn_consequences(result)
+
+    assert "Rope (30ft)" in engine.state.investigator.inventory
+    # Tagged, not synthesized — the counter must tell them apart.
+    assert engine.telemetry_summary().get("items_synthesized", 0) == 0

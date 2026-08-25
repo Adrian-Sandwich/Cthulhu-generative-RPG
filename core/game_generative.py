@@ -9,6 +9,7 @@ import logging
 import os
 import random
 import re
+from functools import lru_cache
 from dataclasses import asdict
 from typing import Optional, Dict, List, Tuple
 
@@ -19,13 +20,28 @@ from .prompts import PromptBuilder
 from .combat import CombatSystem
 from .state import InvestigatorState, GameState
 from .keyword_data import (
-    ROLL_KEYWORDS, MAX_PLAYER_INPUT, MAX_HP_DAMAGE, MAX_SAN_DAMAGE,
+    ROLL_KEYWORDS, TAKE_VERBS, ITEM_KEYWORDS,
+    MAX_PLAYER_INPUT, MAX_HP_DAMAGE, MAX_SAN_DAMAGE,
     AMMO_FIND_CAP, AMMO_MAX, _TAG_LIKE, PHYSICAL_SKILLS, MENTAL_SKILLS,
     ATTACK_VERBS, AMBUSH_CUES, MOVEMENT_VERBS, REST_KEYWORDS,
     REST_COOLDOWN_TURNS, REST_RECOVERY, ESCALATION_CUES, SANITY_TRIGGERS,
 )
 
 logger = logging.getLogger(__name__)
+
+
+@lru_cache(maxsize=512)
+def _word_re(phrase: str):
+    """Compiled whole-word matcher for a keyword phrase.
+
+    Lookarounds rather than \\b so entries that start or end with punctuation
+    (".38") still match, and multi-word entries ("pick up") stay intact.
+    """
+    return re.compile(r"(?<!\w)" + re.escape(phrase) + r"(?!\w)")
+
+
+def _whole_word(phrase: str, text: str) -> bool:
+    return bool(_word_re(phrase).search(text))
 
 # Re-export state dataclasses for backward compatibility with code that imports
 # them from this module (e.g. ``from core.game_generative import GameState``).
@@ -673,6 +689,17 @@ class GenerativeGameEngine:
                     self._track("rolls_synthesized")
                     break
 
+        # Same fallback shape as the roll synthesis above, for the one mechanic
+        # that had none: the DM never emits [ITEM_FOUND: key] in practice, so
+        # without this nothing can ever enter the inventory. Player intent only,
+        # registry items only, and the adventure decides where a placed item can
+        # be taken.
+        if not items_found:
+            granted = self._infer_item_pickup(player_input)
+            if granted:
+                items_found = [granted]
+                self._track("items_synthesized")
+
         # Horror has a price: if the player describes witnessing something
         # terrible and the DM forgot the Sanity check, the engine enforces one
         # so SAN actually drops (and the world starts to corrupt) — even when a
@@ -1115,6 +1142,36 @@ class GenerativeGameEngine:
             round(t["rolls_from_dm"] / offered, 2) if offered else None
         )
         return t
+
+    def _infer_item_pickup(self, player_input: str) -> Optional[str]:
+        """Item key the player is trying to take, or None.
+
+        Requires all three: a taking verb, a noun that maps to a registry item,
+        and — for items the adventure places in a specific room — being in that
+        room. Anything already carried returns None so the fallback cannot
+        re-grant it every turn.
+        """
+        text = (player_input or "").lower()
+        # Whole words only: plain substring matching turned "I take the shotgun"
+        # into a revolver, because "gun" sits inside "shotgun".
+        if not any(_whole_word(v, text) for v in TAKE_VERBS):
+            return None
+
+        for noun, item_key in ITEM_KEYWORDS.items():
+            if item_key not in self.ITEMS or not _whole_word(noun, text):
+                continue
+            item_name = self.ITEMS[item_key]["name"]
+            if self.state and item_name in self.state.investigator.inventory:
+                continue
+            # Placed items exist in one room only; unplaced ones can be found
+            # wherever the DM cares to narrate them.
+            placed = (self.adventure_config.item_locations or {}).get(item_key)
+            if placed and self.state and self.state.location != placed:
+                logger.info("player reached for %r outside %r — not granted",
+                            item_key, placed)
+                return None
+            return item_key
+        return None
 
     def _resolve_location(self, wanted: str) -> Optional[str]:
         """Match a DM-tagged location against the adventure's registry.

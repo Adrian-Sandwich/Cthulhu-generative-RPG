@@ -150,5 +150,8 @@
       "rel": "PROTECTS",
       "to": "lighthouse_exterior"
     }
-  ]
+  ],
+  "item_locations": {
+    "revolver": "Keeper's Quarters"
+  }
 }

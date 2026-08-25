@@ -34,3 +34,12 @@ The in-memory `_sessions` map + per-session locks require gunicorn to run with
 ONE worker (documented in the Dockerfile/DEPLOY). Horizontal scaling would need
 the session/game state moved to a shared store (Redis/DB). Fine for the current
 scale; revisit if one process isn't enough.
+
+## Dead standalone scripts (fan-in 0 in the code graph)
+`game/generate_examples.py`, `game/generate_final_test.py`,
+`game/show_all_images.py`, `game/debug_generation.py`,
+`game/evaluate_examples.py`, `tools/analyze_playtests.py`, and
+`tools/document_to_json.py` are one-off CLI/experiment scripts nothing in the
+app imports. Kept on purpose (image-gen experiments and data tooling), but they
+are not part of the runtime and are excluded from launch review scope. Delete
+whenever the image-generation experiments conclude.

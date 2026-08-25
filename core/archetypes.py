@@ -9,7 +9,7 @@ in execute_skill_check (e.g. "Spot Hidden" -> "spot_hidden").
 
 from typing import Dict
 
-from .game_generative import InvestigatorState
+from .state import InvestigatorState
 
 
 ARCHETYPES: Dict[str, Dict] = {
@@ -101,6 +101,7 @@ def create_investigator(name: str, archetype: str) -> InvestigatorState:
     arch = ARCHETYPES.get(archetype, ARCHETYPES["scholar"])
     characteristics = dict(arch["characteristics"])
     characteristics.update(_derived_stats(characteristics))
+    characteristics["max_hp"] = characteristics["HP"]
 
     return InvestigatorState(
         name=name,

@@ -26,14 +26,16 @@ Defined in `core/game_generative.py`:
 `MAX_PLAYER_INPUT=500`, `MAX_HP_DAMAGE=30`, `MAX_SAN_DAMAGE=30`,
 `AMMO_FIND_CAP=6`, `AMMO_MAX=24`. App bound: `MAX_ACTION_LEN=2000` (`app.py`).
 
+## Covered controls
+
+- **Content moderation.** Implemented via `core/moderation.is_allowed()` called
+  on player input and DM output in `app.py`. Default `MODERATION=local` uses a
+  conservative blocklist tuned for horror; set `MODERATION=api` to call an
+  OpenAI-compatible `/moderations` endpoint.
+- **Rate limiting.** Implemented: per-IP sliding-window limits in `app.py`
+  (`RATE_LIMITS`) on `action`, `start`, and `feedback` endpoints.
+
 ## Not yet covered (recommended next)
 
-- **Content moderation.** Player text and model output are not screened for
-  harmful content. For a public deployment, route both through a moderation API
-  (e.g. an `_content_allowed()` gate) before processing. Tune for a horror
-  setting to avoid false positives on violence/dread.
-- **Rate limiting.** Per-session locking serializes a user's own requests but
-  there is no per-IP rate limit; add one (e.g. Flask-Limiter) behind a public
-  endpoint.
 - **Auth.** Sessions are anonymous cookies; add real auth if games must be
   private or attributable.

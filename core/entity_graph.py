@@ -6,6 +6,7 @@ to inform DM narrative and detect conspiracies.
 """
 
 import logging
+import os
 from typing import Dict, List, Optional, Tuple
 
 try:
@@ -33,16 +34,18 @@ class EntityGraph:
     ALLOWED_RELS = {"WORKS_FOR", "KNOWS", "FEARS", "PROTECTS"}
 
     def __init__(self, uri: str = "bolt://localhost:7687", user: str = "neo4j",
-                 password: str = "password", session_id: str = "default"):
+                 password: Optional[str] = None, session_id: str = "default"):
         """
         Initialize Neo4j connection.
 
         Args:
             uri: Neo4j connection URI
             user: Neo4j username
-            password: Neo4j password
+            password: Neo4j password; falls back to NEO4J_PASSWORD env var
             session_id: Scopes every node this instance creates/reads/deletes.
         """
+        if password is None:
+            password = os.environ.get("NEO4J_PASSWORD", "password")
         self.driver = None
         self.session: Optional[Session] = None
         self.session_id = session_id

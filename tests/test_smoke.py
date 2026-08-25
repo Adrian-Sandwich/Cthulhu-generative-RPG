@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Fast smoke/regression suite — no Ollama, no network. Mocks the LLM and drives
-the real Flask app + engine to catch regressions in the hot path and the
-safety guards. Run: pytest tests/test_smoke.py -q
+a fresh Flask app instance per test to catch regressions in the hot path and
+the safety guards. Run: pytest tests/test_smoke.py -q
 """
 
 import os
@@ -16,14 +16,16 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # --- fixtures --------------------------------------------------------------
 
+def _make_app(data_dir):
+    """Build a fresh app instance isolated to the given data directory."""
+    import app as app_module
+    return app_module.create_app({"DATA_DIR": str(data_dir)})
+
+
 @pytest.fixture
 def client(tmp_path):
     """A fresh app client with storage redirected to a temp dir and the LLM
     mocked to a canned, tag-rich response."""
-    os.environ["DATA_DIR"] = str(tmp_path)
-    import importlib
-    import app as app_module
-    importlib.reload(app_module)
 
     def fake_chat(self, *a, **k):
         on = k.get("on_chunk")
@@ -37,7 +39,7 @@ def client(tmp_path):
 
     with patch("core.llm_client.LLMClient.chat", fake_chat), \
          patch("core.llm_client.LLMClient.chat_with_tools", fake_tools):
-        yield app_module.app.test_client()
+        yield _make_app(tmp_path).test_client()
 
 
 def _start(client, **kw):
@@ -61,6 +63,16 @@ def test_action_turn(client):
     r = client.post("/api/game/action", json={"action": "look around the room"})
     assert r.status_code == 200
     assert r.get_json()["success"]
+
+
+def test_action_stream(client):
+    _start(client)
+    r = client.post("/api/game/action/stream", json={"action": "look around the room"})
+    assert r.status_code == 200
+    assert r.mimetype == "text/event-stream"
+    data = r.get_data(as_text=True)
+    assert "data:" in data
+    assert "event: done" in data
 
 
 def test_roll_flow(client):
@@ -108,19 +120,16 @@ def test_moderation_allows_horror(client):
 # --- session isolation -----------------------------------------------------
 
 def test_two_clients_isolated(tmp_path):
-    os.environ["DATA_DIR"] = str(tmp_path)
-    import importlib, app as app_module
-    importlib.reload(app_module)
-
     def fake_chat(self, *a, **k):
         if k.get("on_chunk"):
             k["on_chunk"]("ok")
         return "ok"
+
     with patch("core.llm_client.LLMClient.chat", fake_chat), \
          patch("core.llm_client.LLMClient.chat_with_tools",
                lambda *a, **k: {"narrative": "", "tool_calls": [], "fallback": True}):
-        c1 = app_module.app.test_client()
-        c2 = app_module.app.test_client()
+        c1 = _make_app(tmp_path).test_client()
+        c2 = _make_app(tmp_path).test_client()
         c1.post("/api/game/start", json={"name": "Alice", "archetype": "scholar"})
         c2.post("/api/game/start", json={"name": "Bob", "archetype": "detective"})
         n1 = c1.get("/api/game/state").get_json()["investigator"]["name"]
@@ -131,11 +140,11 @@ def test_two_clients_isolated(tmp_path):
 # --- engine units ----------------------------------------------------------
 
 def test_save_id_sanitized():
-    from core.generative_save import GenerativeSave, SAVES_DIR
+    from core.generative_save import GenerativeSave, saves_dir
     from pathlib import Path
     p = GenerativeSave._save_path("../../etc/passwd")
     assert p.name == "etcpasswd.json"
-    assert p.resolve().parent == Path(SAVES_DIR).resolve()
+    assert p.resolve().parent == saves_dir().resolve()
 
 
 def test_rel_type_whitelist():
@@ -168,6 +177,7 @@ def test_ammo_and_firearm():
 def test_location_needs_movement():
     from core.game_generative import GenerativeGameEngine
     from core.archetypes import create_investigator
+    from unittest.mock import patch
     e = GenerativeGameEngine(model="mistral", use_memory=False, session_id="u3")
     e.create_game(create_investigator("T", "scholar"))
     start = e.state.location

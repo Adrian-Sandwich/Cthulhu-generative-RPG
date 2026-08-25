@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Standalone CLI — nothing in the app imports it (fan-in 0), it is run by
+# hand. See docs/TECH_DEBT.md ("Dead standalone scripts") before deleting.
 """
 Playtest analytics — summarize saves, playtest archives, and feedback into a
 readable report. Reads from DATA_DIR (default: repo root).

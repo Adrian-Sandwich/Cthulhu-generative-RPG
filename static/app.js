@@ -2,7 +2,7 @@
 
 let gameStarted = false;
 let gameHistory = [];
-let maxHP = 14; // Replaced with the investigator's starting HP on game start
+let maxHP = null; // Set from server responses (max_hp from the investigator sheet)
 let imagePollTimer = null;
 let archetypes = {};
 let pendingRoll = null;
@@ -473,7 +473,7 @@ async function startGame(event) {
         if (data.success) {
             gameStarted = true;
             gameHistory = [];
-            maxHP = data.investigator.HP; // Starting HP is the max
+            maxHP = data.investigator.maxHP || data.investigator.HP;
 
             document.getElementById('startup-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
@@ -528,6 +528,12 @@ function setStatus(message, isError = false) {
 
 // Update Stats
 function updateStats(stats) {
+    if (stats.maxHP !== undefined) {
+        maxHP = stats.maxHP;
+    }
+    if (maxHP === null || maxHP === undefined) {
+        maxHP = stats.HP; // Fallback until start / state refresh arrives
+    }
     document.getElementById('hp-value').textContent = stats.HP + '/' + maxHP;
     document.getElementById('san-value').textContent = stats.SAN + '/99';
     document.getElementById('luck-value').textContent = stats.Luck;

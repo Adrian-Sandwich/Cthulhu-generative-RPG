@@ -90,7 +90,7 @@ cierra, para no volver a planificar trabajo hecho.
 | 1. `ROLL_KEYWORDS` bilingüe | `core/keyword_data.py:10` — 107 claves; incluye `investigar`, `revisar`, `leer`, `buscar`, `trepar`, `apuñalar` |
 | 2. Contención de mundo + anti-dream-reset | `core/adventure_context.py:175-182` — reglas MOVEMENT ("las locations de la aventura son los ÚNICOS lugares que existen") y CONTINUITY ("el jugador NO puede reescribir la realidad") en el system prompt |
 | 4. Warner se presenta temprano | `core/prompts.py:326` (directiva EARLY GAME con `turn <= 3`) + `available_turns: range(1, 10)` en `NPC_DEFINITIONS` |
-| 3. Mini-tutorial | `static/app.js:498-503` — 3 líneas bilingües "CÓMO JUGAR / HOW TO PLAY" en el intro, más el tooltip pulsante `#die-tip` ("¡Haz click en el dado!") que se muestra la primera vez que aparece un dado, más la pantalla `[help]` completa (`templates/index.html:115`) |
+| 3. Mini-tutorial | `static/js/ui.js` — 3 líneas bilingües "CÓMO JUGAR / HOW TO PLAY" en el intro, más el tooltip pulsante `#die-tip` ("¡Haz click en el dado!") que se muestra la primera vez que aparece un dado, más la pantalla `[help]` completa (`templates/index.html:115`) |
 | 5. Camino al arma | **estuvo mal marcado como cerrado** — la plomería estaba completa pero nada la disparaba. Ver abajo |
 
 ### El ítem 5 estuvo mal marcado como cerrado (corregido 2026-08-25)
@@ -148,7 +148,7 @@ huecos encontrados auditando el código, no ítems heredados.
    jugador que *ve* el dado, pero no al que pide tirarlo por texto. Champi
    escribió "Lanza el dado" como acción y el Keeper lo recibió como narrativa,
    gastando el turno. Cerrado parcialmente en este branch: el cliente intercepta
-   la petición (`ROLL_REQUEST_RE` en `static/app.js`) y explica que los dados
+   la petición (`ROLL_REQUEST_RE` en `static/js/turn.js`) y explica que los dados
    salen solos. Queda sin cobertura automatizada — el front no tiene tests.
 2. ~~**Telemetría por sesión**~~ — **hecho**. Contadores en `GameState.telemetry`
    (persisten en el save), expuestos en `/api/admin/stats` y en el panel DICE
@@ -179,8 +179,11 @@ huecos encontrados auditando el código, no ítems heredados.
    no es estética: hoy ningún endpoint es importable, así que toda la cobertura
    HTTP depende de una fixture que instancia la app entera — el hueco exacto por
    el que pasó la regresión de arriba.
-5. **Partir `static/app.js`** — cluster único de 53 funciones, cohesión 0.98.
-   Cuando el front se toque en serio (ítems 1 y 3).
+5. ~~**Partir `static/app.js`**~~ — **hecho**. 1273 líneas y 58 funciones en un
+   archivo, ahora cinco scripts contiguos en `static/js/` (`state`, `audio`,
+   `ui`, `turn`, `dice`). Movimiento puro: concatenarlos reproduce el original
+   línea por línea. Siguen siendo scripts clásicos porque el HTML usa handlers
+   `onclick` inline, que necesitan las funciones globales.
 
 No hacer: adelgazar el facade de `GenerativeGameEngine`. Los wrappers
 delegantes hacia `CombatSystem` / `PromptBuilder` / `CoC7eRulesEngine` son API

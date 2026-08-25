@@ -82,7 +82,8 @@ All endpoints are RESTful JSON APIs.
 ### Frontend (HTML/CSS/JS)
 - `templates/index.html` - Main interface markup
 - `static/style.css` - Lovecraftian theme styling
-- `static/app.js` - Client-side logic and API calls
+- `static/js/` - Client logic, split by concern: `state`, `audio`, `ui`,
+  `turn`, `dice`. Classic scripts sharing one scope, loaded in that order.
 
 ### Game Engine
 - `core/game_generative.py` - LLM-based narrative generation

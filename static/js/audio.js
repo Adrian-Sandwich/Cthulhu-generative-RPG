@@ -1,0 +1,373 @@
+// THE LIGHTHOUSE — audio
+//
+// Synthesized retro audio and the adaptive ambient score. No asset files.
+
+// ---- Retro audio (synthesized, no asset files) ----
+let audioCtx = null;
+let soundOn = true;
+let heartbeatTimer = null;
+
+function getAudio() {
+    if (!soundOn) return null;
+    if (!audioCtx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        audioCtx = new AC();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+}
+
+// Short square-wave blip — the building block for all retro SFX.
+function blip(freq, dur, type = 'square', gain = 0.05) {
+    const ctx = getAudio();
+    if (!ctx) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type;
+    o.frequency.value = freq;
+    o.connect(g);
+    g.connect(ctx.destination);
+    const t = ctx.currentTime;
+    g.gain.setValueAtTime(gain, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.start(t);
+    o.stop(t + dur);
+}
+
+function sfxTumble() { blip(140 + Math.random() * 260, 0.03, 'square', 0.035); }
+
+function sfxLand(success, fumble) {
+    if (fumble) { blip(70, 0.5, 'sawtooth', 0.09); blip(48, 0.6, 'sawtooth', 0.07); return; }
+    if (success) { blip(440, 0.08); setTimeout(() => blip(660, 0.14), 70); }
+    else { blip(180, 0.12, 'sawtooth', 0.07); setTimeout(() => blip(110, 0.22, 'sawtooth', 0.07), 90); }
+}
+
+// Low "lub-dub" pulse loop while sanity is failing; faster at higher levels.
+function startHeartbeat(level) {
+    stopHeartbeat();
+    if (level < 2 || !soundOn) return;
+    const period = level >= 3 ? 900 : 1500;
+    const beat = () => {
+        blip(60, 0.12, 'sine', 0.10);
+        setTimeout(() => blip(50, 0.16, 'sine', 0.09), 150);
+    };
+    beat();
+    heartbeatTimer = setInterval(beat, period);
+}
+function stopHeartbeat() {
+    if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
+}
+
+function toggleSound() {
+    soundOn = !soundOn;
+    const el = document.getElementById('sound-toggle');
+    if (el) el.textContent = soundOn ? '[sound on]' : '[sound off]';
+    if (!soundOn) { stopHeartbeat(); stopMusic(); }
+    else if (gameStarted) startMusic();
+}
+
+// ---- Adaptive ambient music (synthesized drone, no asset files) ----
+// A low Lovecraftian drone that reacts to the game: dissonance swells as
+// sanity fails, a pulse enters during combat, and everything sharpens when
+// the doom clock nears zero.
+let music = null;
+const musicState = { corruption: 0, inCombat: false, timeRemaining: -1, turn: 1, san: 99 };
+
+// Gradual dread 0..1 — the longer you play and the worse you're doing, the
+// more uncomfortable the score gets (independent of the discrete triggers).
+// Built on horror psychoacoustics: roughness, sub-bass, dissonance, and
+// timing unpredictability all scale with this.
+function computeDread() {
+    const turnPart = Math.min(musicState.turn / 25, 1) * 0.35;
+    const sanPart = (1 - Math.max(0, Math.min(musicState.san, 99)) / 99) * 0.45;
+    const doomPart = (musicState.timeRemaining >= 0
+        ? Math.max(0, Math.min((6 - musicState.timeRemaining) / 6, 1)) : 0) * 0.2;
+    return Math.min(1, turnPart + sanPart + doomPart);
+}
+
+function startMusic() {
+    if (music || !soundOn) return;
+    const ctx = getAudio();
+    if (!ctx) return;
+
+    const master = ctx.createGain();
+    master.gain.value = 0;
+    master.connect(ctx.destination);
+    master.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 4); // slow fade-in
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 220;
+    filter.connect(master);
+
+    // Two detuned low saws = the sea's drone
+    const o1 = ctx.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = 55;
+    const o2 = ctx.createOscillator(); o2.type = 'sawtooth'; o2.frequency.value = 55.7;
+    const g1 = ctx.createGain(); g1.gain.value = 0.5;
+    const g2 = ctx.createGain(); g2.gain.value = 0.4;
+    o1.connect(g1); g1.connect(filter);
+    o2.connect(g2); g2.connect(filter);
+
+    // Very slow LFO sweeping the filter — the swell of the tide
+    const lfo = ctx.createOscillator(); lfo.frequency.value = 0.05;
+    const lfoGain = ctx.createGain(); lfoGain.gain.value = 80;
+    lfo.connect(lfoGain); lfoGain.connect(filter.frequency);
+
+    // Dissonant tritone layer — silent while sane, rises with corruption
+    const diss = ctx.createOscillator(); diss.type = 'triangle'; diss.frequency.value = 77.8;
+    const dissGain = ctx.createGain(); dissGain.gain.value = 0;
+    diss.connect(dissGain); dissGain.connect(filter);
+
+    // Sub-bass layer (~28Hz, felt more than heard — the "Irreversible" trick).
+    // Silent at first; emerges as dread grows.
+    const sub = ctx.createOscillator(); sub.type = 'sine'; sub.frequency.value = 28;
+    const subGain = ctx.createGain(); subGain.gain.value = 0;
+    sub.connect(subGain); subGain.connect(master);
+
+    // Roughness layer: a tone whose amplitude flutters at 40-60Hz — the
+    // acoustic signature of a distress scream. Deeply aversive at low volume.
+    const rough = ctx.createOscillator(); rough.type = 'triangle'; rough.frequency.value = 110;
+    const roughGain = ctx.createGain(); roughGain.gain.value = 0;
+    const tremolo = ctx.createOscillator(); tremolo.frequency.value = 40;
+    const tremGain = ctx.createGain(); tremGain.gain.value = 0;   // depth follows dread
+    tremolo.connect(tremGain); tremGain.connect(roughGain.gain);
+    rough.connect(roughGain); roughGain.connect(filter);
+
+    o1.start(); o2.start(); lfo.start(); diss.start(); sub.start(); rough.start(); tremolo.start();
+    music = { ctx, master, filter, o1, o2, lfo, diss, dissGain,
+              sub, subGain, rough, roughGain, tremolo, tremGain, riser: null,
+              pulseTimer: null, swellTimer: null, boomTimer: null, whisperTimer: null };
+    updateMusic();
+    scheduleSwell();
+    scheduleBoom();
+    scheduleWhisper();
+}
+
+// Position a source around the listener's head (HRTF = real "behind you" on
+// headphones). angle 0 = front, PI = directly behind.
+function spatial(ctx, angle, dist = 1.5) {
+    try {
+        const p = ctx.createPanner();
+        p.panningModel = 'HRTF';
+        p.distanceModel = 'inverse';
+        p.refDistance = 1;
+        p.setPosition(Math.sin(angle) * dist, 0, -Math.cos(angle) * dist);
+        return p;
+    } catch (e) { return null; }
+}
+
+// Pick where a sound appears: calm → mostly in front/sides; high dread →
+// increasingly BEHIND the listener.
+function dreadAngle(dread) {
+    const spread = Math.PI * (0.5 + dread);          // 90° .. 270° of arc
+    const bias = dread * Math.PI;                     // center drifts to the back
+    const a = bias + (Math.random() - 0.5) * spread;
+    return Math.random() < 0.5 ? a : -a;
+}
+
+// Swells: a soft tone rises and falls somewhere around your head. While sane
+// it draws from a minor scale in front of you; as dread grows the notes turn
+// dissonant (minor 2nds, the tritone) and drift BEHIND you, on ever more
+// erratic timing (unpredictability is the point).
+function scheduleSwell() {
+    if (!music) return;
+    const dread = computeDread();
+    const base = 25000 - dread * 12000;
+    const jitter = (45000 + dread * 30000) * Math.random();
+    music.swellTimer = setTimeout(() => {
+        if (!music) return;
+        const ctx = music.ctx;
+        const d = computeDread();
+        const calm = [82.4, 98, 110, 130.8, 164.8];       // E2 G2 A2 C3 E3
+        const wrong = [116.5, 155.6, 103.8, 58.3];        // Bb2 Eb3 Ab2 Bb1 — semitone/tritone vs A
+        const pool = Math.random() < d ? wrong : calm;
+        const f = pool[Math.floor(Math.random() * pool.length)]
+                  * (1 + (Math.random() - 0.5) * (0.012 + d * 0.02));  // detune worsens
+        const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+        const g = ctx.createGain(); g.gain.value = 0;
+        const pan = spatial(ctx, dreadAngle(d));
+        o.connect(g);
+        if (pan) { g.connect(pan); pan.connect(music.filter); }
+        else { g.connect(music.filter); }
+        const t = ctx.currentTime;
+        g.gain.linearRampToValueAtTime(0.16, t + 4);
+        g.gain.linearRampToValueAtTime(0.0001, t + 11);
+        o.start(t); o.stop(t + 11.5);
+        scheduleSwell();
+    }, base + jitter);
+}
+
+// Something enormous shifts far below. At higher dread it is preceded by a
+// strategic near-silence — the quiet is what makes the impact land.
+function scheduleBoom() {
+    if (!music) return;
+    music.boomTimer = setTimeout(() => {
+        if (!music) return;
+        const ctx = music.ctx;
+        const d = computeDread();
+        const fire = () => {
+            if (!music) return;
+            const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = 36;
+            const g = ctx.createGain();
+            o.connect(g); g.connect(music.master);
+            const t = ctx.currentTime;
+            g.gain.setValueAtTime(0.12 + d * 0.06, t);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 2.5);
+            o.start(t); o.stop(t + 2.6);
+        };
+        if (d > 0.3 && Math.random() < 0.6) {
+            // duck to near-silence, hold, then the deep shift
+            const t = ctx.currentTime;
+            const hold = 3 + Math.random() * 3;
+            music.master.gain.linearRampToValueAtTime(0.006, t + 2);
+            setTimeout(() => {
+                if (!music) return;
+                fire();
+                music.master.gain.linearRampToValueAtTime(0.05, music.ctx.currentTime + 3);
+            }, (2 + hold) * 1000);
+        } else {
+            fire();
+        }
+        scheduleBoom();
+    }, 60000 + Math.random() * 120000);
+}
+
+// Headphone moment: a breath of filtered noise at one ear — or behind you.
+// Only once dread has set in, and never on a schedule you could predict.
+function scheduleWhisper() {
+    if (!music) return;
+    music.whisperTimer = setTimeout(() => {
+        if (!music) { return; }
+        const d = computeDread();
+        if (d > 0.35) {
+            const ctx = music.ctx;
+            const len = 1.5;
+            const buf = ctx.createBuffer(1, ctx.sampleRate * len, ctx.sampleRate);
+            const ch = buf.getChannelData(0);
+            for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+            const src = ctx.createBufferSource(); src.buffer = buf;
+            const bp = ctx.createBiquadFilter();
+            bp.type = 'bandpass'; bp.frequency.value = 2100; bp.Q.value = 2.5;
+            const g = ctx.createGain(); g.gain.value = 0;
+            // hard to one side, close to the head — or right behind it
+            const angle = Math.random() < 0.4 ? Math.PI + (Math.random() - 0.5) * 0.6
+                                              : (Math.random() < 0.5 ? 1 : -1) * (1.2 + Math.random() * 0.4);
+            const pan = spatial(ctx, angle, 0.6);
+            src.connect(bp); bp.connect(g);
+            if (pan) { g.connect(pan); pan.connect(music.master); }
+            else { g.connect(music.master); }
+            const t = ctx.currentTime;
+            // two breath-like puffs
+            g.gain.linearRampToValueAtTime(0.05 + d * 0.03, t + 0.25);
+            g.gain.linearRampToValueAtTime(0.008, t + 0.6);
+            g.gain.linearRampToValueAtTime(0.045 + d * 0.03, t + 0.9);
+            g.gain.linearRampToValueAtTime(0.0001, t + len);
+            src.start(t); src.stop(t + len);
+        }
+        scheduleWhisper();
+    }, 45000 + Math.random() * 90000);
+}
+
+function stopMusic() {
+    if (!music) return;
+    const m = music;
+    music = null;
+    try {
+        m.master.gain.linearRampToValueAtTime(0.0001, m.ctx.currentTime + 1);
+        if (m.pulseTimer) clearInterval(m.pulseTimer);
+        if (m.swellTimer) clearTimeout(m.swellTimer);
+        if (m.boomTimer) clearTimeout(m.boomTimer);
+        if (m.whisperTimer) clearTimeout(m.whisperTimer);
+        if (m.riser) { if (m.riser.timer) clearTimeout(m.riser.timer); try { m.riser.osc.stop(); } catch (e) {} }
+        setTimeout(() => {
+            try { [m.o1, m.o2, m.lfo, m.diss, m.sub, m.rough, m.tremolo].forEach(o => o.stop()); } catch (e) {}
+        }, 1200);
+    } catch (e) { /* context already gone */ }
+}
+
+function updateMusic() {
+    if (!music) return;
+    const t = music.ctx.currentTime;
+    const dread = computeDread();
+
+    // Madness: the tritone rises out of the drone
+    const dissLevels = [0, 0.12, 0.25, 0.4];
+    music.dissGain.gain.linearRampToValueAtTime(
+        dissLevels[Math.min(musicState.corruption, 3)], t + 2);
+
+    // Gradual dread: sub-bass emerges, scream-roughness flutters in, and the
+    // two drones drift apart (beating gets harsher the worse things go).
+    music.subGain.gain.linearRampToValueAtTime(dread * 0.14, t + 4);
+    music.roughGain.gain.linearRampToValueAtTime(dread * dread * 0.05, t + 4);
+    music.tremGain.gain.linearRampToValueAtTime(dread * dread * 0.05, t + 4);
+    music.tremolo.frequency.linearRampToValueAtTime(40 + dread * 25, t + 4);
+
+    // Doom near: everything a half-step sharper, tide moves faster
+    const doom = musicState.timeRemaining >= 0 && musicState.timeRemaining <= 3;
+    const base = doom ? 58.27 : 55;
+    music.o1.frequency.linearRampToValueAtTime(base, t + 2);
+    music.o2.frequency.linearRampToValueAtTime(base + 0.7 + dread * 1.8, t + 2);
+    music.lfo.frequency.linearRampToValueAtTime((doom ? 0.15 : 0.05) + dread * 0.05, t + 2);
+
+    // Deep dread: a Shepard-like riser — a pitch that climbs for 25s, resets
+    // inaudibly, climbs again. Tension that never resolves.
+    if (dread > 0.6 && !music.riser) startRiser();
+    else if (dread <= 0.55 && music.riser) stopRiser();
+
+    // Combat: a low pulse under everything
+    if (musicState.inCombat && !music.pulseTimer) {
+        music.pulseTimer = setInterval(() => {
+            if (soundOn && music) blip(110, 0.09, 'square', 0.04);
+        }, 480);
+    } else if (!musicState.inCombat && music.pulseTimer) {
+        clearInterval(music.pulseTimer);
+        music.pulseTimer = null;
+    }
+}
+
+function startRiser() {
+    if (!music || music.riser) return;
+    const ctx = music.ctx;
+    const o = ctx.createOscillator(); o.type = 'sine';
+    const g = ctx.createGain(); g.gain.value = 0;
+    o.connect(g); g.connect(music.filter);
+    o.start();
+    const cycle = () => {
+        if (!music || !music.riser) return;
+        const t = ctx.currentTime;
+        o.frequency.setValueAtTime(55, t);
+        o.frequency.linearRampToValueAtTime(110, t + 25);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.linearRampToValueAtTime(0.09, t + 8);
+        g.gain.setValueAtTime(0.09, t + 18);
+        g.gain.linearRampToValueAtTime(0.0001, t + 25);
+        music.riser.timer = setTimeout(cycle, 25000);
+    };
+    music.riser = { osc: o, gain: g, timer: null };
+    cycle();
+}
+
+function stopRiser() {
+    if (!music || !music.riser) return;
+    const r = music.riser;
+    music.riser = null;
+    if (r.timer) clearTimeout(r.timer);
+    try {
+        r.gain.gain.linearRampToValueAtTime(0.0001, music.ctx.currentTime + 2);
+        setTimeout(() => { try { r.osc.stop(); } catch (e) {} }, 2500);
+    } catch (e) {}
+}
+
+// Load archetype stat blocks and show the initial preview
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('/api/archetypes');
+        archetypes = (await response.json()).archetypes;
+        previewArchetype();
+    } catch (error) {
+        console.error('Error loading archetypes:', error);
+    }
+});
+
+// Character sheet markup shared by the preview and the in-game sheet

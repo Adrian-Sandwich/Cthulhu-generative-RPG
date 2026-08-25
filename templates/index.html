@@ -209,6 +209,13 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <!-- Classic scripts, loaded in dependency order: they share one top-level
+         lexical scope, and the inline on* handlers below need these functions
+         to stay global. state.js first — it declares the shared bindings. -->
+    <script src="{{ url_for('static', filename='js/state.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/audio.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/turn.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dice.js') }}"></script>
 </body>
 </html>

@@ -92,3 +92,26 @@ class AdventureConfig:
             roll_keywords=data.get("roll_keywords"),
             resources=data.get("resources", {}) or {},
         )
+
+    def resolve_location(self, wanted: str) -> Optional[str]:
+        """Match a DM-tagged location against this adventure's registry.
+
+        Accepts key or display name, case-insensitive; substring match as a
+        fallback ("Basement" == "the Basement"). Returns the canonical display
+        name, or None if it isn't a real place in this adventure.
+
+        The None contract is what gives world containment: the engine ignores
+        an unresolved tag instead of moving the player, so a DM that invents
+        "Village Library" cannot put them there.
+        """
+        w = wanted.strip().lower()
+        if not w:
+            return None
+        for loc in self.locations:
+            if w in (loc.get("key", "").lower(), loc.get("name", "").lower()):
+                return loc["name"]
+        for loc in self.locations:
+            n = loc.get("name", "").lower()
+            if n and (w in n or n in w):
+                return loc["name"]
+        return None

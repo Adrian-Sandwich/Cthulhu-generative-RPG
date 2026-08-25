@@ -1048,6 +1048,13 @@ class GenerativeGameEngine:
             elif disorder.duration == -1:
                 self.state.narrative.append(f"[DISORDER PERMANENT: {disorder.type} is now permanent]")
 
+    def _resolve_location(self, wanted: str) -> Optional[str]:
+        """Match a DM-tagged location against the adventure's registry.
+
+        Delegated to AdventureConfig, which owns the location list.
+        """
+        return self.adventure_config.resolve_location(wanted)
+
     def start_combat(self, enemy_key: str) -> Dict:
         """Start combat with an enemy (delegated to CombatSystem)."""
         return self.combat.start_combat(enemy_key)

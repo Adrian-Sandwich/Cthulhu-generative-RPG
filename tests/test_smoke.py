@@ -22,14 +22,25 @@ def _make_app(data_dir):
     return app_module.create_app({"DATA_DIR": str(data_dir)})
 
 
+# A canned DM reply that actually carries mechanic tags. The tags matter: the
+# [LOCATION: name] path lost its resolver in a refactor and shipped broken
+# because this fixture claimed to be "tag-rich" while returning bare prose, so
+# nothing exercised it. Terminal tags (ROLL, COMBAT_START, ENDING) stay out —
+# they would change game phase for every test sharing this fixture.
+CANNED_DM = (
+    "You press deeper into the dark. Something stirs. "
+    "[LOCATION: Keeper's Quarters] [ITEM_FOUND: revolver]"
+)
+
+
 @pytest.fixture
 def client(tmp_path):
     """A fresh app client with storage redirected to a temp dir and the LLM
-    mocked to a canned, tag-rich response."""
+    mocked to a canned, genuinely tag-rich response (see CANNED_DM)."""
 
     def fake_chat(self, *a, **k):
         on = k.get("on_chunk")
-        txt = "You press deeper into the dark. Something stirs."
+        txt = CANNED_DM
         if on:
             on(txt)
         return txt
@@ -63,6 +74,25 @@ def test_action_turn(client):
     r = client.post("/api/game/action", json={"action": "look around the room"})
     assert r.status_code == 200
     assert r.get_json()["success"]
+
+
+def test_dm_tags_take_mechanical_effect_over_http(client):
+    """The tags in CANNED_DM must change real state, not just parse.
+
+    Regression: [LOCATION: name] used to raise AttributeError inside
+    process_player_action, which app.py turns into a 500 — so the most common
+    player action (moving) lost the turn.
+    """
+    _start(client)
+    before = client.get("/api/game/state").get_json()
+    assert before["location"] != "Keeper's Quarters"
+
+    r = client.post("/api/game/action", json={"action": "go up to the keeper's quarters"})
+    assert r.status_code == 200, r.get_data(as_text=True)
+
+    after = client.get("/api/game/state").get_json()
+    assert after["location"] == "Keeper's Quarters"
+    assert "Revolver (.38)" in after["investigator"]["inventory"]
 
 
 def test_action_stream(client):

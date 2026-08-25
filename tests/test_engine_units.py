@@ -172,3 +172,97 @@ def test_check_ending_san_zero(engine):
 
 def test_check_ending_no_ending(engine):
     assert engine.check_ending_condition() is None
+
+
+# --- location resolution -----------------------------------------------------
+# Regression guard: the [LOCATION: name] tag path had its resolver deleted by the
+# module-extraction refactor while the call site survived, so every DM-tagged
+# move raised AttributeError (HTTP 500 for the player). The tag is the only
+# language-independent way to move, so this path must stay covered.
+
+def _cfg():
+    from core.adventure_config import AdventureConfig
+    return AdventureConfig.from_name("point_black")
+
+
+def test_resolve_location_by_key():
+    assert _cfg().resolve_location("keeper_quarters") == "Keeper's Quarters"
+
+
+def test_resolve_location_by_display_name():
+    assert _cfg().resolve_location("Keeper's Quarters") == "Keeper's Quarters"
+
+
+def test_resolve_location_case_and_whitespace_insensitive():
+    assert _cfg().resolve_location("  KEEPER'S QUARTERS  ") == "Keeper's Quarters"
+
+
+def test_resolve_location_substring_fallback():
+    # "the Lantern Room" is not an exact key or name, but contains one.
+    assert _cfg().resolve_location("the Lantern Room") == "Lantern Room"
+
+
+def test_resolve_location_empty_is_none():
+    assert _cfg().resolve_location("") is None
+    assert _cfg().resolve_location("   ") is None
+
+
+def test_resolve_location_invented_place_rejected():
+    # World containment: the DM inventing an off-map place must not resolve.
+    assert _cfg().resolve_location("Village Library") is None
+    assert _cfg().resolve_location("Police Station") is None
+
+
+def test_dm_location_tag_moves_player(engine):
+    from unittest.mock import patch
+    start = engine.state.location
+    assert start != "Keeper's Quarters"
+    dm = "You climb the stairs into the keeper's room. [LOCATION: Keeper's Quarters]"
+    with patch.object(engine, "_call_ollama", return_value=dm):
+        engine.process_player_action("go up to the keeper's quarters")
+    assert engine.state.location == "Keeper's Quarters"
+
+
+def test_dm_invented_location_tag_ignored(engine):
+    from unittest.mock import patch
+    start = engine.state.location
+    dm = "You walk into town and enter the library. [LOCATION: Village Library]"
+    with patch.object(engine, "_call_ollama", return_value=dm):
+        engine.process_player_action("go to the village library")
+    assert engine.state.location == start
+
+
+def test_all_dm_tags_survive_a_turn(engine):
+    """Every tag in tag_parser._TAG_PATTERNS must survive a full turn.
+
+    This is the class-level guard: an orphaned call site on any tag path fails
+    here instead of reaching a player as a 500. ENDING goes in a second turn
+    because it terminates the game.
+    """
+    from unittest.mock import patch
+    from core.tag_parser import _TAG_PATTERNS
+
+    dm = (
+        "The dark presses in and something moves below. "
+        "[ROLL: spot hidden/Hard] [SANITY_CHECK: 2] [ITEM_FOUND: revolver] "
+        "[HP_DAMAGE: 1] [AMMO_FOUND: 2] [NPC_DIALOGUE: warner] "
+        "[COMBAT_START: deep_one_hybrid] [LOCATION: Keeper's Quarters]"
+    )
+    dm_ending = "The boat pulls away from the rocks. [ENDING: escape]"
+
+    # Completeness: if a new tag is added to the parser, this test must grow.
+    for tag in _TAG_PATTERNS:
+        assert f"[{tag}" in dm + dm_ending, f"tag {tag} not exercised by this test"
+
+    with patch.object(engine, "_call_ollama", return_value=dm):
+        result = engine.process_player_action("search the room")
+    outcome = engine.apply_turn_consequences(result)
+
+    assert "error" not in result
+    assert isinstance(outcome.get("events"), list)
+    assert engine.state.location == "Keeper's Quarters"
+    assert "Revolver (.38)" in engine.state.investigator.inventory
+
+    with patch.object(engine, "_call_ollama", return_value=dm_ending):
+        engine.process_player_action("row for the shore")
+    assert engine.state.ending_reached == "escape"

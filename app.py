@@ -548,7 +548,12 @@ def create_app(config=None):
                         try:
                             chunk = q.get(timeout=1.0)
                         except _queue.Empty:
-                            if cancel_event.is_set() or request.is_disconnected:
+                            # Only cancel_event is readable here: `request` is
+                            # unbound once the request context tears down, and
+                            # Flask has no `request.is_disconnected` anyway. A
+                            # real client disconnect surfaces as an exception on
+                            # the next yield, which the finally below cleans up.
+                            if cancel_event.is_set():
                                 break
                             continue
                         if chunk is None:

@@ -77,9 +77,11 @@ roll resolution. → Addressed same day with suggested-action chips
 
 ## Backlog auditado (2026-08-25)
 
-El backlog original de esta sesión quedó obsoleto: cuatro de sus seis ítems ya
-están en el código. Auditado contra el árbol en `d692d52` — cada ítem cerrado
-lleva el ancla que lo cierra, para no volver a planificar trabajo hecho.
+El backlog original de esta sesión quedó obsoleto: **cinco de sus seis ítems se
+cerraron en `52ee13a`** (2026-07-16, "clear the playtest backlog — ES dice,
+containment, tutorial, Warner, revolver, moderation") y el documento nunca se
+actualizó. Auditado contra el árbol — cada ítem cerrado lleva el ancla que lo
+cierra, para no volver a planificar trabajo hecho.
 
 ### Cerrado
 
@@ -88,6 +90,7 @@ lleva el ancla que lo cierra, para no volver a planificar trabajo hecho.
 | 1. `ROLL_KEYWORDS` bilingüe | `core/keyword_data.py:10` — 107 claves; incluye `investigar`, `revisar`, `leer`, `buscar`, `trepar`, `apuñalar` |
 | 2. Contención de mundo + anti-dream-reset | `core/adventure_context.py:175-182` — reglas MOVEMENT ("las locations de la aventura son los ÚNICOS lugares que existen") y CONTINUITY ("el jugador NO puede reescribir la realidad") en el system prompt |
 | 4. Warner se presenta temprano | `core/prompts.py:326` (directiva EARLY GAME con `turn <= 3`) + `available_turns: range(1, 10)` en `NPC_DEFINITIONS` |
+| 3. Mini-tutorial | `static/app.js:498-503` — 3 líneas bilingües "CÓMO JUGAR / HOW TO PLAY" en el intro, más el tooltip pulsante `#die-tip` ("¡Haz click en el dado!") que se muestra la primera vez que aparece un dado, más la pantalla `[help]` completa (`templates/index.html:115`) |
 | 5. Camino al arma | `core/prompts.py:314` siembra el .38 en Keeper's Quarters con instrucción explícita de emitir `[ITEM_FOUND: revolver]`; `pick_up_item` (`core/game_generative.py:957`) carga la munición de la aventura al recogerlo |
 
 Sobre el cuchillo de Pao ("agarro un cuchillo" concedido de palabra, inventario
@@ -113,11 +116,15 @@ ruta de tags falle en CI en vez de llegar al jugador.
 
 ### Abierto, en orden
 
-1. **Mini-tutorial** (descubribilidad del dado) — único ítem del backlog
-   original que sigue vivo, y el mejor respaldado por los datos: Champi escribió
-   "Lanza el dado" como acción de texto y Lysis dijo "después de lanzar el dado
-   no le supe [cómo avanzo]". Dos testers independientes, sin lectura causal
-   alternativa.
+El backlog de julio está cerrado salvo el selector de idioma. Lo que sigue son
+huecos encontrados auditando el código, no ítems heredados.
+
+1. **Residuo de descubribilidad del dado** — el tutorial y el tooltip cubren al
+   jugador que *ve* el dado, pero no al que pide tirarlo por texto. Champi
+   escribió "Lanza el dado" como acción y el Keeper lo recibió como narrativa,
+   gastando el turno. Cerrado parcialmente en este branch: el cliente intercepta
+   la petición (`ROLL_REQUEST_RE` en `static/app.js`) y explica que los dados
+   salen solos. Queda sin cobertura automatizada — el front no tiene tests.
 2. **Telemetría por sesión** — contadores de tiradas intentadas vs. parseadas,
    NPCs encontrados, arma adquirida, ending alcanzado, turnos. Con n=4 no se
    puede distinguir "mecánica inalcanzable" de "mecánica no señalizada"; esto lo

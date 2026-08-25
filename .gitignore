@@ -19,3 +19,6 @@ playtests/
 game/generated/
 game/test_generated/
 feedback/
+
+# Browser-verification artifacts (playwright MCP snapshots/console logs)
+.playwright-mcp/

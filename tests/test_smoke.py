@@ -105,6 +105,39 @@ def test_action_stream(client):
     assert "event: done" in data
 
 
+def test_action_stream_survives_a_slow_first_chunk(tmp_path):
+    """The SSE generator must survive the queue-timeout branch.
+
+    Regression: that branch read `request.is_disconnected` — an attribute Flask
+    does not have, on a proxy that is unbound once the request context tears
+    down — so it raised RuntimeError and the stream 500'd, silently degrading
+    every turn to the non-streaming fallback. The default fixture's LLM answers
+    instantly, so `q.get(timeout=1.0)` never times out and the branch was
+    unreachable. This one makes the model slow enough to reach it.
+    """
+    import time
+
+    def slow_chat(self, *a, **k):
+        on = k.get("on_chunk")
+        time.sleep(1.6)          # longer than the generator's 1.0s queue timeout
+        if on:
+            on(CANNED_DM)
+        return CANNED_DM
+
+    with patch("core.llm_client.LLMClient.chat", slow_chat), \
+         patch("core.llm_client.LLMClient.chat_with_tools",
+               lambda *a, **k: {"narrative": "", "tool_calls": [], "fallback": True}):
+        c = _make_app(tmp_path).test_client()
+        c.post("/api/game/start", json={"name": "Slow", "archetype": "scholar"})
+        r = c.post("/api/game/action/stream", json={"action": "listen at the door"})
+        assert r.status_code == 200
+        data = r.get_data(as_text=True)
+
+    assert "event: done" in data, data[-400:]
+    assert "Working outside of request context" not in data
+    assert "event: error" not in data, data[-400:]
+
+
 def test_roll_flow(client):
     _start(client)
     r = client.post("/api/game/action", json={"action": "climb the slick cliff"}).get_json()

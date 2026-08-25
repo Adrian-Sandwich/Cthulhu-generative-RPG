@@ -645,6 +645,22 @@ function escapeHtml(s) {
 // Playtest feedback: total freedom paralyzes ("no le hayo"), and after a roll
 // players didn't know how to continue. Rule-based (no LLM latency); clicking
 // a chip submits it as the action — typing anything remains king.
+// Players who don't realise the die is clickable type the request as an action
+// instead. Champi did exactly that in the LAN playtest ("Lanza el dado") and
+// spent a turn on it, since the Keeper receives it as narrative. Rolls are
+// engine-driven — the die appears on its own when an action is risky — so
+// answer the question locally rather than burning the turn.
+const ROLL_REQUEST_RE = new RegExp(
+    '^\\s*(?:' +
+    // Spanish: lanza/tira/echa/avienta (el|los|un) dado(s)
+    '(?:lanz|tir|ech|avient)\\w*\\s+(?:el|los|un|unos)?\\s*dad[oi]s?' +
+    '|' +
+    // English: roll/throw/cast (the|a) dice/die/d100
+    '(?:roll|throw|cast)\\s+(?:the|a|my)?\\s*(?:dice|die|d100|d\\d+)' +
+    ')\\s*[.!]*\\s*$',
+    'i'
+);
+
 const SUGGESTION_POOLS = {
     explore: [
         'Look around carefully', 'Examine that more closely', 'Search for anything useful',
@@ -870,6 +886,16 @@ async function submitAction(event) {
     const actionInput = document.getElementById('action-input');
     const action = actionInput.value.trim();
     if (!action) return;
+
+    // "Lanza el dado" is a question about the controls, not an action.
+    if (ROLL_REQUEST_RE.test(action)) {
+        setStatus(pendingRoll
+            ? 'Haz click en el dado. / Click the die.'
+            : 'Los dados salen solos cuando algo es riesgoso — describe qué haces. '
+              + '/ Dice appear on their own when an action is risky — describe what you do.');
+        actionInput.select();
+        return;
+    }
 
     setStatus('The keeper considers…');
     actionInput.disabled = true;

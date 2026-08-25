@@ -125,11 +125,23 @@ huecos encontrados auditando el código, no ítems heredados.
    gastando el turno. Cerrado parcialmente en este branch: el cliente intercepta
    la petición (`ROLL_REQUEST_RE` en `static/app.js`) y explica que los dados
    salen solos. Queda sin cobertura automatizada — el front no tiene tests.
-2. **Telemetría por sesión** — contadores de tiradas intentadas vs. parseadas,
-   NPCs encontrados, arma adquirida, ending alcanzado, turnos. Con n=4 no se
-   puede distinguir "mecánica inalcanzable" de "mecánica no señalizada"; esto lo
-   dirime y convierte cada partida futura en muestra, sin depender de organizar
-   otra sesión LAN.
+2. ~~**Telemetría por sesión**~~ — **hecho**. Contadores en `GameState.telemetry`
+   (persisten en el save), expuestos en `/api/admin/stats` y en el panel DICE
+   del dashboard. Lo que se cuenta es solo lo que no queda registrado en otra
+   parte — `actions`, `rolls_from_dm`, `rolls_synthesized`, `rolls_thrown`; NPCs,
+   inventario y arma se **derivan** del estado para que no puedan desviarse.
+
+   Las dos lecturas que el playtest no podía separar, ahora booleanas por
+   sesión: `mechanic_silent` (jugó y nunca se le ofreció un dado → el matcher no
+   dispara para cómo escribe) y `dice_undiscovered` (se le ofrecieron dados y no
+   tiró ninguno → el dado no es descubrible). Más `dm_roll_compliance`, la
+   fracción de tiradas que el DM pidió por sí mismo en vez de que el motor
+   tuviera que inyectarla.
+
+   Primera señal de una partida real: el modelo **no** pidió la tirada de
+   "trepo por las escaleras" — la sintetizó el motor. Si eso se sostiene, el
+   protocolo de tiradas del prompt no se está cumpliendo y el motor lo está
+   cargando.
 3. **Re-habilitar selector de idioma** — `app.py:294` fuerza `language = 'en'`.
    La infraestructura i18n está intacta, así que es quitar el gate y des-ocultar
    el selector; sin endpoints nuevos.

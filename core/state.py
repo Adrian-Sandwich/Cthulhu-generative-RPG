@@ -42,3 +42,9 @@ class GameState:
     ammo: int = 0          # rounds left for the firearm; 0 = empty
     time_limit: int = 0    # turn at which doom arrives (0 = no clock)
     last_rest_turn: int = 0  # cooldown anchor for deliberate sanity recovery
+    # Playtest telemetry. Counters only — no player text, no PII. The point is
+    # to separate "the mechanic never fires" from "the player never finds it":
+    # actions with no rolls offered means the matcher is failing; rolls offered
+    # but never thrown means the die is not discoverable. With n=4 testers those
+    # two were indistinguishable. See docs/PLAYTEST_FINDINGS.md.
+    telemetry: Dict[str, int] = field(default_factory=dict)

@@ -332,3 +332,69 @@ def test_admin_stats_excludes_configured_names(tmp_path):
     assert body["opened_only"] == 1
     names = {s["name"] for s in body["sessions"]}
     assert names == {"Pao", "Champi"}
+
+
+def test_admin_stats_reports_playtest_telemetry(tmp_path):
+    """The dashboard must separate an unreachable mechanic from an unfound one.
+
+    Two saves, two different failures — the same "0 rolls thrown" on the
+    surface, opposite causes underneath.
+    """
+    c = _admin_app(tmp_path, ADMIN_TOKEN="s3cret")
+    saves = tmp_path / "saves" / "generative"
+    saves.mkdir(parents=True)
+    import json as _j
+
+    def _save(name, actions, telemetry):
+        (saves / f"{name}.json").write_text(_j.dumps({
+            "game_state": {
+                "investigator": {"name": name, "characteristics": {"SAN": 60, "HP": 9}},
+                "narrative": [f"Player: act {i}" for i in range(actions)],
+                "turn": actions,
+                "location": "Point Black Lighthouse - Exterior",
+                "telemetry": telemetry,
+            }
+        }))
+
+    # Nothing ever asked for a roll: the matcher never fired.
+    _save("angelin", 29, {"actions": 29, "rolls_from_dm": 0,
+                          "rolls_synthesized": 0, "rolls_thrown": 0})
+    # Dice were offered repeatedly and never thrown: the die is not findable.
+    _save("champi", 12, {"actions": 12, "rolls_from_dm": 4,
+                         "rolls_synthesized": 0, "rolls_thrown": 0})
+    # A session that works, so the roll-ups are not trivially zero.
+    _save("pao", 13, {"actions": 13, "rolls_from_dm": 3,
+                      "rolls_synthesized": 2, "rolls_thrown": 4})
+
+    t = c.get("/api/admin/stats?token=s3cret").get_json()["telemetry"]
+
+    assert t["sessions_mechanic_silent"] == 1        # angelin only
+    assert t["sessions_dice_undiscovered"] == 1      # champi only
+    assert t["sessions_with_rolls_offered"] == 2
+    assert t["rolls_offered"] == 9                   # 4 + 3 + 2
+    assert t["rolls_thrown"] == 4
+    assert t["throw_rate"] == round(4 / 9, 2)
+    assert t["dm_roll_compliance"] == round(7 / 9, 2)
+
+
+def test_admin_stats_telemetry_handles_saves_without_it(tmp_path):
+    """Saves written before telemetry existed must not break the dashboard."""
+    c = _admin_app(tmp_path, ADMIN_TOKEN="s3cret")
+    saves = tmp_path / "saves" / "generative"
+    saves.mkdir(parents=True)
+    import json as _j
+    (saves / "old.json").write_text(_j.dumps({
+        "game_state": {
+            "investigator": {"name": "Old", "characteristics": {"SAN": 55, "HP": 8}},
+            "narrative": ["Player: look around"],
+            "turn": 1,
+            "location": "Point Black Lighthouse - Exterior",
+        }
+    }))
+
+    r = c.get("/api/admin/stats?token=s3cret")
+    assert r.status_code == 200
+    t = r.get_json()["telemetry"]
+    assert t["rolls_offered"] == 0
+    assert t["throw_rate"] is None          # no division by zero
+    assert t["dm_roll_compliance"] is None

@@ -556,6 +556,8 @@ class GenerativeGameEngine:
         if not player_input:
             return {"error": "Empty action"}
 
+        self._track("actions")
+
         from .cthulhu_tools import TOOL_CAPABLE_MODELS
 
         # Try tool calling for capable models
@@ -659,12 +661,16 @@ class GenerativeGameEngine:
                 combat_start.append(self._infer_enemy(scene))
 
         # Phase 2e Fix C: Synthesize roll if LLM omitted one for a physical action
+        if rolls_requested:
+            self._track("rolls_from_dm", len(rolls_requested))
+
         if not rolls_requested and not combat_start and not sanity_checks:
             action_lower = player_input.lower()
             for keyword, (skill, difficulty) in self._roll_keywords.items():
                 if keyword in action_lower:
                     # LLM should have requested a roll — inject one
                     rolls_requested.append((skill, difficulty))
+                    self._track("rolls_synthesized")
                     break
 
         # Horror has a price: if the player describes witnessing something
@@ -1048,6 +1054,68 @@ class GenerativeGameEngine:
             elif disorder.duration == -1:
                 self.state.narrative.append(f"[DISORDER PERMANENT: {disorder.type} is now permanent]")
 
+    # ---- playtest telemetry -------------------------------------------------
+    # Counters live on GameState so they persist with the save and show up in
+    # /api/admin/stats. Never raises: a missing counter is worth less than a
+    # broken turn.
+    # Counted, because nothing else in the state remembers these happened.
+    TELEMETRY_KEYS = (
+        "actions",             # turns the player took
+        "rolls_from_dm",       # the DM asked for a roll via [ROLL: ...]
+        "rolls_synthesized",   # the DM did not, so the engine injected one
+        "rolls_thrown",        # the player actually threw the die
+    )
+
+    def _track(self, key: str, n: int = 1) -> None:
+        """Bump a telemetry counter. Silent on any failure by design."""
+        try:
+            if self.state is None:
+                return
+            if self.state.telemetry is None:
+                self.state.telemetry = {}
+            self.state.telemetry[key] = self.state.telemetry.get(key, 0) + n
+        # Deliberate: a lost counter is cheaper than a lost turn.
+        except Exception:  # nosec B110  # pragma: no cover
+            pass
+
+    def telemetry_summary(self) -> Dict:
+        """Counters, values derived from state, and the two readings they serve.
+
+        Anything already recorded in GameState is derived here rather than
+        counted, so it cannot drift from the thing it describes.
+        """
+        t = {k: 0 for k in self.TELEMETRY_KEYS}
+        if self.state:
+            t.update({k: v for k, v in (self.state.telemetry or {}).items()})
+
+        # Derived — the state is the record, a counter would only disagree.
+        inv = self.state.investigator.inventory if self.state else []
+        t["npcs_met"] = len(self.state.npcs_talked_to or {}) if self.state else 0
+        t["items_held"] = len(inv)
+        t["has_firearm"] = any("Revolver" in i for i in inv)
+        t["turn"] = self.state.turn if self.state else 0
+        t["ending"] = self.state.ending_reached if self.state else None
+        t["san"] = (self.state.investigator.characteristics.get("SAN")
+                    if self.state else None)
+
+        offered = t["rolls_from_dm"] + t["rolls_synthesized"]
+        t["rolls_offered"] = offered
+
+        # The two readings this exists for. With n=4 testers these were
+        # indistinguishable; each is now a boolean per session.
+        #
+        # No roll ever offered across real play → the keyword matcher is not
+        # firing for how this player writes (angelin: 0 rolls in 29 actions).
+        t["mechanic_silent"] = t["actions"] >= 5 and offered == 0
+        # Dice offered and never touched → the player cannot tell the die is
+        # clickable (Champi typed "Lanza el dado" as an action instead).
+        t["dice_undiscovered"] = offered >= 2 and t["rolls_thrown"] == 0
+        # The engine carrying the roll protocol the model was told to follow.
+        t["dm_roll_compliance"] = (
+            round(t["rolls_from_dm"] / offered, 2) if offered else None
+        )
+        return t
+
     def _resolve_location(self, wanted: str) -> Optional[str]:
         """Match a DM-tagged location against the adventure's registry.
 
@@ -1216,6 +1284,8 @@ class GenerativeGameEngine:
         """
         if not self.state or not self.state.last_roll:
             return {"error": "No pending roll"}
+
+        self._track("rolls_thrown")
 
         roll = self.state.last_roll
         consequence = None
@@ -1739,7 +1809,9 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             last_roll=state_dict.get("last_roll"),
             ammo=state_dict.get("ammo", 0),
             time_limit=state_dict.get("time_limit", 0),
-            last_rest_turn=state_dict.get("last_rest_turn", 0)
+            last_rest_turn=state_dict.get("last_rest_turn", 0),
+            # Saves written before telemetry existed simply start at zero.
+            telemetry=state_dict.get("telemetry", {}) or {}
         )
 
         # Create engine instance with same model, session, and adventure.

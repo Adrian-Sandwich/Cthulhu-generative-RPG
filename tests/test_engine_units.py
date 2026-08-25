@@ -294,3 +294,113 @@ def test_prompt_companion_lines_agree(engine):
     assert "Companions Alive: 1" in prompt
     assert "You are alone." not in prompt
     assert "Warner" in prompt
+
+
+# --- playtest telemetry ------------------------------------------------------
+# These counters exist to answer one question the LAN playtest could not: when a
+# mechanic goes unused, is it unreachable or just unsignposted? Each test below
+# reproduces one of the two real sessions that made the question unanswerable.
+
+def test_telemetry_starts_empty(engine):
+    t = engine.telemetry_summary()
+    assert t["actions"] == 0 and t["rolls_offered"] == 0
+    assert t["mechanic_silent"] is False      # too early to conclude anything
+    assert t["dice_undiscovered"] is False
+    assert t["dm_roll_compliance"] is None    # no division by zero
+
+
+def test_telemetry_counts_actions_and_synthesized_rolls(engine):
+    from unittest.mock import patch
+    # The DM narrates without ever tagging a roll, so the engine's keyword
+    # fallback has to inject one — the case where the model ignores the protocol.
+    with patch.object(engine, "_call_ollama", return_value="The stairs groan under you."):
+        engine.process_player_action("trepo por las escaleras")
+
+    t = engine.telemetry_summary()
+    assert t["actions"] == 1
+    assert t["rolls_synthesized"] == 1
+    assert t["rolls_from_dm"] == 0
+    assert t["dm_roll_compliance"] == 0.0     # the engine carried it, not the DM
+
+
+def test_telemetry_counts_dm_requested_rolls(engine):
+    from unittest.mock import patch
+    dm = "Something shifts in the dark. [ROLL: spot hidden/Normal]"
+    with patch.object(engine, "_call_ollama", return_value=dm):
+        engine.process_player_action("look into the corner")
+
+    t = engine.telemetry_summary()
+    assert t["rolls_from_dm"] == 1
+    assert t["rolls_synthesized"] == 0
+    assert t["dm_roll_compliance"] == 1.0
+
+
+def test_telemetry_counts_thrown_dice(engine):
+    from unittest.mock import patch
+    dm = "Something shifts in the dark. [ROLL: spot hidden/Normal]"
+    with patch.object(engine, "_call_ollama", return_value=dm):
+        engine.process_player_action("look into the corner")
+        engine.execute_skill_check("spot hidden", "Normal")
+        engine.resolve_roll_consequences()
+
+    assert engine.telemetry_summary()["rolls_thrown"] == 1
+
+
+def test_telemetry_flags_silent_mechanic(engine):
+    """angelin's session: 29 actions, 0 rolls — Spanish verbs never matched."""
+    from unittest.mock import patch
+    with patch.object(engine, "_call_ollama", return_value="The fog rolls past."):
+        for _ in range(6):
+            # Deliberately a verb with no entry in ROLL_KEYWORDS.
+            engine.process_player_action("contemplo el horizonte")
+
+    t = engine.telemetry_summary()
+    assert t["actions"] >= 5
+    assert t["rolls_offered"] == 0
+    assert t["mechanic_silent"] is True
+    assert t["dice_undiscovered"] is False    # no dice were ever offered
+
+
+def test_telemetry_flags_undiscovered_dice(engine):
+    """Champi's session: dice offered, never thrown — he typed 'Lanza el dado'."""
+    from unittest.mock import patch
+    dm = "Something shifts in the dark. [ROLL: spot hidden/Normal]"
+    with patch.object(engine, "_call_ollama", return_value=dm):
+        for _ in range(2):
+            engine.process_player_action("look into the corner")
+            engine.state.last_roll = None     # the player never threw it
+
+    t = engine.telemetry_summary()
+    assert t["rolls_offered"] >= 2
+    assert t["rolls_thrown"] == 0
+    assert t["dice_undiscovered"] is True
+    assert t["mechanic_silent"] is False      # the mechanic fired fine
+
+
+def test_telemetry_derives_state_rather_than_counting_it(engine):
+    """Derived values must track the state, not a counter that can drift."""
+    engine.pick_up_item("revolver")
+    t = engine.telemetry_summary()
+    assert t["has_firearm"] is True
+    assert t["items_held"] == len(engine.state.investigator.inventory)
+    assert t["npcs_met"] == len(engine.state.npcs_talked_to)
+
+
+def test_telemetry_survives_save_and_load(engine, tmp_path):
+    engine._track("actions", 7)
+    engine._track("rolls_thrown", 2)
+    engine.save_game()
+
+    loaded = GenerativeGameEngine.load_game(engine.session_id)
+    t = loaded.telemetry_summary()
+    assert t["actions"] == 7 and t["rolls_thrown"] == 2
+
+
+def test_telemetry_never_breaks_a_turn(engine):
+    """A broken counter must cost a number, never the turn."""
+    engine.state.telemetry = None             # corrupted / absent
+    engine._track("actions")                  # must not raise
+    assert engine.state.telemetry == {"actions": 1}
+
+    engine.state = None
+    engine._track("actions")                  # still must not raise

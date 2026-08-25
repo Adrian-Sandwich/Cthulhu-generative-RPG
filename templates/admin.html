@@ -43,10 +43,21 @@
     <div class="card"><div class="n" id="c-fb">–</div><div class="l">REVIEWS</div></div>
   </div>
 
+  <div class="section">DICE — is the mechanic reaching players?</div>
+  <div class="cards">
+    <div class="card"><div class="n" id="c-offered">–</div><div class="l">DICE OFFERED</div></div>
+    <div class="card"><div class="n" id="c-thrown">–</div><div class="l">DICE THROWN</div></div>
+    <div class="card"><div class="n" id="c-throw">–</div><div class="l">THROW RATE</div></div>
+    <div class="card"><div class="n" id="c-compliance">–</div><div class="l">DM ASKED</div></div>
+    <div class="card"><div class="n" id="c-silent">–</div><div class="l">NEVER ROLLED</div></div>
+    <div class="card"><div class="n" id="c-undisc">–</div><div class="l">NEVER THREW</div></div>
+  </div>
+  <div class="sub" id="dice-read">–</div>
+
   <div class="section">SESSIONS</div>
   <table>
-    <thead><tr><th>Investigator</th><th>Actions</th><th>Turn</th><th>HP</th><th>SAN</th><th>Location</th><th>Ending</th></tr></thead>
-    <tbody id="rows"><tr><td colspan="7" class="updated">loading…</td></tr></tbody>
+    <thead><tr><th>Investigator</th><th>Actions</th><th>Turn</th><th>Dice</th><th>HP</th><th>SAN</th><th>Location</th><th>Ending</th></tr></thead>
+    <tbody id="rows"><tr><td colspan="8" class="updated">loading…</td></tr></tbody>
   </table>
 
   <div class="section">FEEDBACK</div>
@@ -70,16 +81,36 @@ async function refresh(){
     document.getElementById('c-rating').textContent = d.avg_rating ?? '–';
     document.getElementById('c-fb').textContent = d.feedback_count;
 
+    const t = d.telemetry || {};
+    const pct = v => v == null ? '–' : Math.round(v * 100) + '%';
+    document.getElementById('c-offered').textContent = t.rolls_offered ?? '–';
+    document.getElementById('c-thrown').textContent = t.rolls_thrown ?? '–';
+    document.getElementById('c-throw').textContent = pct(t.throw_rate);
+    document.getElementById('c-compliance').textContent = pct(t.dm_roll_compliance);
+    document.getElementById('c-silent').textContent = t.sessions_mechanic_silent ?? '–';
+    document.getElementById('c-undisc').textContent = t.sessions_dice_undiscovered ?? '–';
+
+    // The whole point of these counters is telling the two failures apart.
+    const reads = [];
+    if (t.sessions_mechanic_silent)
+      reads.push(t.sessions_mechanic_silent + ' player(s) played on with no roll ever offered — the keyword matcher is not firing for how they write');
+    if (t.sessions_dice_undiscovered)
+      reads.push(t.sessions_dice_undiscovered + ' player(s) were offered dice and never threw one — the die is not discoverable');
+    if (t.dm_roll_compliance != null && t.dm_roll_compliance < 0.5)
+      reads.push('the engine is injecting most rolls — the model is ignoring the roll protocol');
+    document.getElementById('dice-read').textContent = reads.join(' · ') || 'no dice signal yet';
+
     document.getElementById('rows').innerHTML = (d.sessions||[]).map(s => `
       <tr class="${s.actions>0?'played':''}">
         <td>${esc(s.name)}</td>
         <td>${s.actions}</td>
         <td>${s.turn}</td>
+        <td class="${(s.mechanic_silent||s.dice_undiscovered)?'bad':''}">${s.rolls_thrown ?? 0}/${s.rolls_offered ?? 0}</td>
         <td>${s.hp}</td>
         <td class="${s.san<40?'bad':''}">${s.san}</td>
         <td>${esc(s.location)}</td>
         <td>${s.ending ? '<span class="pill">'+esc(s.ending)+'</span>' : ''}</td>
-      </tr>`).join('') || '<tr><td colspan="7" class="updated">no sessions yet</td></tr>';
+      </tr>`).join('') || '<tr><td colspan="8" class="updated">no sessions yet</td></tr>';
 
     document.getElementById('feedback').innerHTML = (d.feedback||[]).slice().reverse().map(f => `
       <div class="fb">

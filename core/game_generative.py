@@ -688,6 +688,15 @@ class GenerativeGameEngine:
                     rolls_requested.append((skill, difficulty))
                     self._track("rolls_synthesized")
                     break
+            else:
+                # Nothing matched, so this turn had no check at all. With the
+                # models measured so far the table IS the mechanic, so a miss
+                # here is a gap in coverage rather than a quiet non-event —
+                # angelin played 29 turns like this before anyone noticed.
+                # Logging the raw action turns the gaps into a work list
+                # ordered by what players actually type.
+                self._track("actions_without_check")
+                logger.info("no roll keyword matched: %r", player_input[:120])
 
         # Same fallback shape as the roll synthesis above, for the one mechanic
         # that had none: the DM never emits [ITEM_FOUND: key] in practice, so
@@ -1091,6 +1100,8 @@ class GenerativeGameEngine:
         "rolls_from_dm",       # the DM asked for a roll via [ROLL: ...]
         "rolls_synthesized",   # the DM did not, so the engine injected one
         "rolls_thrown",        # the player actually threw the die
+        "items_synthesized",   # the engine granted an item the DM never tagged
+        "actions_without_check",  # no keyword matched: a gap in the table
     )
 
     def _track(self, key: str, n: int = 1) -> None:

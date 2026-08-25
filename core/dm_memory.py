@@ -338,7 +338,9 @@ class DMMemory:
             # ChromaDB >= 0.4 with PersistentClient handles persistence automatically
             # This is a no-op for newer versions, but kept for API consistency
             if hasattr(self.client, 'persist'):
-                self.client.persist()
+                # chromadb >= 0.4 dropped persist(); the hasattr guard above is
+                # the point. pyright cannot see that it narrows the type.
+                self.client.persist()  # pyright: ignore[reportAttributeAccessIssue]
         except Exception:
             pass
 

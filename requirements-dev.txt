@@ -3,3 +3,7 @@
 -r requirements.txt
 pytest>=7.0.0
 pytest-subtests>=0.11.0
+
+# Narrow static gate — see pyrightconfig.json (needs node, same as the
+# frontend checks).
+pyright

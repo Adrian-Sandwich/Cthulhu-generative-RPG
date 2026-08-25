@@ -382,6 +382,10 @@ def create_app(config=None):
             "image_url": image_url,
             "image_generating": image_generating,
             "pending_roll": gs.pending_roll,
+            # The client renders the combat HUD from here on every refresh.
+            # Omitting it meant renderCombat(undefined) hid the bar and cut the
+            # combat music one tick after the turn showed them.
+            "combat": gs.engine.combat_status(),
             "npcs": gs.engine.get_npc_status(),
             "sanity_corruption": gs.engine.sanity_corruption_level(),
             "resources": gs.engine.resources_status(),

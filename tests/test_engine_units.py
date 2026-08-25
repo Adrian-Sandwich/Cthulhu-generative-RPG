@@ -294,3 +294,200 @@ def test_prompt_companion_lines_agree(engine):
     assert "Companions Alive: 1" in prompt
     assert "You are alone." not in prompt
     assert "Warner" in prompt
+
+
+# --- playtest telemetry ------------------------------------------------------
+# These counters exist to answer one question the LAN playtest could not: when a
+# mechanic goes unused, is it unreachable or just unsignposted? Each test below
+# reproduces one of the two real sessions that made the question unanswerable.
+
+def test_telemetry_starts_empty(engine):
+    t = engine.telemetry_summary()
+    assert t["actions"] == 0 and t["rolls_offered"] == 0
+    assert t["mechanic_silent"] is False      # too early to conclude anything
+    assert t["dice_undiscovered"] is False
+    assert t["dm_roll_compliance"] is None    # no division by zero
+
+
+def test_telemetry_counts_actions_and_synthesized_rolls(engine):
+    from unittest.mock import patch
+    # The DM narrates without ever tagging a roll, so the engine's keyword
+    # fallback has to inject one — the case where the model ignores the protocol.
+    with patch.object(engine, "_call_ollama", return_value="The stairs groan under you."):
+        engine.process_player_action("trepo por las escaleras")
+
+    t = engine.telemetry_summary()
+    assert t["actions"] == 1
+    assert t["rolls_synthesized"] == 1
+    assert t["rolls_from_dm"] == 0
+    assert t["dm_roll_compliance"] == 0.0     # the engine carried it, not the DM
+
+
+def test_telemetry_counts_dm_requested_rolls(engine):
+    from unittest.mock import patch
+    dm = "Something shifts in the dark. [ROLL: spot hidden/Normal]"
+    with patch.object(engine, "_call_ollama", return_value=dm):
+        engine.process_player_action("look into the corner")
+
+    t = engine.telemetry_summary()
+    assert t["rolls_from_dm"] == 1
+    assert t["rolls_synthesized"] == 0
+    assert t["dm_roll_compliance"] == 1.0
+
+
+def test_telemetry_counts_thrown_dice(engine):
+    from unittest.mock import patch
+    dm = "Something shifts in the dark. [ROLL: spot hidden/Normal]"
+    with patch.object(engine, "_call_ollama", return_value=dm):
+        engine.process_player_action("look into the corner")
+        engine.execute_skill_check("spot hidden", "Normal")
+        engine.resolve_roll_consequences()
+
+    assert engine.telemetry_summary()["rolls_thrown"] == 1
+
+
+def test_telemetry_flags_silent_mechanic(engine):
+    """angelin's session: 29 actions, 0 rolls — Spanish verbs never matched."""
+    from unittest.mock import patch
+    with patch.object(engine, "_call_ollama", return_value="The fog rolls past."):
+        for _ in range(6):
+            # Deliberately a verb with no entry in ROLL_KEYWORDS.
+            engine.process_player_action("contemplo el horizonte")
+
+    t = engine.telemetry_summary()
+    assert t["actions"] >= 5
+    assert t["rolls_offered"] == 0
+    assert t["mechanic_silent"] is True
+    assert t["dice_undiscovered"] is False    # no dice were ever offered
+
+
+def test_telemetry_flags_undiscovered_dice(engine):
+    """Champi's session: dice offered, never thrown — he typed 'Lanza el dado'."""
+    from unittest.mock import patch
+    dm = "Something shifts in the dark. [ROLL: spot hidden/Normal]"
+    with patch.object(engine, "_call_ollama", return_value=dm):
+        for _ in range(2):
+            engine.process_player_action("look into the corner")
+            engine.state.last_roll = None     # the player never threw it
+
+    t = engine.telemetry_summary()
+    assert t["rolls_offered"] >= 2
+    assert t["rolls_thrown"] == 0
+    assert t["dice_undiscovered"] is True
+    assert t["mechanic_silent"] is False      # the mechanic fired fine
+
+
+def test_telemetry_derives_state_rather_than_counting_it(engine):
+    """Derived values must track the state, not a counter that can drift."""
+    engine.pick_up_item("revolver")
+    t = engine.telemetry_summary()
+    assert t["has_firearm"] is True
+    assert t["items_held"] == len(engine.state.investigator.inventory)
+    assert t["npcs_met"] == len(engine.state.npcs_talked_to)
+
+
+def test_telemetry_survives_save_and_load(engine, tmp_path):
+    engine._track("actions", 7)
+    engine._track("rolls_thrown", 2)
+    engine.save_game()
+
+    loaded = GenerativeGameEngine.load_game(engine.session_id)
+    t = loaded.telemetry_summary()
+    assert t["actions"] == 7 and t["rolls_thrown"] == 2
+
+
+def test_telemetry_never_breaks_a_turn(engine):
+    """A broken counter must cost a number, never the turn."""
+    engine.state.telemetry = None             # corrupted / absent
+    engine._track("actions")                  # must not raise
+    assert engine.state.telemetry == {"actions": 1}
+
+    engine.state = None
+    engine._track("actions")                  # still must not raise
+
+
+# --- item pickup fallback ----------------------------------------------------
+# Measured against real turns, the local models emit no mechanic tags and return
+# no tool calls, so [ITEM_FOUND: key] never fires. Rolls, combat, sanity and
+# movement all survive that because they have keyword fallbacks; items had none,
+# which is why the LAN playtest recorded "0 armas encontradas" with an AMMO
+# counter nobody could spend. These tests pin the fallback and its guards.
+
+def _in_quarters(engine):
+    engine.state.location = "Keeper's Quarters"
+    return engine
+
+
+def test_item_pickup_requires_taking_intent(engine):
+    _in_quarters(engine)
+    # Naming the revolver is not taking it.
+    assert engine._infer_item_pickup("miro el revólver sobre la mesa") is None
+    assert engine._infer_item_pickup("there is a revolver in the holster") is None
+    assert engine._infer_item_pickup("agarro el revólver") == "revolver"
+    assert engine._infer_item_pickup("I take the revolver") == "revolver"
+
+
+def test_item_pickup_is_bilingual(engine):
+    _in_quarters(engine)
+    for phrase in ("agarro la pistola", "tomo el arma", "recojo el revólver",
+                   "I grab the gun", "I pick up the firearm"):
+        assert engine._infer_item_pickup(phrase) == "revolver", phrase
+
+
+def test_item_pickup_respects_placement(engine):
+    """A placed item exists in one room; reaching for it elsewhere gets nothing."""
+    engine.state.location = "Lighthouse Interior"
+    assert engine._infer_item_pickup("agarro el revólver") is None
+    _in_quarters(engine)
+    assert engine._infer_item_pickup("agarro el revólver") == "revolver"
+
+
+def test_item_pickup_ignores_unplaced_item_location(engine):
+    """Items the adventure does not place can be taken wherever they are found."""
+    engine.state.location = "Lighthouse Interior"
+    assert engine._infer_item_pickup("recojo la cuerda") == "rope"
+
+
+def test_item_pickup_will_not_regrant(engine):
+    _in_quarters(engine)
+    engine.pick_up_item("revolver")
+    assert engine._infer_item_pickup("agarro el revólver") is None
+
+
+def test_item_pickup_rejects_unregistered_items(engine):
+    """Pao asked for a knife the adventure has no item for — that must stay a no."""
+    _in_quarters(engine)
+    assert engine._infer_item_pickup("agarro un cuchillo de la mesa") is None
+    assert engine._infer_item_pickup("I take the shotgun") is None
+
+
+def test_item_pickup_end_to_end_loads_the_firearm(engine):
+    """The whole point: AMMO stops being a number the player can never spend."""
+    from unittest.mock import patch
+    _in_quarters(engine)
+    assert engine.resources_status()["has_firearm"] is False
+
+    # A DM that emits no tags at all — which is what the real models do.
+    with patch.object(engine, "_call_ollama",
+                      return_value="You rummage through the keeper's effects."):
+        result = engine.process_player_action("registro los efectos y agarro el revólver")
+    engine.apply_turn_consequences(result)
+
+    assert "Revolver (.38)" in engine.state.investigator.inventory
+    assert engine.state.ammo == 6
+    assert engine.resources_status()["has_firearm"] is True
+    assert engine.telemetry_summary().get("items_synthesized") == 1
+
+
+def test_dm_tag_still_wins_over_the_fallback(engine):
+    """The fallback is a backstop; a DM that does tag items keeps control."""
+    from unittest.mock import patch
+    _in_quarters(engine)
+    dm = "A coil of rope hangs by the door. [ITEM_FOUND: rope]"
+    with patch.object(engine, "_call_ollama", return_value=dm):
+        result = engine.process_player_action("miro alrededor")
+    engine.apply_turn_consequences(result)
+
+    assert "Rope (30ft)" in engine.state.investigator.inventory
+    # Tagged, not synthesized — the counter must tell them apart.
+    assert engine.telemetry_summary().get("items_synthesized", 0) == 0

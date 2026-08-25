@@ -745,10 +745,18 @@ def create_app(config=None):
             inv = st.get("investigator", {})
             narr = st.get("narrative", [])
             acts = [l for l in narr if l.startswith("Player:")]
+            tele = st.get("telemetry") or {}
+            offered = tele.get("rolls_from_dm", 0) + tele.get("rolls_synthesized", 0)
             sessions.append({
                 "name": inv.get("name", "?"),
                 "actions": len(acts),
                 "turn": st.get("turn", 0),
+                "rolls_offered": offered,
+                "rolls_thrown": tele.get("rolls_thrown", 0),
+                "rolls_synthesized": tele.get("rolls_synthesized", 0),
+                # The two readings, per session. See GenerativeGameEngine.
+                "mechanic_silent": len(acts) >= 5 and offered == 0,
+                "dice_undiscovered": offered >= 2 and tele.get("rolls_thrown", 0) == 0,
                 "san": inv.get("characteristics", {}).get("SAN", 99),
                 "hp": inv.get("characteristics", {}).get("HP", 0),
                 "location": st.get("location", "?"),
@@ -771,9 +779,31 @@ def create_app(config=None):
                             pass
         ratings = [f["rating"] for f in feedback if f.get("rating")]
 
+        # Playtest readings across real players. These exist to separate "the
+        # mechanic never fires" from "the player never finds it" — with four
+        # testers those were indistinguishable by hand.
+        telemetry = {
+            "sessions_with_rolls_offered": sum(1 for s in real if s["rolls_offered"]),
+            "sessions_mechanic_silent": sum(1 for s in real if s["mechanic_silent"]),
+            "sessions_dice_undiscovered": sum(1 for s in real if s["dice_undiscovered"]),
+            "rolls_offered": sum(s["rolls_offered"] for s in real),
+            "rolls_thrown": sum(s["rolls_thrown"] for s in real),
+            "rolls_synthesized": sum(s["rolls_synthesized"] for s in real),
+        }
+        offered = telemetry["rolls_offered"]
+        # Share of offered dice the players actually threw.
+        telemetry["throw_rate"] = (
+            round(telemetry["rolls_thrown"] / offered, 2) if offered else None)
+        # Share of rolls the DM asked for itself, rather than the engine having
+        # to inject one because the model ignored the roll protocol.
+        telemetry["dm_roll_compliance"] = (
+            round((offered - telemetry["rolls_synthesized"]) / offered, 2)
+            if offered else None)
+
         return {
             "active_sessions": len(_sessions),
             "total_saves": len(sessions),
+            "telemetry": telemetry,
             "players": len(real),
             "played": len(played),
             "opened_only": len(real) - len(played),

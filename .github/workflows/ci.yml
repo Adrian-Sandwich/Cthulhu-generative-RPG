@@ -35,3 +35,9 @@ jobs:
         run: |
           mkdir -p "$DATA_DIR"
           pytest tests/test_smoke.py tests/test_engine_units.py tests/test_frontend.py -q
+
+      # Catches attribute reads that do not exist. Two shipped regressions were
+      # exactly that and the suite could not see either. Scoped to one rule in
+      # pyrightconfig.json, so it passes today rather than needing a cleanup.
+      - name: Static attribute check (pyright, one rule)
+        run: pyright

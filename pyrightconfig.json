@@ -1,0 +1,8 @@
+{
+  "//": "Narrow static gate, not a full type-check. Two shipped regressions were attribute reads that did not exist -- request.is_disconnected (Flask has no such attribute) and engine.companion_manager (it is engine.companions). Both are reportAttributeAccessIssue, and neither mypy's default mode nor the test suite caught them. Full pyright reports 73 pre-existing findings on this codebase, mostly Optional access, so everything else stays off until someone chooses to take that on.",
+  "include": ["app.py", "core"],
+  "typeCheckingMode": "off",
+  "reportAttributeAccessIssue": "error",
+  "reportMissingImports": "none",
+  "reportMissingModuleSource": "none"
+}

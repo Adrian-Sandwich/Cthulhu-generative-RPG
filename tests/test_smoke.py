@@ -247,3 +247,88 @@ def test_location_needs_movement():
     with patch.object(e, "_call_ollama", return_value="You wonder about the hidden chamber above."):
         e.process_player_action("what is up there?")
     assert e.state.location == start  # mere mention must not teleport
+
+
+# --- admin dashboard -------------------------------------------------------
+# The only two endpoints with access control, and they had no coverage at all.
+# Everything here is about the gate, not the numbers behind it.
+
+def _admin_app(tmp_path, **cfg):
+    import app as app_module
+    return app_module.create_app({"DATA_DIR": str(tmp_path), **cfg}).test_client()
+
+
+def test_admin_disabled_when_no_token_configured(tmp_path):
+    """With ADMIN_TOKEN unset the dashboard must be closed, not open.
+
+    `_admin_authorized` leads with `bool(ADMIN_TOKEN)`; if that guard were ever
+    dropped, an empty configured token would compare equal to an empty query
+    token and the dashboard would be world-readable.
+    """
+    c = _admin_app(tmp_path, ADMIN_TOKEN="")
+    assert c.get("/admin").status_code == 401
+    assert c.get("/admin?token=").status_code == 401
+    assert c.get("/api/admin/stats?token=").status_code == 401
+    assert c.get("/api/admin/stats").status_code == 401
+
+
+def test_admin_rejects_wrong_token(tmp_path):
+    c = _admin_app(tmp_path, ADMIN_TOKEN="s3cret")
+    for bad in ("", "wrong", "s3cre", "s3secret", "S3CRET", "s3cret "):
+        assert c.get(f"/api/admin/stats?token={bad}").status_code == 401, bad
+        assert c.get(f"/admin?token={bad}").status_code == 401, bad
+    assert c.get("/api/admin/stats").status_code == 401
+
+
+def test_admin_accepts_correct_token(tmp_path):
+    c = _admin_app(tmp_path, ADMIN_TOKEN="s3cret")
+
+    r = c.get("/api/admin/stats?token=s3cret")
+    assert r.status_code == 200
+    body = r.get_json()
+    for key in ("active_sessions", "total_saves", "players", "played",
+                "opened_only", "feedback_count", "sessions", "feedback"):
+        assert key in body, key
+
+    page = c.get("/admin?token=s3cret")
+    assert page.status_code == 200
+    assert b"Unauthorized" not in page.data
+
+
+def test_admin_unauthorized_page_explains_how(tmp_path):
+    c = _admin_app(tmp_path, ADMIN_TOKEN="s3cret")
+    r = c.get("/admin")
+    assert r.status_code == 401
+    assert b"token" in r.data.lower()
+
+
+def test_admin_stats_excludes_configured_names(tmp_path):
+    """EXCLUDE_NAMES keeps the team's own sessions out of the playtest numbers."""
+    c = _admin_app(tmp_path, ADMIN_TOKEN="s3cret", EXCLUDE_NAMES="Adrian, tester")
+
+    saves = tmp_path / "saves" / "generative"
+    saves.mkdir(parents=True)
+    import json as _j
+
+    def _save(name, actions):
+        (saves / f"{name}.json").write_text(_j.dumps({
+            "game_state": {
+                "investigator": {"name": name, "characteristics": {"SAN": 60, "HP": 9}},
+                "narrative": [f"Player: act {i}" for i in range(actions)],
+                "turn": actions,
+                "location": "Point Black Lighthouse - Exterior",
+            }
+        }))
+
+    _save("Adrian", 5)      # excluded by name
+    _save("tester", 3)      # excluded by name, case-insensitively
+    _save("Pao", 4)         # counted, and played
+    _save("Champi", 0)      # counted, opened only
+
+    body = c.get("/api/admin/stats?token=s3cret").get_json()
+    assert body["total_saves"] == 4          # every file is seen
+    assert body["players"] == 2              # but only non-excluded ones count
+    assert body["played"] == 1
+    assert body["opened_only"] == 1
+    names = {s["name"] for s in body["sessions"]}
+    assert names == {"Pao", "Champi"}

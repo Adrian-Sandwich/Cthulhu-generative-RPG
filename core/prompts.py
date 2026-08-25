@@ -302,8 +302,14 @@ DO NOT output template text. Do not show IF/ELSE logic. Just tell the story.
             max_san=state.investigator.characteristics.get('max_san', 99),
             inventory=state.investigator.inventory,
             discoveries=[d for d in state.narrative if "discover" in d.lower()][:5],
-            companions_alive=len(getattr(self.engine, 'companion_manager', None) and
-                                self.engine.companion_manager.get_active_companions() or []),
+            # The attribute is `companions` (see GenerativeGameEngine.__init__).
+            # This read used to say `companion_manager`, guarded by getattr, so
+            # it silently collapsed to len([]) and told the DM there were never
+            # any allies — while line 181 of this same prompt described them.
+            companions_alive=len(
+                self.engine.companions.get_active_companions()
+                if self.engine.companions else []
+            ),
             turn=state.turn
         )
 

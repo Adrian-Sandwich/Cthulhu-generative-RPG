@@ -266,3 +266,31 @@ def test_all_dm_tags_survive_a_turn(engine):
     with patch.object(engine, "_call_ollama", return_value=dm_ending):
         engine.process_player_action("row for the shore")
     assert engine.state.ending_reached == "escape"
+
+
+# --- DM prompt state ---------------------------------------------------------
+# The prompt reports "Companions Alive: N" to the model. That read used to point
+# at a `companion_manager` attribute the engine does not have, guarded by
+# getattr, so it always reported 0 while the same prompt separately described
+# the allies by name — contradictory data, and silent.
+
+def test_prompt_reports_recruited_companions(engine):
+    engine.companions.recruit_custom("warner", "Lt. William Warner", "Coast Guard")
+    assert len(engine.companions.get_active_companions()) == 1
+
+    prompt = engine._build_dm_prompt("look around")
+    assert "Companions Alive: 1" in prompt, prompt[-500:]
+
+
+def test_prompt_reports_zero_companions_when_alone(engine):
+    prompt = engine._build_dm_prompt("look around")
+    assert "Companions Alive: 0" in prompt
+
+
+def test_prompt_companion_lines_agree(engine):
+    """The count and the narrative description must not contradict each other."""
+    engine.companions.recruit_custom("warner", "Lt. William Warner", "Coast Guard")
+    prompt = engine._build_dm_prompt("look around")
+    assert "Companions Alive: 1" in prompt
+    assert "You are alone." not in prompt
+    assert "Warner" in prompt

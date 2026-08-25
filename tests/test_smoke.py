@@ -16,6 +16,19 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # --- fixtures --------------------------------------------------------------
 
+@pytest.fixture(autouse=True)
+def _reset_llm_degradation():
+    """The degraded-turn counter is process-wide by design (it answers "is the
+    model answering at all", not a per-session question), which makes tests
+    order-dependent unless it is reset."""
+    from core.llm_client import LLMClient
+    LLMClient.degraded_turns = 0
+    LLMClient.last_error = None
+    yield
+    LLMClient.degraded_turns = 0
+    LLMClient.last_error = None
+
+
 def _make_app(data_dir):
     """Build a fresh app instance isolated to the given data directory."""
     import app as app_module
@@ -584,3 +597,21 @@ def test_state_reports_active_combat(tmp_path):
 
         c.post("/api/game/flee")
         assert c.get("/api/game/state").get_json()["combat"] is None
+
+
+def test_health_surfaces_a_degraded_model(client):
+    """/api/health must not report ok while the model is answering nothing."""
+    from core.llm_client import LLMClient
+
+    assert client.get("/api/health").get_json()["status"] == "ok"
+
+    before = LLMClient.degraded_turns
+    try:
+        LLMClient._degrade("model_not_found", LLMClient.GENERIC_FALLBACK)
+        body = client.get("/api/health").get_json()
+        assert body["status"] == "degraded"
+        assert body["llm"]["degraded_turns"] > 0
+        assert body["llm"]["last_error"] == "model_not_found"
+    finally:
+        LLMClient.degraded_turns = before
+        LLMClient.last_error = None

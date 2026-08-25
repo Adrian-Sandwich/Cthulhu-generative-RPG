@@ -5,6 +5,7 @@ Routes that need no game state: archetype sheets, feedback, health.
 
 import json
 import logging
+import os
 from datetime import datetime
 
 from flask import Blueprint, jsonify, request
@@ -59,4 +60,24 @@ def leave_feedback(gs):
 
 @bp.route('/api/health', methods=['GET'])
 def health():
-    return jsonify({"status": "ok", "sessions": len(ctx().sessions)})
+    """Liveness, plus whether the model is actually answering.
+
+    "ok" used to mean only that Flask was up. Production once ran for weeks on
+    a model the provider had retired: every turn 404'd, the engine swallowed it
+    and served a canned sentence, and this endpoint kept saying ok. Reporting
+    the degraded-turn counter makes that visible to anything that polls here.
+    """
+    from core.llm_client import LLMClient
+
+    degraded = LLMClient.degraded_turns
+    body = {
+        "status": "degraded" if degraded else "ok",
+        "sessions": len(ctx().sessions),
+        "llm": {
+            "model": os.environ.get("LLM_MODEL", "(default)"),
+            "degraded_turns": degraded,
+        },
+    }
+    if degraded:
+        body["llm"]["last_error"] = LLMClient.last_error
+    return jsonify(body)

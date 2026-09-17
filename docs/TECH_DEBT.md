@@ -3,7 +3,7 @@
 Known, deliberately-deferred items. None block launch; listed so they're not
 forgotten.
 
-## God object: `GenerativeGameEngine` (core/game_generative.py, ~2500 lines)
+## God object: `GenerativeGameEngine` (core/game_generative.py, 1924 lines)
 Mixes CoC rules, prompt building, combat, NPCs, sanity, resources, saves, i18n,
 and playtest export in one class. It works and is covered by the smoke suite,
 but it's the main friction point for future changes.

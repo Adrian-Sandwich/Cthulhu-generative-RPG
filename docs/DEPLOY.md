@@ -46,7 +46,7 @@ No env set → defaults to Ollama at `localhost:11434`, `DATA_DIR=.` (files in t
 repo). `python app.py` or `./launch.command` as before.
 
 ## Before going public (see docs/ABUSE_POLICY.md)
-- Per-IP rate limiting: **already on** (`RATE_LIMITS` in `app.py`).
+- Per-IP rate limiting: **already on** (`RATE_LIMITS` in `web/context.py`).
 - Content moderation on player input + LLM output: **already on** by default
   (`MODERATION=local` in `core/moderation.py`). For stronger coverage set
   `MODERATION=api` and provide an OpenAI-compatible `/moderations` endpoint.

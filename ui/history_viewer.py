@@ -10,8 +10,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from typing import List, Dict, Optional
 import re
-import tty
-import termios
 from ui.color_system import orange, green, cyan, red, yellow, gray
 from ui.text_utils import wrap_text
 from ui.retro_display import RetroDisplay
@@ -27,6 +25,14 @@ def _visual_len(s: str) -> int:
 
 def _getch() -> str:
     """Read one keypress in raw mode (no echo). Returns char or arrow escape sequence."""
+    try:
+        import tty
+        import termios
+    except ImportError:
+        # Windows does not provide the POSIX-only raw terminal modules.
+        line = sys.stdin.readline()
+        return line[:1] if line else 'q'
+
     try:
         fd = sys.stdin.fileno()
         old = termios.tcgetattr(fd)

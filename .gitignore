@@ -10,7 +10,6 @@ legacy/pixel_landscape/target/
 
 # Game saves and session data
 saves/
-playtests/
 
 # Flask session signing key (generated at runtime)
 .flask_secret
@@ -19,6 +18,9 @@ playtests/
 game/generated/
 game/test_generated/
 feedback/
+
+# Manual playtest scripts (not part of the automated test suite)
+playtests/
 
 # Browser-verification artifacts (playwright MCP snapshots/console logs)
 .playwright-mcp/

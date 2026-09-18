@@ -10,8 +10,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from typing import List, Dict, Optional
 import re
-import tty
-import termios
 from ui.color_system import orange, green, cyan, red, yellow, gray
 from ui.text_utils import wrap_text
 from ui.retro_display import RetroDisplay
@@ -27,6 +25,33 @@ def _visual_len(s: str) -> int:
 
 def _getch() -> str:
     """Read one keypress in raw mode (no echo). Returns char or arrow escape sequence."""
+    if os.name == 'nt':
+        # msvcrt reads console input one key at a time; readline is still
+        # required for redirected stdin, where there is no console to query.
+        if not sys.stdin.isatty():
+            line = sys.stdin.readline()
+            return line[:1] if line else 'q'
+
+        import msvcrt
+
+        ch = msvcrt.getch()
+        if ch in (b'\x00', b'\xe0'):
+            return {
+                b'H': '\x1b[A',  # up
+                b'P': '\x1b[B',  # down
+                b'K': '\x1b[D',  # left
+                b'M': '\x1b[C',  # right
+            }.get(msvcrt.getch(), '')
+        return ch.decode(errors='replace')
+
+    try:
+        import tty
+        import termios
+    except ImportError:
+        # Windows does not provide the POSIX-only raw terminal modules.
+        line = sys.stdin.readline()
+        return line[:1] if line else 'q'
+
     try:
         fd = sys.stdin.fileno()
         old = termios.tcgetattr(fd)

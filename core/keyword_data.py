@@ -135,9 +135,12 @@ MENTAL_SKILLS = {
 # world remembers what the investigator uncovered. Keyed by the engine, never
 # by an LLM tag: the local models were measured emitting zero tags
 # (docs/PLAYTEST_FINDINGS.md), so a tag-only mechanic would be invisible.
+# Not "listen" or "science" (MAGI #39): a secret freezes the location's danger
+# escalation for good, and a Listen the DM asked for because something made a
+# noise — or a Science roll over a sample — is not a search of the place.
 DISCOVERY_SKILLS = {
     "spot_hidden", "investigate", "search", "library", "library_use",
-    "listen", "occult", "archaeology", "anthropology", "science",
+    "occult", "archaeology", "anthropology",
 }
 
 # Attack intent (English + Spanish) — used to synthesize combat when the player

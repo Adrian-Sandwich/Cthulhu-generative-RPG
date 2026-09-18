@@ -34,7 +34,7 @@ see its prompts.
 
 ## Partially wired `location_state` features
 `reveal_secret` is wired (MAGI #37): a **successful discovery roll** (Spot
-Hidden, Library Use, Listen, Occult… — `DISCOVERY_SKILLS` in
+Hidden, Library Use, Occult… — `DISCOVERY_SKILLS` in
 `core/keyword_data.py`) makes the engine record an engine-generated secret on
 the current location, which stops that location's danger escalation and puts
 the names of the last finds into the DM prompt. It is deliberately not driven
@@ -49,12 +49,23 @@ every game and told the Keeper so. **Saves written before it** load fine
 (missing lists default to empty) but keep whatever danger level they had
 reached; it stops climbing only once a secret is found there.
 
-Still unwired: `trigger_event` (hardened the same way, but no caller),
-contamination, and the single-adventure tables `SECRET_UNLOCKS` /
-`DANGER_REDUCING_SECRETS`, which `reveal_secret` no longer consults — their
-keys exist in one adventure only and would silently never match in
-dark/tide/point_black. Decision pending: generalize them per adventure or
-delete them.
+Decided in MAGI #39 (2026-09-17):
+
+- `SECRET_UNLOCKS` / `DANGER_REDUCING_SECRETS` were **deleted**. They were
+  keys of one adventure that would silently never match in
+  dark/tide/point_black; generalizing them through `AdventureConfig` was
+  discarded because no adventure asks for it. Recoverable from git if one does.
+- `listen` and `science` were **removed from `DISCOVERY_SKILLS`**: a secret
+  freezes the location's danger escalation for good, and a Listen the DM asked
+  for because something made a noise is not a search of the place. Melchior's
+  dissent is recorded: in CoC a successful Listen does reveal the hidden thing;
+  revisit if playtests show players expecting it.
+- `trigger_event` **stays without a caller**, deliberately. Wiring it to combat
+  start (the one caller proposed) would write engine-generated event slugs
+  into every later prompt with no adventure-level meaning behind them. It is
+  hardened and tested; it gets a caller when an adventure defines events.
+
+Still unwired: contamination.
 
 ## Local-only content moderation
 `core/moderation.py` ships a conservative local blocklist by default. An

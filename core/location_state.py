@@ -95,23 +95,6 @@ class LocationState:
 class LocationStateManager:
     """Manages dynamic states of all locations in the game"""
 
-    # Secrets that unlock new locations when discovered.
-    # NOT CONSULTED at runtime: these are keys of a single adventure and would
-    # silently never match in dark/tide/point_black. Kept as documented dead
-    # data until they are generalized per adventure or deleted (TECH_DEBT.md).
-    SECRET_UNLOCKS = {
-        "hidden_passage": "underground_chamber",
-        "ritual_chamber_map": "ritual_chamber",
-        "keeper_diary": "keeper_quarters_hidden",
-    }
-
-    # Secrets that reduce danger when discovered. Same status as above.
-    DANGER_REDUCING_SECRETS = {
-        "ritual_seal": 2,
-        "entity_ward": 3,
-        "safe_haven": 2,
-    }
-
     # Bounds on what a location remembers. Keys are engine-generated slugs;
     # anything that does not fit the slug is discarded without mutating state.
     MAX_SECRETS_PER_LOCATION = 8

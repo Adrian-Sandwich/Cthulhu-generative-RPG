@@ -749,17 +749,44 @@ def test_reveal_secret_caps_at_eight_per_location():
     assert "8 secret(s) found here: s5; s6; s7" in ctx
 
 
-def test_reveal_secret_does_not_consult_single_adventure_tables():
-    """SECRET_UNLOCKS / DANGER_REDUCING_SECRETS stay dead data (out of scope)."""
+def test_single_adventure_secret_tables_are_gone():
+    """SECRET_UNLOCKS / DANGER_REDUCING_SECRETS were keys of one adventure that
+    would silently never match elsewhere; MAGI #39 deleted them rather than
+    generalizing them. A secret with one of their old keys is just a secret."""
     from core.location_state import LocationStateManager
+    assert not hasattr(LocationStateManager, "SECRET_UNLOCKS")
+    assert not hasattr(LocationStateManager, "DANGER_REDUCING_SECRETS")
     mgr = LocationStateManager()
     mgr.register_location("hall", "Great Hall", "")
     mgr.get_location("hall").danger_level = 4
     res = mgr.reveal_secret("hall", "hidden_passage")
     assert res["success"] and "unlocked_location" not in res
-    assert "underground_chamber" not in mgr.unlocked_locations
+    assert mgr.unlocked_locations == {"hall"}
     mgr.reveal_secret("hall", "ritual_seal")
     assert mgr.get_location("hall").danger_level == 4
+
+
+def test_listen_and_science_successes_do_not_freeze_the_danger(engine):
+    """A Listen the DM asked for because something made a noise is not a
+    search of the place: it must not leave a secret, so the location keeps
+    escalating. Spot Hidden still records (MAGI #39)."""
+    from unittest.mock import patch
+    loc = engine.location_state.get_location(engine.state.location)
+    with patch.object(engine, "_call_ollama", return_value="Narration."):
+        for skill in ("listen", "Listen", "science"):
+            engine.state.last_roll = _roll(skill)
+            out = engine.resolve_roll_consequences()
+            assert out["consequence"] is None
+    assert loc.secrets_revealed == []
+    before = loc.danger_level
+    engine.location_state.visit_location(engine.state.location, engine.state.turn + 1)
+    assert loc.danger_level == before + 1                  # still escalating
+
+    with patch.object(engine, "_call_ollama", return_value="Narration."):
+        engine.state.last_roll = _roll("spot hidden")
+        assert engine.resolve_roll_consequences()["consequence"]["kind"] == "secret"
+    engine.location_state.visit_location(engine.state.location, engine.state.turn + 2)
+    assert loc.danger_level == before + 1                  # frozen by the real find
 
 
 def test_trigger_event_resolves_by_name_and_is_idempotent():

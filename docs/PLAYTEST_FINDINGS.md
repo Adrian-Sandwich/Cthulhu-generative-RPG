@@ -89,10 +89,12 @@ es cómo los tests construyen partidas, no abandono.
 Causa: el motor guardaba partidas y exportaba playtests leyendo `DATA_DIR`
 sólo del entorno (default: raíz del repo) mientras la app lo resolvía desde la
 config de Flask, que es lo único que los smoke tests pasaban. Arreglo: un solo
-resolvedor (`core/generative_save.py`, `configure_data_dir` / `data_root`) que
-la app configura, `tests/conftest.py` fija el entorno, un smoke test falla si
-una corrida escribe en el repo, y `tools/analyze_playtests.py` avisa cuando
-`DATA_DIR` apunta a la raíz y honra `EXCLUDE_NAMES`.
+resolvedor (`core/generative_save.py`, `data_root(data_dir)`) al que la app
+pasa su directorio explícitamente en cada motor y cada acceso a saves (sin
+estado global: dos apps en un proceso no se pisan), `tests/conftest.py` fija el
+entorno, dos smoke tests fallan si una corrida escribe en el repo o si dos apps
+comparten directorio, y `tools/analyze_playtests.py` avisa cuando `DATA_DIR`
+apunta a la raíz y honra `EXCLUDE_NAMES`.
 
 **No hay dato de retención hasta bajar el corpus del volumen de Fly** (las
 partidas LAN de 12–30 turnos) y correr el analizador con `DATA_DIR` ahí.

@@ -22,11 +22,3 @@ def _isolated_data_dir(tmp_path_factory):
     else:
         os.environ["DATA_DIR"] = previous
 
-
-@pytest.fixture(autouse=True)
-def _fresh_data_root():
-    """Each test starts with no process-wide override left by a previous app."""
-    from core.generative_save import configure_data_dir
-    configure_data_dir(None)
-    yield
-    configure_data_dir(None)

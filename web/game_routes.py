@@ -44,7 +44,7 @@ def start_game(gs):
         gs.investigator = create_investigator(investigator_name, occupation)
 
         gs.engine = GenerativeGameEngine(use_memory=False, session_id=gs.sid,
-                                         language=language)
+                                         language=language, data_dir=ctx().data_dir)
         gs.engine.create_game(gs.investigator)
 
         intro = gs.engine.localized_intro()
@@ -75,7 +75,7 @@ def start_game(gs):
 @synchronized
 def list_saves(gs):
     """List saved games for this session (currently a single autosave per sid)."""
-    summary = GenerativeSave.get_session_summary(gs.sid)
+    summary = GenerativeSave.get_session_summary(gs.sid, ctx().data_dir)
     return jsonify({"saves": [summary] if summary else []})
 
 
@@ -84,7 +84,7 @@ def list_saves(gs):
 @synchronized
 def load_saved_game(gs):
     """Resume this session's autosaved game from disk."""
-    if not GenerativeSave.exists(gs.sid):
+    if not GenerativeSave.exists(gs.sid, ctx().data_dir):
         return jsonify({"error": "No saved game for this session"}), 404
     if gs.engine:
         ctx().cleanup_session(gs)
@@ -439,7 +439,7 @@ def reset_game(gs):
     gs.investigator = None
     gs.pending_roll = None
     try:
-        GenerativeSave.delete(gs.sid)
+        GenerativeSave.delete(gs.sid, ctx().data_dir)
     except Exception:
         logger.warning("save delete failed for sid=%s", gs.sid, exc_info=True)
 

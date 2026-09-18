@@ -60,10 +60,9 @@ class GameContext:
         self.data_dir = Path(cfg.get('DATA_DIR',
                                      os.environ.get('DATA_DIR',
                                                     str(Path(__file__).parent.parent))))
-        # The engine's saves and playtest exports must land under the SAME
-        # directory the app reads from (MAGI #42) — one resolver, not two.
-        from core.generative_save import configure_data_dir
-        configure_data_dir(self.data_dir)
+        # Every engine this app builds or resumes persists under self.data_dir
+        # (MAGI #42/#43): passed explicitly, never through process-wide state,
+        # so two apps in one process keep separate saves and playtests.
         # Generated location images. SDXL scene generation is gated behind a
         # flag (off by default) — the procedural art was more confusing than
         # helpful, so the game runs text-only unless ENABLE_IMAGES=1.
@@ -167,11 +166,11 @@ class GameContext:
         """
         if gs.engine is not None:
             return True
-        if GenerativeSave.exists(gs.sid):
+        if GenerativeSave.exists(gs.sid, self.data_dir):
             try:
-                gs.engine = GenerativeGameEngine.load_game(gs.sid)
+                gs.engine = GenerativeGameEngine.load_game(gs.sid, data_dir=self.data_dir)
                 gs.investigator = gs.engine.state.investigator
-                app_state = GenerativeSave.load_app_state(gs.sid) or {}
+                app_state = GenerativeSave.load_app_state(gs.sid, self.data_dir) or {}
                 gs.pending_roll = app_state.get("pending_roll")
                 return True
             except Exception:

@@ -654,3 +654,37 @@ def test_saves_and_playtests_follow_the_configured_data_dir(tmp_path, monkeypatc
         if (repo / "saves" / "generative").exists() else set()
     after_pt = set((repo / "playtests").glob("*.json")) if (repo / "playtests").exists() else set()
     assert after_saves == before_saves and after_pt == before_pt              # nothing leaked
+
+
+def test_two_apps_in_one_process_keep_separate_data_dirs(tmp_path):
+    """web/__init__ promises two apps per process with separate state; #43
+    (balthasar) asked for proof that persistence honors it too — a
+    process-wide DATA_DIR override would have sent both apps' saves and
+    playtest archives to whichever app was created last."""
+    import json
+    a_dir, b_dir = tmp_path / "a", tmp_path / "b"
+
+    def fake_chat(self, *a, **k):
+        on = k.get("on_chunk")
+        if on:
+            on(CANNED_DM)
+        return CANNED_DM
+
+    def fake_tools(self, *a, **k):
+        return {"narrative": "", "tool_calls": [], "fallback": True}
+
+    with patch("core.llm_client.LLMClient.chat", fake_chat), \
+         patch("core.llm_client.LLMClient.chat_with_tools", fake_tools):
+        a = _make_app(a_dir).test_client()
+        b = _make_app(b_dir).test_client()          # created last: must not capture A
+        _start(a, name="Alpha")
+        _start(b, name="Beta")
+        assert a.post("/api/game/action", json={"action": "look around"}).status_code == 200
+        assert b.post("/api/game/reset").get_json()["success"]
+
+    a_saves = list((a_dir / "saves" / "generative").glob("*.json"))
+    b_saves = list((b_dir / "saves" / "generative").glob("*.json"))
+    assert len(a_saves) == 1 and json.loads(a_saves[0].read_text(encoding="utf-8"))["metadata"]["investigator"] == "Alpha"
+    assert b_saves == []                                          # reset deleted B's save
+    assert not (a_dir / "playtests").exists()                     # A never reset
+    assert len(list((b_dir / "playtests").glob("*.json"))) == 1   # B's archive, under B

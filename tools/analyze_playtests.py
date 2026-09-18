@@ -14,6 +14,11 @@ import os
 from collections import Counter
 
 DATA = os.environ.get("DATA_DIR", ".")
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Same knob the admin dashboard honors (web/context.py EXCLUDE_NAMES): the
+# team's own investigators never count as players. Case-insensitive.
+EXCLUDE = {n.strip().lower() for n in os.environ.get("EXCLUDE_NAMES", "").split(",") if n.strip()}
 
 
 def _load(pattern):
@@ -41,8 +46,31 @@ def main():
     print(f"PLAYTEST REPORT  (DATA_DIR={DATA})")
     print("=" * 60)
 
+    # MAGI #42: human sessions never live in the repo root — only pytest
+    # fixtures do (before the DATA_DIR fix, every run left "Tester" games
+    # here). Say so loudly instead of reporting them as players.
+    if "DATA_DIR" not in os.environ or os.path.abspath(DATA) == REPO_ROOT:
+        print("\nWARNING: DATA_DIR is unset or points at the repo root. Games here are")
+        print("         almost certainly test fixtures, not players. Point DATA_DIR at the")
+        print("         production volume before reading retention out of this report.")
+
+    if EXCLUDE:
+        excluded = [d for _, d in saves
+                    if (d.get("game_state", {}).get("investigator", {}).get("name") or "")
+                    .strip().lower() in EXCLUDE]
+        saves = [(p, d) for p, d in saves if d not in excluded]
+        # Archived runs carry the investigator at the top level.
+        excluded_pt = [d for _, d in playtests
+                       if ((d.get("investigator") or {}).get("name") or "").strip().lower() in EXCLUDE]
+        playtests = [(p, d) for p, d in playtests if d not in excluded_pt]
+        print(f"\nEXCLUDED (EXCLUDE_NAMES): {len(excluded)} saves, {len(excluded_pt)} archived runs")
+
     # --- sessions (live saves) ---
     print(f"\nSESSIONS: {len(saves)}")
+    names = Counter((d.get("game_state", {}).get("investigator", {}).get("name") or "?")
+                    for _, d in saves)
+    if names:
+        print("  investigators: " + ", ".join(f"{n} x{c}" for n, c in names.most_common(8)))
     played = tot_a = tot_r = 0
     turns = []
     sans = []

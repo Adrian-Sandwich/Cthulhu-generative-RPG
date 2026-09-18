@@ -15,9 +15,26 @@ from dataclasses import asdict
 
 # DATA_DIR lets a PaaS deploy point all persistence at a mounted volume
 # (ephemeral container FS otherwise loses saves on every restart).
-def saves_dir() -> Path:
-    """Resolve the save directory from the current DATA_DIR env var."""
-    return Path(os.environ.get("DATA_DIR", ".")) / "saves" / "generative"
+#
+# ONE resolver for every persistence path (MAGI #42/#43). The web layer
+# resolved DATA_DIR from Flask config while saves and playtest exports read
+# only the env var with default "." — so every pytest run wrote fixture games
+# into the real repo and the analyzer counted them as players. Every entry
+# point now takes an explicit ``data_dir``; the web app passes the directory
+# it resolved (per app, so two apps in one process never share one), and the
+# env var remains the default for the CLI game and standalone tools. There is
+# deliberately no process-wide override.
+def data_root(data_dir=None) -> Path:
+    """Where saves/, playtests/ and feedback/ live: the explicit directory
+    when given, else the DATA_DIR env var, else the current directory."""
+    if data_dir:
+        return Path(data_dir)
+    return Path(os.environ.get("DATA_DIR", "."))
+
+
+def saves_dir(data_dir=None) -> Path:
+    """Resolve the save directory from data_root(data_dir)."""
+    return data_root(data_dir) / "saves" / "generative"
 
 
 _SAFE_ID_RE = re.compile(r"[^A-Za-z0-9_-]")
@@ -47,9 +64,9 @@ class GenerativeSave:
         return cleaned
 
     @staticmethod
-    def _save_path(session_id: str) -> Path:
+    def _save_path(session_id: str, data_dir=None) -> Path:
         """Get the file path for a save, sanitized and confined to saves_dir()."""
-        root = saves_dir().resolve()
+        root = saves_dir(data_dir).resolve()
         path = (root / f"{GenerativeSave._safe_id(session_id)}.json")
         # Defense in depth: ensure the resolved path stays inside saves_dir().
         resolved = path.resolve()
@@ -60,7 +77,7 @@ class GenerativeSave:
     @staticmethod
     def save(state, session_id: str, model: str, location_state=None, sanity_system=None,
              app_state: Optional[Dict] = None, adventure: Optional[str] = None,
-             language: str = "en", companions=None) -> str:
+             language: str = "en", companions=None, data_dir=None) -> str:
         """
         Serialize game state to JSON file.
 
@@ -74,7 +91,7 @@ class GenerativeSave:
         Returns:
             Path to the saved file
         """
-        saves_dir().mkdir(parents=True, exist_ok=True)
+        saves_dir(data_dir).mkdir(parents=True, exist_ok=True)
 
         # Serialize location state if available
         location_state_data = None
@@ -107,14 +124,14 @@ class GenerativeSave:
             "app_state": app_state  # app-layer state (e.g. web pending_roll) not in GameState
         }
 
-        path = GenerativeSave._save_path(session_id)
+        path = GenerativeSave._save_path(session_id, data_dir)
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(save_data, f, indent=2, ensure_ascii=False)
 
         return str(path)
 
     @staticmethod
-    def load(session_id: str) -> Tuple[Dict, Dict, Optional[Dict], Optional[Dict]]:
+    def load(session_id: str, data_dir=None) -> Tuple[Dict, Dict, Optional[Dict], Optional[Dict]]:
         """
         Load saved game from disk.
 
@@ -128,7 +145,7 @@ class GenerativeSave:
         Raises:
             FileNotFoundError: If save file doesn't exist
         """
-        path = GenerativeSave._save_path(session_id)
+        path = GenerativeSave._save_path(session_id, data_dir)
         if not path.exists():
             raise FileNotFoundError(f"Save not found: {path}")
 
@@ -143,9 +160,9 @@ class GenerativeSave:
         )
 
     @staticmethod
-    def load_companions_state(session_id: str) -> Optional[Dict]:
+    def load_companions_state(session_id: str, data_dir=None) -> Optional[Dict]:
         """Return the serialized CompanionManager stored with a save, or None."""
-        path = GenerativeSave._save_path(session_id)
+        path = GenerativeSave._save_path(session_id, data_dir)
         if not path.exists():
             return None
         try:
@@ -156,12 +173,12 @@ class GenerativeSave:
             return None
 
     @staticmethod
-    def load_app_state(session_id: str) -> Optional[Dict]:
+    def load_app_state(session_id: str, data_dir=None) -> Optional[Dict]:
         """
         Return the app-layer state stored alongside a save (e.g. the web
         pending_roll), or None if the save or the field is absent.
         """
-        path = GenerativeSave._save_path(session_id)
+        path = GenerativeSave._save_path(session_id, data_dir)
         if not path.exists():
             return None
         try:
@@ -172,26 +189,26 @@ class GenerativeSave:
             return None
 
     @staticmethod
-    def exists(session_id: str) -> bool:
+    def exists(session_id: str, data_dir=None) -> bool:
         """True if a save file exists for this session id."""
         try:
-            return GenerativeSave._save_path(session_id).exists()
+            return GenerativeSave._save_path(session_id, data_dir).exists()
         except ValueError:
             return False
 
     @staticmethod
-    def list_saves() -> List[Dict]:
+    def list_saves(data_dir=None) -> List[Dict]:
         """
         List all available saves with metadata.
 
         Returns:
             List of metadata dicts, sorted by timestamp (newest first)
         """
-        if not saves_dir().exists():
+        if not saves_dir(data_dir).exists():
             return []
 
         saves = []
-        for path in saves_dir().glob("*.json"):
+        for path in saves_dir(data_dir).glob("*.json"):
             try:
                 with open(path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
@@ -202,7 +219,7 @@ class GenerativeSave:
         return sorted(saves, key=lambda x: x.get("timestamp", ""), reverse=True)
 
     @staticmethod
-    def get_session_summary(session_id: str) -> Optional[Dict]:
+    def get_session_summary(session_id: str, data_dir=None) -> Optional[Dict]:
         """
         Get a summary of a saved session for display before resuming.
 
@@ -213,7 +230,7 @@ class GenerativeSave:
             Dict with session summary, or None if not found
         """
         try:
-            metadata, state_dict, _, _ = GenerativeSave.load(session_id)
+            metadata, state_dict, _, _ = GenerativeSave.load(session_id, data_dir)
 
             inv = state_dict.get("investigator", {})
             sanity = inv.get("characteristics", {}).get("SAN", 75)
@@ -243,7 +260,7 @@ class GenerativeSave:
             return None
 
     @staticmethod
-    def list_saves_with_summaries() -> List[Dict]:
+    def list_saves_with_summaries(data_dir=None) -> List[Dict]:
         """
         List all available saves with detailed summaries.
 
@@ -251,18 +268,18 @@ class GenerativeSave:
             List of summary dicts, sorted by timestamp (newest first)
         """
         summaries = []
-        for metadata in GenerativeSave.list_saves():
+        for metadata in GenerativeSave.list_saves(data_dir):
             session_id = metadata.get("session_id")
             if session_id:
-                summary = GenerativeSave.get_session_summary(session_id)
+                summary = GenerativeSave.get_session_summary(session_id, data_dir)
                 if summary:
                     summaries.append(summary)
 
         return summaries
 
     @staticmethod
-    def delete(session_id: str):
+    def delete(session_id: str, data_dir=None):
         """Delete a save file"""
-        path = GenerativeSave._save_path(session_id)
+        path = GenerativeSave._save_path(session_id, data_dir)
         if path.exists():
             path.unlink()

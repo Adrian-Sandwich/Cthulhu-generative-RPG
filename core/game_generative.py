@@ -138,7 +138,7 @@ class GenerativeGameEngine:
     def __init__(self, ollama_endpoint: str = "http://localhost:11434", model: str = "mistral",
                  session_id: Optional[str] = None, use_memory: bool = True,
                  use_entity_graph: Optional[bool] = None, adventure: str = "point_black",
-                 language: str = "en"):
+                 language: str = "en", data_dir=None):
         """
         Initialize game engine.
 
@@ -167,6 +167,10 @@ class GenerativeGameEngine:
             self.model = model
             self.llm = OllamaClient(endpoint=ollama_endpoint, model=model)
         self.session_id = session_id or f"session_{int(time.time())}"
+        # Where this engine persists (saves, playtest archives). The web app
+        # passes its own directory so two apps in one process never share one;
+        # None means the DATA_DIR env var / current directory (CLI, tools).
+        self.data_dir = data_dir
         self.language = language
         self.state: Optional[GameState] = None
         self.rules = CoC7eRulesEngine()
@@ -1758,10 +1762,10 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
         if not self.state:
             return None
         from datetime import datetime
-        from pathlib import Path as _Path
+        from .generative_save import data_root
 
-        out_dir = _Path(os.environ.get("DATA_DIR", ".")) / "playtests"
-        out_dir.mkdir(exist_ok=True)
+        out_dir = data_root(self.data_dir) / "playtests"
+        out_dir.mkdir(parents=True, exist_ok=True)
         inv = self.state.investigator
         data = {
             "archived_at": datetime.now().isoformat(),
@@ -1892,6 +1896,7 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             adventure=getattr(self, "adventure_name", None),
             language=getattr(self, "language", "en"),
             companions=self.companions,
+            data_dir=self.data_dir,
         )
 
         # Also persist ChromaDB memory if available
@@ -1902,7 +1907,8 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
 
     @classmethod
     def load_game(cls, session_id: str,
-                  ollama_endpoint: str = "http://localhost:11434") -> 'GenerativeGameEngine':
+                  ollama_endpoint: str = "http://localhost:11434",
+                  data_dir=None) -> 'GenerativeGameEngine':
         """
         Load a saved game session from disk.
 
@@ -1920,7 +1926,8 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
         from .location_state import LocationStateManager
         from .sanity_system import SanitySystem
 
-        metadata, state_dict, location_state_data, sanity_state_data = GenerativeSave.load(session_id)
+        metadata, state_dict, location_state_data, sanity_state_data = GenerativeSave.load(
+            session_id, data_dir)
 
         # Reconstruct InvestigatorState from dictionary
         inv_dict = state_dict["investigator"]
@@ -1964,7 +1971,8 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             session_id=session_id,
             use_memory=True,
             adventure=metadata.get("adventure") or "point_black",
-            language=metadata.get("language") or "en"
+            language=metadata.get("language") or "en",
+            data_dir=data_dir,
         )
 
         # Inject the loaded state
@@ -1988,7 +1996,7 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
 
         # Restore traveling companions (trusted NPCs who joined the player)
         try:
-            companions_data = GenerativeSave.load_companions_state(session_id)
+            companions_data = GenerativeSave.load_companions_state(session_id, data_dir)
             if companions_data:
                 from .companion_system import CompanionManager
                 engine.companions = CompanionManager.from_dict(companions_data)

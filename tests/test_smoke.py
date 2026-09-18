@@ -615,3 +615,76 @@ def test_health_surfaces_a_degraded_model(client):
     finally:
         LLMClient.degraded_turns = before
         LLMClient.last_error = None
+
+
+# --- persistence isolation (MAGI #42) ----------------------------------------
+
+def test_saves_and_playtests_follow_the_configured_data_dir(tmp_path, monkeypatch):
+    """The app's DATA_DIR (Flask config) must govern the engine's saves and
+    playtest archives too. Before #42 they read only the env var, defaulting
+    to the repo root: every test run left fixture games in saves/ and
+    playtests/, and the analyzer reported them as players dying at turn 2."""
+    import os
+    from pathlib import Path
+    monkeypatch.delenv("DATA_DIR", raising=False)             # the leaky default
+    repo = Path(__file__).resolve().parent.parent
+    before_saves = set((repo / "saves" / "generative").glob("*.json")) \
+        if (repo / "saves" / "generative").exists() else set()
+    before_pt = set((repo / "playtests").glob("*.json")) if (repo / "playtests").exists() else set()
+
+    def fake_chat(self, *a, **k):
+        on = k.get("on_chunk")
+        if on:
+            on(CANNED_DM)
+        return CANNED_DM
+
+    def fake_tools(self, *a, **k):
+        return {"narrative": "", "tool_calls": [], "fallback": True}
+
+    with patch("core.llm_client.LLMClient.chat", fake_chat), \
+         patch("core.llm_client.LLMClient.chat_with_tools", fake_tools):
+        c = _make_app(tmp_path).test_client()
+        _start(c)
+        assert c.post("/api/game/action", json={"action": "look around"}).status_code == 200
+        assert c.post("/api/game/reset").get_json()["success"]
+
+    # reset archives the run under the configured dir (and deletes its save)
+    assert len(list((tmp_path / "playtests").glob("*.json"))) == 1
+    after_saves = set((repo / "saves" / "generative").glob("*.json")) \
+        if (repo / "saves" / "generative").exists() else set()
+    after_pt = set((repo / "playtests").glob("*.json")) if (repo / "playtests").exists() else set()
+    assert after_saves == before_saves and after_pt == before_pt              # nothing leaked
+
+
+def test_two_apps_in_one_process_keep_separate_data_dirs(tmp_path):
+    """web/__init__ promises two apps per process with separate state; #43
+    (balthasar) asked for proof that persistence honors it too — a
+    process-wide DATA_DIR override would have sent both apps' saves and
+    playtest archives to whichever app was created last."""
+    import json
+    a_dir, b_dir = tmp_path / "a", tmp_path / "b"
+
+    def fake_chat(self, *a, **k):
+        on = k.get("on_chunk")
+        if on:
+            on(CANNED_DM)
+        return CANNED_DM
+
+    def fake_tools(self, *a, **k):
+        return {"narrative": "", "tool_calls": [], "fallback": True}
+
+    with patch("core.llm_client.LLMClient.chat", fake_chat), \
+         patch("core.llm_client.LLMClient.chat_with_tools", fake_tools):
+        a = _make_app(a_dir).test_client()
+        b = _make_app(b_dir).test_client()          # created last: must not capture A
+        _start(a, name="Alpha")
+        _start(b, name="Beta")
+        assert a.post("/api/game/action", json={"action": "look around"}).status_code == 200
+        assert b.post("/api/game/reset").get_json()["success"]
+
+    a_saves = list((a_dir / "saves" / "generative").glob("*.json"))
+    b_saves = list((b_dir / "saves" / "generative").glob("*.json"))
+    assert len(a_saves) == 1 and json.loads(a_saves[0].read_text(encoding="utf-8"))["metadata"]["investigator"] == "Alpha"
+    assert b_saves == []                                          # reset deleted B's save
+    assert not (a_dir / "playtests").exists()                     # A never reset
+    assert len(list((b_dir / "playtests").glob("*.json"))) == 1   # B's archive, under B

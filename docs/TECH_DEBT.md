@@ -88,6 +88,19 @@ Discarded in #40, on the record:
 - **The discarded return value of `visit_location`** (its threshold prose
   never reaches the player). Changes what the player sees; its own decision.
 
+## One resolver for `DATA_DIR`
+Saves and playtest archives resolve through
+`core.generative_save.data_root(data_dir)` (feedback is written by the web
+layer straight under its own `data_dir`): the web app passes the directory
+it resolved from its Flask config into every engine it builds or resumes
+(`GenerativeGameEngine(data_dir=...)`, `load_game(..., data_dir=...)`) and
+into every `GenerativeSave` call; the CLI game and standalone tools pass
+nothing and fall back to the `DATA_DIR` env var, then to the current
+directory. There is deliberately no process-wide override: two apps in one
+process (which the tests rely on) keep separate saves. Do not read `DATA_DIR`
+directly anywhere else — the split between config and env is exactly what let
+every pytest run write fixture games into the repo (MAGI #42/#43).
+
 ## Local-only content moderation
 `core/moderation.py` ships a conservative local blocklist by default. An
 OpenAI-compatible `/moderations` API path exists (`MODERATION=api`) but adds

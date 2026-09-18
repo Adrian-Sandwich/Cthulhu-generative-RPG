@@ -17,6 +17,21 @@ but it's the main friction point for future changes.
 Deferred because a large refactor right before a public launch is high-risk for
 low user-visible gain. Do it when a feature actually needs it.
 
+## Manual playtest scripts
+
+The manual generative playtests live under `tools/` and are intentionally not
+collected by the automated test suite. Run them from the repository root:
+
+```bash
+python tools/test_gameplay.py
+python tools/test_generative_flow.py
+python tools/test_generative_with_selection.py
+```
+
+The first two scripts exercise the generative engine and may require a
+configured LLM. The selection playtest needs an interactive TTY; omit `-q` to
+see its prompts.
+
 ## Unused rich `location_state` features
 `reveal_secret`, `trigger_event`, contamination mechanics exist and are tested
 but never wired into gameplay. Decision pending: wire them (the world reacts —

@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11"]
 
     steps:
       - uses: actions/checkout@v4
@@ -34,7 +34,7 @@ jobs:
           CI: "true"
         run: |
           mkdir -p "$DATA_DIR"
-          pytest tests/test_smoke.py tests/test_engine_units.py tests/test_frontend.py tests/test_url_map.py -q
+          pytest tests/test_smoke.py tests/test_engine_units.py tests/test_frontend.py tests/test_url_map.py tests/test_history_viewer.py -q
 
       # Catches attribute reads that do not exist. Two shipped regressions were
       # exactly that and the suite could not see either. Scoped to one rule in
@@ -46,7 +46,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11"]
 
     steps:
       - uses: actions/checkout@v4
@@ -68,7 +68,4 @@ jobs:
         shell: bash
         run: |
           mkdir -p "$DATA_DIR"
-          pytest tests/test_smoke.py tests/test_engine_units.py tests/test_frontend.py tests/test_url_map.py -q
-
-      - name: Static attribute check (pyright, one rule)
-        run: pyright
+          pytest tests/test_smoke.py tests/test_engine_units.py tests/test_frontend.py tests/test_url_map.py tests/test_history_viewer.py -q

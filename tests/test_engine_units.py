@@ -846,3 +846,83 @@ def test_failure_consequence_matches_spaced_skill_names(engine):
     assert hp["kind"] == "hp"
     social = engine._failure_consequence(_roll("charm", success=False))
     assert social["kind"] == "setback"
+
+
+# --- contamination: horror leaves a stain on the place -----------------------
+# MAGI decision #40: fed by SAN loss and the doom clock (events measured as
+# firing in real sessions without dice), never by an LLM tag. Prose by tier in
+# the DM context; tier-snapped for the image cache.
+
+def test_contamination_resolves_by_display_name_and_clamps():
+    from core.location_state import LocationStateManager
+    mgr = LocationStateManager()
+    mgr.register_location("lighthouse_exterior", "Point Black Lighthouse - Exterior", "")
+    assert mgr.increase_contamination("Point Black Lighthouse - Exterior", 30) == 30
+    assert mgr.increase_contamination("lighthouse_exterior", 90) == 100          # clamp
+    assert mgr.decrease_contamination("Point Black Lighthouse - Exterior", 40) == 60
+    assert mgr.decrease_contamination("lighthouse_exterior", 500) == 0            # floor
+    assert mgr.increase_contamination("Nowhere", 10) is None
+    assert mgr.increase_contamination("lighthouse_exterior", -5) == 0             # no negative feed
+    assert mgr.increase_contamination("lighthouse_exterior", "junk") == 0         # no mutation
+
+
+def test_contamination_reaches_the_dm_as_prose_not_a_percentage():
+    from core.location_state import LocationStateManager
+    mgr = LocationStateManager()
+    mgr.register_location("hall", "Great Hall", "")
+    assert "tainted" not in mgr.get_location_context("hall")
+    mgr.increase_contamination("hall", 10)
+    ctx = mgr.get_location_context("hall")
+    assert "faint wrongness" in ctx and "%" not in ctx
+    mgr.increase_contamination("hall", 20)                                        # 30
+    ctx = mgr.get_location_context("hall")
+    assert "profoundly wrong" in ctx and "%" not in ctx and "30" not in ctx
+    mgr.increase_contamination("hall", 50)                                        # 80
+    assert "Reality seems to bend" in mgr.get_location_context("hall")
+    assert "Reality seems to bend" in mgr.get_location("hall").get_current_description()
+
+
+def test_contamination_bucket_snaps_to_tiers():
+    from core.location_state import contamination_bucket
+    assert [contamination_bucket(v) for v in (0, 5, 24, 25, 49, 50, 74, 75, 100)] == \
+        [0, 0, 0, 25, 25, 50, 50, 75, 75]
+
+
+def test_sanity_loss_stains_the_current_location(engine):
+    from core.keyword_data import CONTAMINATION_PER_SAN
+    loc = engine.location_state.get_location(engine.state.location)
+    assert loc.contamination == 0
+    engine.apply_sanity_check(5, source="the thing in the water")
+    assert loc.contamination == 5 * CONTAMINATION_PER_SAN
+    assert engine.telemetry_summary()["contamination_raised"] == 1
+    engine.apply_sanity_check(0, source="nothing")                               # no stain
+    assert loc.contamination == 5 * CONTAMINATION_PER_SAN
+    assert engine.telemetry_summary()["contamination_raised"] == 1
+
+
+def test_doom_clock_corrupts_the_place_every_overdue_turn(engine):
+    from unittest.mock import patch
+    from core.keyword_data import CONTAMINATION_PER_SAN, CONTAMINATION_PER_DOOM_TURN
+    loc = engine.location_state.get_location(engine.state.location)
+    engine.state.time_limit = engine.state.turn                                   # out of time now
+    with patch.object(engine, "_call_ollama", return_value="The fog thickens."):
+        engine.process_player_action("wait")
+    # The overdue turn bleeds 2 SAN (stain) and the presence adds its own.
+    assert loc.contamination == 2 * CONTAMINATION_PER_SAN + CONTAMINATION_PER_DOOM_TURN
+    assert any("presence draws nearer" in n for n in engine.state.narrative)
+
+
+def test_stain_is_silent_without_location_state(engine):
+    engine.location_state = None
+    res = engine.apply_sanity_check(3, source="a test")
+    assert "error" not in res                                                     # SAN path untouched
+    assert engine._stain_location(10) is None
+
+
+def test_contamination_survives_save_and_load(engine):
+    engine.apply_sanity_check(6, source="the thing in the water")
+    before = engine.location_state.get_location(engine.state.location).contamination
+    assert before > 0
+    engine.save_game()
+    loaded = GenerativeGameEngine.load_game(engine.session_id)
+    assert loaded.location_state.get_location(loaded.state.location).contamination == before

@@ -12,6 +12,40 @@ import re
 from pathlib import Path
 
 
+# Contamination thresholds. The same three tiers drive the player-facing
+# description, the DM context and the image pipeline (game/art_director.py),
+# so the world corrupts in the same steps everywhere.
+CONTAMINATION_TIERS = (
+    (75, "Reality seems to bend strangely here. The laws of nature feel negotiable."),
+    (50, "Unnatural symbols and patterns mark the walls."),
+    (25, "Something about this place feels profoundly wrong."),
+)
+
+
+def describe_contamination(level: int) -> str:
+    """Prose for a contamination level, or "" below the first tier.
+
+    A weak model ignores "contamination 30%" and obeys a sentence (MAGI #38's
+    lesson with secret keys), so the number never reaches the prompt.
+    """
+    for floor, prose in CONTAMINATION_TIERS:
+        if level >= floor:
+            return prose
+    return ""
+
+
+def contamination_bucket(level: int) -> int:
+    """Snap a contamination level to its tier floor (0/25/50/75).
+
+    The image cache keys on the raw value (game/cache.py), so without this
+    every SAN point lost would regenerate the location's image.
+    """
+    for floor, _ in CONTAMINATION_TIERS:
+        if level >= floor:
+            return floor
+    return 0
+
+
 @dataclass
 class LocationState:
     """Mutable state of a location that changes based on player actions"""
@@ -43,12 +77,9 @@ class LocationState:
             desc += "\n[There's a subtle unease to this place.]"
 
         # Contamination effects
-        if self.contamination >= 75:
-            desc += "\n[Reality seems to bend strangely here. The laws of nature feel negotiable.]"
-        elif self.contamination >= 50:
-            desc += "\n[Unnatural symbols and patterns mark the walls.]"
-        elif self.contamination >= 25:
-            desc += "\n[Something about this place feels profoundly wrong.]"
+        taint = describe_contamination(self.contamination)
+        if taint:
+            desc += f"\n[{taint}]"
 
         # Reveal found secrets in description
         if "keeper_corpse" in self.secrets_revealed:
@@ -275,31 +306,45 @@ class LocationStateManager:
 
     def increase_contamination(
         self, location_key: str, amount: int
-    ) -> None:
+    ) -> Optional[int]:
         """
-        Increase supernatural contamination at a location.
+        Increase supernatural contamination at a location (clamped to 100).
 
-        Args:
-            location_key: Location to contaminate
-            amount: Contamination points to add (max 100)
+        Resolves the location by key or display name — the engine tracks the
+        current location by name, so a direct dict lookup was a silent no-op.
+
+        Returns the new level, or None if the location is unknown.
         """
-        if location_key in self.locations:
-            loc = self.locations[location_key]
-            loc.contamination = min(100, loc.contamination + amount)
+        loc = self.get_location(location_key)
+        if loc is None:
+            return None
+        try:
+            delta = max(0, int(amount))
+        except (TypeError, ValueError):
+            return loc.contamination
+        loc.contamination = min(100, loc.contamination + delta)
+        return loc.contamination
 
     def decrease_contamination(
         self, location_key: str, amount: int
-    ) -> None:
+    ) -> Optional[int]:
         """
-        Decrease supernatural contamination (via cleansing/sealing).
+        Decrease supernatural contamination (via cleansing/sealing), floor 0.
 
-        Args:
-            location_key: Location to cleanse
-            amount: Contamination points to remove
+        Same resolution rules as increase_contamination. No caller yet: no
+        adventure defines a cleansing rite (MAGI #40).
+
+        Returns the new level, or None if the location is unknown.
         """
-        if location_key in self.locations:
-            loc = self.locations[location_key]
-            loc.contamination = max(0, loc.contamination - amount)
+        loc = self.get_location(location_key)
+        if loc is None:
+            return None
+        try:
+            delta = max(0, int(amount))
+        except (TypeError, ValueError):
+            return loc.contamination
+        loc.contamination = max(0, loc.contamination - delta)
+        return loc.contamination
 
     def get_location_context(self, location_key: str) -> str:
         """
@@ -333,8 +378,11 @@ class LocationStateManager:
         if loc.danger_level > 1:
             parts.append(f"danger level {loc.danger_level}/5")
 
-        if loc.contamination > 0:
-            parts.append(f"contamination {loc.contamination}%")
+        taint = describe_contamination(loc.contamination)
+        if taint:
+            parts.append(f"the place is tainted: {taint}")
+        elif loc.contamination > 0:
+            parts.append("a faint wrongness is settling over this place")
 
         if not parts:
             return ""

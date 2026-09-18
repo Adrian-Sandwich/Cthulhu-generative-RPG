@@ -25,6 +25,25 @@ def _visual_len(s: str) -> int:
 
 def _getch() -> str:
     """Read one keypress in raw mode (no echo). Returns char or arrow escape sequence."""
+    if os.name == 'nt':
+        # msvcrt reads console input one key at a time; readline is still
+        # required for redirected stdin, where there is no console to query.
+        if not sys.stdin.isatty():
+            line = sys.stdin.readline()
+            return line[:1] if line else 'q'
+
+        import msvcrt
+
+        ch = msvcrt.getch()
+        if ch in (b'\x00', b'\xe0'):
+            return {
+                b'H': '\x1b[A',  # up
+                b'P': '\x1b[B',  # down
+                b'K': '\x1b[D',  # left
+                b'M': '\x1b[C',  # right
+            }.get(msvcrt.getch(), '')
+        return ch.decode(errors='replace')
+
     try:
         import tty
         import termios

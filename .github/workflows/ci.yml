@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        # Keep CI aligned with Dockerfile's python:3.11-slim runtime image.
         python-version: ["3.11"]
 
     steps:
@@ -46,6 +47,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
+        # Keep CI aligned with Dockerfile's python:3.11-slim runtime image.
         python-version: ["3.11"]
 
     steps:

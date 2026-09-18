@@ -15,9 +15,33 @@ from dataclasses import asdict
 
 # DATA_DIR lets a PaaS deploy point all persistence at a mounted volume
 # (ephemeral container FS otherwise loses saves on every restart).
+#
+# ONE resolver for every persistence path (MAGI #42). The web layer resolved
+# DATA_DIR from Flask config while saves and playtest exports read only the
+# env var with default "." — so every pytest run wrote fixture games into the
+# real repo and the analyzer counted them as players. The app now hands its
+# resolved directory to configure_data_dir(); the env var stays the default
+# for the CLI game and standalone tools.
+_DATA_DIR_OVERRIDE: Optional[Path] = None
+
+
+def configure_data_dir(path) -> None:
+    """Pin the data root for this process (None restores the env default)."""
+    global _DATA_DIR_OVERRIDE
+    _DATA_DIR_OVERRIDE = Path(path) if path else None
+
+
+def data_root() -> Path:
+    """Where saves/, playtests/ and feedback/ live: the configured override,
+    else the DATA_DIR env var, else the current directory."""
+    if _DATA_DIR_OVERRIDE is not None:
+        return _DATA_DIR_OVERRIDE
+    return Path(os.environ.get("DATA_DIR", "."))
+
+
 def saves_dir() -> Path:
-    """Resolve the save directory from the current DATA_DIR env var."""
-    return Path(os.environ.get("DATA_DIR", ".")) / "saves" / "generative"
+    """Resolve the save directory from data_root()."""
+    return data_root() / "saves" / "generative"
 
 
 _SAFE_ID_RE = re.compile(r"[^A-Za-z0-9_-]")

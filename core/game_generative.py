@@ -1758,10 +1758,10 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
         if not self.state:
             return None
         from datetime import datetime
-        from pathlib import Path as _Path
+        from .generative_save import data_root
 
-        out_dir = _Path(os.environ.get("DATA_DIR", ".")) / "playtests"
-        out_dir.mkdir(exist_ok=True)
+        out_dir = data_root() / "playtests"
+        out_dir.mkdir(parents=True, exist_ok=True)
         inv = self.state.investigator
         data = {
             "archived_at": datetime.now().isoformat(),

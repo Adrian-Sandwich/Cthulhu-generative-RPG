@@ -615,3 +615,42 @@ def test_health_surfaces_a_degraded_model(client):
     finally:
         LLMClient.degraded_turns = before
         LLMClient.last_error = None
+
+
+# --- persistence isolation (MAGI #42) ----------------------------------------
+
+def test_saves_and_playtests_follow_the_configured_data_dir(tmp_path, monkeypatch):
+    """The app's DATA_DIR (Flask config) must govern the engine's saves and
+    playtest archives too. Before #42 they read only the env var, defaulting
+    to the repo root: every test run left fixture games in saves/ and
+    playtests/, and the analyzer reported them as players dying at turn 2."""
+    import os
+    from pathlib import Path
+    monkeypatch.delenv("DATA_DIR", raising=False)             # the leaky default
+    repo = Path(__file__).resolve().parent.parent
+    before_saves = set((repo / "saves" / "generative").glob("*.json")) \
+        if (repo / "saves" / "generative").exists() else set()
+    before_pt = set((repo / "playtests").glob("*.json")) if (repo / "playtests").exists() else set()
+
+    def fake_chat(self, *a, **k):
+        on = k.get("on_chunk")
+        if on:
+            on(CANNED_DM)
+        return CANNED_DM
+
+    def fake_tools(self, *a, **k):
+        return {"narrative": "", "tool_calls": [], "fallback": True}
+
+    with patch("core.llm_client.LLMClient.chat", fake_chat), \
+         patch("core.llm_client.LLMClient.chat_with_tools", fake_tools):
+        c = _make_app(tmp_path).test_client()
+        _start(c)
+        assert c.post("/api/game/action", json={"action": "look around"}).status_code == 200
+        assert c.post("/api/game/reset").get_json()["success"]
+
+    # reset archives the run under the configured dir (and deletes its save)
+    assert len(list((tmp_path / "playtests").glob("*.json"))) == 1
+    after_saves = set((repo / "saves" / "generative").glob("*.json")) \
+        if (repo / "saves" / "generative").exists() else set()
+    after_pt = set((repo / "playtests").glob("*.json")) if (repo / "playtests").exists() else set()
+    assert after_saves == before_saves and after_pt == before_pt              # nothing leaked

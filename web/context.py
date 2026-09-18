@@ -60,6 +60,10 @@ class GameContext:
         self.data_dir = Path(cfg.get('DATA_DIR',
                                      os.environ.get('DATA_DIR',
                                                     str(Path(__file__).parent.parent))))
+        # The engine's saves and playtest exports must land under the SAME
+        # directory the app reads from (MAGI #42) — one resolver, not two.
+        from core.generative_save import configure_data_dir
+        configure_data_dir(self.data_dir)
         # Generated location images. SDXL scene generation is gated behind a
         # flag (off by default) — the procedural art was more confusing than
         # helpful, so the game runs text-only unless ENABLE_IMAGES=1.

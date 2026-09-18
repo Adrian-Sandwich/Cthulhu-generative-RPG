@@ -77,6 +77,26 @@ roll resolution. → Addressed same day with suggested-action chips
   `web/game_routes.py:37` ("Spanish paused again by request", `4c6253a`): es
   una decisión del operador, no deuda técnica.
 
+## 2026-09-17: la telemetría local era 100% fixtures (MAGI #42)
+
+La conclusión de MAGI #40 — "las sesiones anónimas mueren en el turno 2" —
+**se retira**. El corpus local (126 saves, 6 archivos de `playtests/`) no tenía
+una sola sesión humana: los investigadores eran `Tester`, `Alice`, `Bob`,
+`Slow`, `Rater`, `Flood`, `Runner`, `Fighter`, las acciones eran las de los
+tests y las fechas coincidían con las corridas de pytest. El techo de 2 turnos
+es cómo los tests construyen partidas, no abandono.
+
+Causa: el motor guardaba partidas y exportaba playtests leyendo `DATA_DIR`
+sólo del entorno (default: raíz del repo) mientras la app lo resolvía desde la
+config de Flask, que es lo único que los smoke tests pasaban. Arreglo: un solo
+resolvedor (`core/generative_save.py`, `configure_data_dir` / `data_root`) que
+la app configura, `tests/conftest.py` fija el entorno, un smoke test falla si
+una corrida escribe en el repo, y `tools/analyze_playtests.py` avisa cuando
+`DATA_DIR` apunta a la raíz y honra `EXCLUDE_NAMES`.
+
+**No hay dato de retención hasta bajar el corpus del volumen de Fly** (las
+partidas LAN de 12–30 turnos) y correr el analizador con `DATA_DIR` ahí.
+
 ## Backlog auditado (2026-08-25)
 
 El backlog original de esta sesión quedó obsoleto: **cinco de sus seis ítems se

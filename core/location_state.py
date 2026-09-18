@@ -119,6 +119,23 @@ class LocationStateManager:
     KEY_PATTERN = re.compile(r"^[a-z0-9_]{1,40}$")
     CONTEXT_NAMES_SHOWN = 3  # most recent secrets/events named in the DM context
 
+    _TURN_KEY = re.compile(r"^(?P<skill>[a-z0-9_]+)_turn_(?P<turn>\d+)$")
+
+    @classmethod
+    def describe_key(cls, key: str) -> str:
+        """Render a stored slug as prose for the DM / player.
+
+        Engine-generated discovery keys look like ``spot_hidden_turn_3``; a
+        weak model shown that string narrates "the spot hidden turn 3" as if
+        it were an object. Render it as what it is: a find, made with a skill,
+        on a turn. Any other slug just loses its underscores.
+        """
+        m = cls._TURN_KEY.match(key)
+        if m:
+            skill = m.group("skill").replace("_", " ")
+            return f"a hidden detail uncovered with {skill} on turn {m.group('turn')}"
+        return key.replace("_", " ")
+
     @classmethod
     def sanitize_key(cls, raw) -> Optional[str]:
         """Normalize a secret/event key to a slug, or None if it can't be one.
@@ -241,7 +258,7 @@ class LocationStateManager:
             "secret": key,
             "location": loc.key,
             "location_name": loc.name,
-            "narrative": f"You discover: {key.replace('_', ' ')}",
+            "narrative": f"You discover {self.describe_key(key)}.",
         }
 
     def trigger_event(
@@ -322,13 +339,13 @@ class LocationStateManager:
 
         if loc.secrets_revealed:
             recent = loc.secrets_revealed[-self.CONTEXT_NAMES_SHOWN:]
-            names = ", ".join(k.replace("_", " ") for k in recent)
-            parts.append(f"{len(loc.secrets_revealed)} secret(s) found: {names}")
+            names = "; ".join(self.describe_key(k) for k in recent)
+            parts.append(f"{len(loc.secrets_revealed)} secret(s) found here: {names}")
 
         if loc.events_triggered:
             recent = loc.events_triggered[-self.CONTEXT_NAMES_SHOWN:]
-            names = ", ".join(k.replace("_", " ") for k in recent)
-            parts.append(f"events: {names}")
+            names = "; ".join(self.describe_key(k) for k in recent)
+            parts.append(f"events that happened here: {names}")
 
         if loc.danger_level > 1:
             parts.append(f"danger level {loc.danger_level}/5")

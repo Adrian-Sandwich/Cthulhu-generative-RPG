@@ -658,8 +658,11 @@ def test_discovery_reaches_the_dm_prompt_by_name(engine):
         engine.resolve_roll_consequences()
 
     ctx = engine._get_location_context_for_prompt()
-    assert "library use turn" in ctx          # the name, not just a count
-    assert "1 secret(s) found" in ctx
+    # Prose, not the stored slug: a weak model narrates "library_use_turn_1"
+    # as if it were an object (MAGI #38, casper's condition).
+    assert "a hidden detail uncovered with library use on turn" in ctx
+    assert "library_use" not in ctx and "library use turn" not in ctx
+    assert "1 secret(s) found here" in ctx
 
 
 def test_non_discovery_and_failed_rolls_record_nothing(engine):
@@ -743,7 +746,7 @@ def test_reveal_secret_caps_at_eight_per_location():
     assert len(mgr.get_location("hall").secrets_revealed) == 8
     # The context names only the most recent ones and keeps the total.
     ctx = mgr.get_location_context("hall")
-    assert "8 secret(s) found: s5, s6, s7" in ctx
+    assert "8 secret(s) found here: s5; s6; s7" in ctx
 
 
 def test_reveal_secret_does_not_consult_single_adventure_tables():
@@ -768,7 +771,7 @@ def test_trigger_event_resolves_by_name_and_is_idempotent():
     assert mgr.trigger_event("hall", "???") is False
     assert mgr.trigger_event("Nowhere", "x") is False
     assert mgr.get_location("hall").events_triggered == ["lights_out"]
-    assert "events: lights out" in mgr.get_location_context("hall")
+    assert "events that happened here: lights out" in mgr.get_location_context("hall")
 
 
 def test_location_secrets_round_trip_through_save_and_load(engine):

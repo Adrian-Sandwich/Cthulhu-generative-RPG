@@ -6,7 +6,7 @@ Handles scene-to-image pipeline without modifying core engine.
 
 from pathlib import Path
 from typing import Optional
-from core.location_state import LocationState
+from core.location_state import LocationState, contamination_bucket
 from game.scene_spec import SceneSpec
 from game.art_director import spec_to_prompt, load_style_bible
 from game.image_gen import LocalImageGenerator
@@ -58,7 +58,9 @@ class ImageGenerationService:
             palette=[],
             camera="wide_eye_level",
             danger_level=min(5, location_state.danger_level + 1),  # Escalate visual danger
-            contamination=location_state.contamination,
+            # Snapped to its tier so the cache key (game/cache.py) stays
+            # stable between thresholds instead of regenerating per SAN point.
+            contamination=contamination_bucket(location_state.contamination),
             forbidden=[]
         )
 

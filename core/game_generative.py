@@ -24,6 +24,7 @@ from .keyword_data import (
     ROLL_KEYWORDS, TAKE_VERBS, ITEM_KEYWORDS,
     MAX_PLAYER_INPUT, MAX_HP_DAMAGE, MAX_SAN_DAMAGE,
     AMMO_FIND_CAP, AMMO_MAX, _TAG_LIKE, PHYSICAL_SKILLS, MENTAL_SKILLS, DISCOVERY_SKILLS,
+    CONTAMINATION_PER_SAN, CONTAMINATION_PER_DOOM_TURN,
     ATTACK_VERBS, AMBUSH_CUES, MOVEMENT_VERBS, REST_KEYWORDS,
     REST_COOLDOWN_TURNS, REST_RECOVERY, ESCALATION_CUES, SANITY_TRIGGERS,
 )
@@ -766,6 +767,9 @@ class GenerativeGameEngine:
         # bleeds sanity every turn — time itself is now a threat.
         if self.state.time_limit and self.state.turn > self.state.time_limit:
             self.apply_sanity_check(2, source="the presence draws nearer")
+            # ...and the place itself corrupts a little more every overdue turn,
+            # on top of the stain the SAN loss above already left.
+            self._stain_location(CONTAMINATION_PER_DOOM_TURN)
             self.state.narrative.append("[The presence draws nearer. There is no more time.]")
 
         # Update sanity system (reduce disorder durations, etc.)
@@ -929,6 +933,9 @@ class GenerativeGameEngine:
 
         # Apply damage through enhanced sanity system
         result = self.sanity_system.apply_sanity_damage(damage, source)
+
+        # Horror leaves a stain: the place where sanity was lost corrupts.
+        self._stain_location(damage * CONTAMINATION_PER_SAN)
 
         # Record in narrative
         self.state.investigator.sanity_breaks.append(
@@ -1344,6 +1351,25 @@ class GenerativeGameEngine:
             "label": "SETBACK",
             "summary": "The attempt backfires and the situation turns against you.",
         }
+
+    def _stain_location(self, amount: int) -> Optional[int]:
+        """
+        Raise the current location's contamination (MAGI #40).
+
+        The ENGINE owns this, fed by events measured as firing in real
+        sessions without dice: sanity loss and the doom clock. The taint comes
+        back to the DM as prose in the location context and to the player in
+        the location description and its generated image. Silent when there
+        is no location state or no game; a zero amount changes nothing.
+
+        Returns the new level, or None if nothing was recorded.
+        """
+        if not self.location_state or not self.state or amount <= 0:
+            return None
+        level = self.location_state.increase_contamination(self.state.location, amount)
+        if level is not None:
+            self._track("contamination_raised")
+        return level
 
     def _success_discovery(self, roll: Dict) -> Optional[Dict]:
         """

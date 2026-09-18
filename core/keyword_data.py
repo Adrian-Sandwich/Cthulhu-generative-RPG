@@ -114,6 +114,12 @@ ROLL_KEYWORDS: Dict[str, Tuple[str, str]] = {
 MAX_PLAYER_INPUT = 500   # characters; longer actions are truncated
 MAX_HP_DAMAGE = 30       # ceiling on a single HP loss
 MAX_SAN_DAMAGE = 30      # ceiling on a single SAN loss
+
+# Horror leaves a stain on the place (MAGI #40). Every SAN point lost taints
+# the current location; every overdue doom-clock turn adds on top. Both feeds
+# are engine-owned and fire in real sessions without a single die roll.
+CONTAMINATION_PER_SAN = 5         # contamination points per SAN point lost
+CONTAMINATION_PER_DOOM_TURN = 5   # extra per turn past the time limit
 AMMO_FIND_CAP = 6        # most rounds one discovery can grant
 AMMO_MAX = 24            # hard ceiling on carried rounds
 _TAG_LIKE = re.compile(r'\[[^\]]*\]')  # strip bracket directives from player text

@@ -65,7 +65,28 @@ Decided in MAGI #39 (2026-09-17):
   into every later prompt with no adventure-level meaning behind them. It is
   hardened and tested; it gets a caller when an adventure defines events.
 
-Still unwired: contamination.
+Contamination is wired (MAGI #40): every SAN point lost stains the current
+location (`CONTAMINATION_PER_SAN`) and every turn past the doom clock adds
+`CONTAMINATION_PER_DOOM_TURN` on top, both engine-owned in
+`core/game_generative.py` (`_stain_location`). The level reaches the DM as
+prose by tier (`describe_contamination`), the player through the location
+description, and the image pipeline snapped to its tier
+(`contamination_bucket`) so the cache does not regenerate per SAN point.
+`increase/decrease_contamination` resolve by key or display name; the direct
+dict lookup they had was a silent no-op for the engine, which tracks the
+location by name.
+
+Discarded in #40, on the record:
+
+- **Lowering `danger_level` by 1 on a found secret.** `danger_level` has no
+  mechanical consumer (only narration, DM context and its own escalation), so
+  the change would have edited prose and nothing else.
+- **Deleting contamination.** `game/game_image_integration.py` and
+  `game/art_director.py` read it; deleting would break a working subsystem.
+- **A caller for `decrease_contamination`.** Resting does not cleanse a room;
+  it waits for an adventure that defines a sealing rite.
+- **The discarded return value of `visit_location`** (its threshold prose
+  never reaches the player). Changes what the player sees; its own decision.
 
 ## Local-only content moderation
 `core/moderation.py` ships a conservative local blocklist by default. An

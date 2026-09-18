@@ -671,7 +671,7 @@ def test_non_discovery_and_failed_rolls_record_nothing(engine):
         assert out["consequence"] is None
         engine.state.last_roll = _roll("spot hidden", success=False)
         out = engine.resolve_roll_consequences()
-        assert out["consequence"]["kind"] in ("san", "setback")  # the failure path is untouched
+        assert out["consequence"]["kind"] == "san"              # the failure path is untouched
     assert loc.secrets_revealed == []
 
 
@@ -803,3 +803,16 @@ def test_location_state_loads_a_save_without_the_secret_fields():
     assert mgr.reveal_secret("Great Hall", "found_it")["success"]
     again = LocationStateManager.from_dict(mgr.to_dict())
     assert again.get_location("hall").secrets_revealed == ["found_it"]
+
+
+def test_failure_consequence_matches_spaced_skill_names(engine):
+    """'spot hidden' (as the DM and the UI spell it) must hit the mental pool,
+    not fall through to a generic setback; 'library use' and 'climb' likewise."""
+    san = engine._failure_consequence(_roll("spot hidden", success=False))
+    assert san["kind"] == "san" and san["amount"] >= 1
+    lib = engine._failure_consequence(_roll("Library Use", success=False))
+    assert lib["kind"] == "san"
+    hp = engine._failure_consequence(_roll("climb", success=False))
+    assert hp["kind"] == "hp"
+    social = engine._failure_consequence(_roll("charm", success=False))
+    assert social["kind"] == "setback"

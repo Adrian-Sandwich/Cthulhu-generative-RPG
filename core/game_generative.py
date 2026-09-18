@@ -1299,7 +1299,10 @@ class GenerativeGameEngine:
         Returns a dict describing what happened, for the DM to narrate and the
         UI to surface.
         """
-        skill = roll["skill"].lower()
+        # Normalize "Spot Hidden" / "library use" / "firearms (revolver)" to the
+        # slug form the pools use ("spot_hidden"); a bare .lower() left spaced
+        # names unmatched, so a failed Spot Hidden cost a setback instead of SAN.
+        skill = LocationStateManager.sanitize_key(roll["skill"]) or roll["skill"].lower()
         margin = roll["roll"] - roll["target"]          # > 0 on a failed roll
         fumble = roll["roll"] >= 96                      # CoC 7e fumble band
 

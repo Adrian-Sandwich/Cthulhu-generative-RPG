@@ -73,7 +73,9 @@ roll resolution. → Addressed same day with suggested-action chips
 - Chips de sugerencias ya enviados (`7465169`).
 - **2026-08-25: la condición del gate de español se cumplió** — #1 y #2
   están cerrados (ver Backlog auditado). Lo único que queda para
-  re-habilitarlo es quitar el forzado de `app.py:294`.
+  re-habilitarlo es quitar el forzado, que tras el split a blueprints vive en
+  `web/game_routes.py:37` ("Spanish paused again by request", `4c6253a`): es
+  una decisión del operador, no deuda técnica.
 
 ## Backlog auditado (2026-08-25)
 
@@ -167,18 +169,15 @@ huecos encontrados auditando el código, no ítems heredados.
    "trepo por las escaleras" — la sintetizó el motor. Si eso se sostiene, el
    protocolo de tiradas del prompt no se está cumpliendo y el motor lo está
    cargando.
-3. **Re-habilitar selector de idioma** — `app.py:294` fuerza `language = 'en'`.
-   La infraestructura i18n está intacta, así que es quitar el gate y des-ocultar
-   el selector; sin endpoints nuevos.
-4. **Blueprints en `app.py`** — `create_app` tiene complejidad ciclomática 115 y
-   cognitiva 224: **763 de 810 líneas del archivo viven dentro de esa función**,
-   con los 16 endpoints como closures anidados (el grafo de código detecta 0
-   nodos Route de Flask). Partición por dependencia de estado: `game_bp` 9,
-   `admin_bp` 2 (`/admin`, `/api/admin/stats`), `api_bp` 3 (`/api/archetypes`,
-   `/api/feedback`, `/api/health`), y `/` + `/images/<path>` se quedan. La razón
-   no es estética: hoy ningún endpoint es importable, así que toda la cobertura
-   HTTP depende de una fixture que instancia la app entera — el hueco exacto por
-   el que pasó la regresión de arriba.
+3. **Re-habilitar selector de idioma** — `web/game_routes.py:37` fuerza
+   `language = 'en'` ("Spanish paused again by request", `4c6253a`). La
+   infraestructura i18n está intacta, así que técnicamente es quitar el gate y
+   des-ocultar el selector; sin endpoints nuevos. Pero el comentario registra
+   una pausa pedida expresamente por el operador: se reactiva cuando él lo
+   diga, no como ítem técnico.
+4. ~~**Blueprints en `app.py`**~~ — **hecho** (`a366153`). `app.py` quedó en
+   75 líneas; los endpoints viven en `web/game_routes.py`, `web/admin_routes.py`
+   y `web/api_routes.py`, pinneados por el golden de `tests/test_url_map.py`.
 5. ~~**Partir `static/app.js`**~~ — **hecho**. 1273 líneas y 58 funciones en un
    archivo, ahora cinco scripts contiguos en `static/js/` (`state`, `audio`,
    `ui`, `turn`, `dice`). Movimiento puro: concatenarlos reproduce el original

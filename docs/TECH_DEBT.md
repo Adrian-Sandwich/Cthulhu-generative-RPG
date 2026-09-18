@@ -32,11 +32,29 @@ The first two scripts exercise the generative engine and may require a
 configured LLM. The selection playtest needs an interactive TTY; omit `-q` to
 see its prompts.
 
-## Unused rich `location_state` features
-`reveal_secret`, `trigger_event`, contamination mechanics exist and are tested
-but never wired into gameplay. Decision pending: wire them (the world reacts —
-secrets found via Spot Hidden, contamination rising with the doom clock) or
-delete them. Leaving dead-but-tested code is the current (acceptable) state.
+## Partially wired `location_state` features
+`reveal_secret` is wired (MAGI #37): a **successful discovery roll** (Spot
+Hidden, Library Use, Listen, Occult… — `DISCOVERY_SKILLS` in
+`core/keyword_data.py`) makes the engine record an engine-generated secret on
+the current location, which stops that location's danger escalation and puts
+the names of the last finds into the DM prompt. It is deliberately not driven
+by an LLM tag: the local models were measured emitting zero tags
+(`docs/PLAYTEST_FINDINGS.md`), so a tag-only mechanic would be invisible.
+Covered in `tests/test_engine_units.py` (idempotence, garbage keys, 8-per-
+location cap, save/load with and without the fields).
+
+Before this wiring nothing ever populated `secrets_revealed`, so
+`visit_location` pushed `danger_level` to 5/5 on every revisited location in
+every game and told the Keeper so. **Saves written before it** load fine
+(missing lists default to empty) but keep whatever danger level they had
+reached; it stops climbing only once a secret is found there.
+
+Still unwired: `trigger_event` (hardened the same way, but no caller),
+contamination, and the single-adventure tables `SECRET_UNLOCKS` /
+`DANGER_REDUCING_SECRETS`, which `reveal_secret` no longer consults — their
+keys exist in one adventure only and would silently never match in
+dark/tide/point_black. Decision pending: generalize them per adventure or
+delete them.
 
 ## Local-only content moderation
 `core/moderation.py` ships a conservative local blocklist by default. An

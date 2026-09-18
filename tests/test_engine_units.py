@@ -622,3 +622,184 @@ def test_tool_capable_models_are_the_measured_ones():
     # Returned zero tool calls and narrated it in prose instead.
     for model in ("mistral", "neural-chat", "llama3"):
         assert model not in TOOL_CAPABLE_MODELS, model
+
+
+# --- location secrets: a successful discovery roll leaves a mark -------------
+# MAGI decision #37: the ENGINE records the find (never an LLM tag, measured at
+# zero emission), the location stops escalating in danger, and the DM sees the
+# names of what was uncovered in every later prompt.
+
+def _roll(skill, success=True):
+    return {"skill": skill, "difficulty": "Normal", "success": success,
+            "roll": 5 if success else 95, "target": 50, "message": ""}
+
+
+def test_successful_discovery_roll_records_a_secret_on_the_location(engine):
+    from unittest.mock import patch
+    engine.state.last_roll = _roll("spot hidden")
+    with patch.object(engine, "_call_ollama", return_value="You notice scratches on the floor."):
+        out = engine.resolve_roll_consequences()
+
+    loc = engine.location_state.get_location(engine.state.location)
+    assert loc is not None
+    assert loc.secrets_revealed == [f"spot_hidden_turn_{engine.state.turn}"]
+    # The UI shows the bite of a roll through `consequence.label`.
+    assert out["consequence"]["kind"] == "secret"
+    assert out["consequence"]["label"] == "SECRET FOUND"
+    assert out["hp_damage"] == [] and out["sanity_checks"] == []
+    assert engine.telemetry_summary().get("secrets_revealed", 0) == 1 or \
+        engine.state.telemetry["secrets_revealed"] == 1
+
+
+def test_discovery_reaches_the_dm_prompt_by_name(engine):
+    from unittest.mock import patch
+    engine.state.last_roll = _roll("library use")
+    with patch.object(engine, "_call_ollama", return_value="A ledger, hidden."):
+        engine.resolve_roll_consequences()
+
+    ctx = engine._get_location_context_for_prompt()
+    assert "library use turn" in ctx          # the name, not just a count
+    assert "1 secret(s) found" in ctx
+
+
+def test_non_discovery_and_failed_rolls_record_nothing(engine):
+    from unittest.mock import patch
+    loc = engine.location_state.get_location(engine.state.location)
+    with patch.object(engine, "_call_ollama", return_value="Narration."):
+        engine.state.last_roll = _roll("climb")                 # success, not discovery
+        out = engine.resolve_roll_consequences()
+        assert out["consequence"] is None
+        engine.state.last_roll = _roll("spot hidden", success=False)
+        out = engine.resolve_roll_consequences()
+        assert out["consequence"]["kind"] in ("san", "setback")  # the failure path is untouched
+    assert loc.secrets_revealed == []
+
+
+def test_discovery_is_idempotent_within_a_turn(engine):
+    from unittest.mock import patch
+    with patch.object(engine, "_call_ollama", return_value="Narration."):
+        engine.state.last_roll = _roll("spot hidden")
+        first = engine.resolve_roll_consequences()
+        engine.state.last_roll = _roll("spot hidden")
+        second = engine.resolve_roll_consequences()
+    loc = engine.location_state.get_location(engine.state.location)
+    assert len(loc.secrets_revealed) == 1
+    assert first["consequence"] is not None and second["consequence"] is None
+
+
+def test_secret_stops_the_danger_escalation():
+    """The live bug: nothing ever populated secrets_revealed, so every revisit
+    pushed danger to 5/5 in every game and the Keeper was told so."""
+    from core.location_state import LocationStateManager
+    haunted = LocationStateManager()
+    haunted.register_location("hall", "Great Hall", "")
+    for turn in range(1, 8):
+        haunted.visit_location("Great Hall", turn)
+    assert haunted.get_location("hall").danger_level == 5   # untouched location: escalates
+
+    known = LocationStateManager()
+    known.register_location("hall", "Great Hall", "")
+    known.visit_location("Great Hall", 1)
+    known.visit_location("Great Hall", 2)
+    assert known.get_location("hall").danger_level == 2
+    assert known.reveal_secret("Great Hall", "spot_hidden_turn_2")["success"]
+    for turn in range(3, 10):
+        known.visit_location("Great Hall", turn)
+    assert known.get_location("hall").danger_level == 2      # frozen once something was found
+
+
+def test_reveal_secret_resolves_by_display_name_and_by_key():
+    from core.location_state import LocationStateManager
+    mgr = LocationStateManager()
+    mgr.register_location("lighthouse_exterior", "Point Black Lighthouse - Exterior", "")
+    assert mgr.reveal_secret("Point Black Lighthouse - Exterior", "a")["success"]
+    assert mgr.reveal_secret("lighthouse_exterior", "b")["success"]
+    assert mgr.get_location("lighthouse_exterior").secrets_revealed == ["a", "b"]
+    assert mgr.reveal_secret("Nowhere", "c") == {"success": False, "reason": "unknown_location"}
+
+
+def test_reveal_secret_rejects_garbage_and_duplicates_without_mutating():
+    from core.location_state import LocationStateManager
+    mgr = LocationStateManager()
+    mgr.register_location("hall", "Great Hall", "")
+    for bad in ("", "   ", "!!!", "x" * 41, None, 42):
+        res = mgr.reveal_secret("hall", bad)
+        assert res["success"] is False and res["reason"] == "invalid_key"
+    assert mgr.reveal_secret("hall", "Keeper's Diary")["success"]      # slugified
+    assert mgr.get_location("hall").secrets_revealed == ["keeper_s_diary"]
+    dup = mgr.reveal_secret("hall", "keeper_s_diary")
+    assert dup["success"] is False and dup["reason"] == "already_revealed"
+    assert mgr.get_location("hall").secrets_revealed == ["keeper_s_diary"]
+
+
+def test_reveal_secret_caps_at_eight_per_location():
+    from core.location_state import LocationStateManager
+    mgr = LocationStateManager()
+    mgr.register_location("hall", "Great Hall", "")
+    for i in range(8):
+        assert mgr.reveal_secret("hall", f"s{i}")["success"]
+    ninth = mgr.reveal_secret("hall", "s8")
+    assert ninth["success"] is False and ninth["reason"] == "cap_reached"
+    assert len(mgr.get_location("hall").secrets_revealed) == 8
+    # The context names only the most recent ones and keeps the total.
+    ctx = mgr.get_location_context("hall")
+    assert "8 secret(s) found: s5, s6, s7" in ctx
+
+
+def test_reveal_secret_does_not_consult_single_adventure_tables():
+    """SECRET_UNLOCKS / DANGER_REDUCING_SECRETS stay dead data (out of scope)."""
+    from core.location_state import LocationStateManager
+    mgr = LocationStateManager()
+    mgr.register_location("hall", "Great Hall", "")
+    mgr.get_location("hall").danger_level = 4
+    res = mgr.reveal_secret("hall", "hidden_passage")
+    assert res["success"] and "unlocked_location" not in res
+    assert "underground_chamber" not in mgr.unlocked_locations
+    mgr.reveal_secret("hall", "ritual_seal")
+    assert mgr.get_location("hall").danger_level == 4
+
+
+def test_trigger_event_resolves_by_name_and_is_idempotent():
+    from core.location_state import LocationStateManager
+    mgr = LocationStateManager()
+    mgr.register_location("hall", "Great Hall", "")
+    assert mgr.trigger_event("Great Hall", "Lights Out") is True
+    assert mgr.trigger_event("hall", "lights_out") is False
+    assert mgr.trigger_event("hall", "???") is False
+    assert mgr.trigger_event("Nowhere", "x") is False
+    assert mgr.get_location("hall").events_triggered == ["lights_out"]
+    assert "events: lights out" in mgr.get_location_context("hall")
+
+
+def test_location_secrets_round_trip_through_save_and_load(engine):
+    from unittest.mock import patch
+    engine.state.last_roll = _roll("spot hidden")
+    with patch.object(engine, "_call_ollama", return_value="Narration."):
+        engine.resolve_roll_consequences()
+    engine.save_game()
+
+    loaded = GenerativeGameEngine.load_game(engine.session_id)
+    loc = loaded.location_state.get_location(loaded.state.location)
+    assert loc.secrets_revealed == [f"spot_hidden_turn_{engine.state.turn}"]
+    # And it keeps its danger frozen after the load too.
+    before = loc.danger_level
+    loaded.location_state.visit_location(loaded.state.location, 99)
+    assert loc.danger_level == before
+
+
+def test_location_state_loads_a_save_without_the_secret_fields():
+    """Saves written before this wiring have no secrets/events lists."""
+    from core.location_state import LocationStateManager
+    old_save = {
+        "locations": {
+            "hall": {"key": "hall", "name": "Great Hall", "base_description": "",
+                     "visited_count": 3, "danger_level": 3},
+        },
+        "unlocked": ["hall"],
+    }
+    mgr = LocationStateManager.from_dict(old_save)
+    loc = mgr.get_location("Great Hall")
+    assert loc.secrets_revealed == [] and loc.events_triggered == []
+    assert mgr.reveal_secret("Great Hall", "found_it")["success"]
+    again = LocationStateManager.from_dict(mgr.to_dict())
+    assert again.get_location("hall").secrets_revealed == ["found_it"]

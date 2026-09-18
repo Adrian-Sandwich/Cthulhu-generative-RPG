@@ -130,6 +130,16 @@ MENTAL_SKILLS = {
     "psychology", "science", "navigate", "listen", "archaeology", "anthropology",
 }
 
+# Successful-roll discovery. A success on one of these skills makes the ENGINE
+# record a secret on the current location (core/location_state.py), so the
+# world remembers what the investigator uncovered. Keyed by the engine, never
+# by an LLM tag: the local models were measured emitting zero tags
+# (docs/PLAYTEST_FINDINGS.md), so a tag-only mechanic would be invisible.
+DISCOVERY_SKILLS = {
+    "spot_hidden", "investigate", "search", "library", "library_use",
+    "listen", "occult", "archaeology", "anthropology", "science",
+}
+
 # Attack intent (English + Spanish) — used to synthesize combat when the player
 # clearly attacks a present threat but the DM didn't formally start a fight.
 ATTACK_VERBS = {

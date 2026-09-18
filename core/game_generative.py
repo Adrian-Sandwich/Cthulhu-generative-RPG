@@ -19,10 +19,11 @@ from .coc_rules import CoC7eRulesEngine
 from .prompts import PromptBuilder
 from .combat import CombatSystem
 from .state import InvestigatorState, GameState
+from .location_state import LocationStateManager
 from .keyword_data import (
     ROLL_KEYWORDS, TAKE_VERBS, ITEM_KEYWORDS,
     MAX_PLAYER_INPUT, MAX_HP_DAMAGE, MAX_SAN_DAMAGE,
-    AMMO_FIND_CAP, AMMO_MAX, _TAG_LIKE, PHYSICAL_SKILLS, MENTAL_SKILLS,
+    AMMO_FIND_CAP, AMMO_MAX, _TAG_LIKE, PHYSICAL_SKILLS, MENTAL_SKILLS, DISCOVERY_SKILLS,
     ATTACK_VERBS, AMBUSH_CUES, MOVEMENT_VERBS, REST_KEYWORDS,
     REST_COOLDOWN_TURNS, REST_RECOVERY, ESCALATION_CUES, SANITY_TRIGGERS,
 )
@@ -1341,6 +1342,43 @@ class GenerativeGameEngine:
             "summary": "The attempt backfires and the situation turns against you.",
         }
 
+    def _success_discovery(self, roll: Dict) -> Optional[Dict]:
+        """
+        Make a successful discovery roll leave a mark on the world.
+
+        The ENGINE owns this (not the LLM): on a success with a skill in
+        DISCOVERY_SKILLS it records an engine-generated secret on the current
+        location, so the place stops escalating in danger and the DM sees what
+        was uncovered in every later prompt. Idempotent per skill and turn.
+
+        Returns a consequence-shaped dict for the UI/DM, or None when the roll
+        does not reveal anything (non-discovery skill, no location state, or
+        the location already remembers this find).
+        """
+        if not self.location_state or not self.state:
+            return None
+        skill = LocationStateManager.sanitize_key(roll.get("skill", ""))
+        if skill is None:
+            return None
+        parts = set(skill.split("_")) | {skill}
+        if not (parts & DISCOVERY_SKILLS):
+            return None
+
+        key = f"{skill}_turn_{self.state.turn}"
+        res = self.location_state.reveal_secret(self.state.location, key)
+        if not res.get("success"):
+            return None
+
+        self._track("secrets_revealed")
+        return {
+            "kind": "secret", "amount": 0, "fumble": False,
+            "label": "SECRET FOUND",
+            "secret": res["secret"],
+            "location": res.get("location_name", self.state.location),
+            "summary": (f"The investigator uncovers a hidden detail of "
+                        f"{res.get('location_name', self.state.location)}."),
+        }
+
     def resolve_roll_consequences(self, on_chunk=None) -> Dict:
         """
         After a roll is made, generate DM narrative for the outcome.
@@ -1360,9 +1398,16 @@ class GenerativeGameEngine:
 
         # Build a simple, direct prompt
         if roll['success']:
+            # A discovery success is recorded on the location BEFORE the DM
+            # narrates it, so the find exists even if the model says nothing.
+            consequence = self._success_discovery(roll)
+            discovery_note = ""
+            if consequence:
+                discovery_note = (f"\nMechanical outcome (ALREADY APPLIED): {consequence['summary']} "
+                                  f"Describe concretely WHAT they found here; it is now part of this place.")
             consequence_prompt = f"""You are the Dungeon Master.
 
-The player SUCCEEDED at: {roll['skill']} (rolled {roll['roll']} vs {roll['target']})
+The player SUCCEEDED at: {roll['skill']} (rolled {roll['roll']} vs {roll['target']}){discovery_note}
 
 Describe in 2-3 sentences what the player accomplished. What does success look like?
 Be vivid and advance the story.

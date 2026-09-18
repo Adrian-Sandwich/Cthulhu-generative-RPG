@@ -95,19 +95,43 @@ class LocationState:
 class LocationStateManager:
     """Manages dynamic states of all locations in the game"""
 
-    # Secrets that unlock new locations when discovered
+    # Secrets that unlock new locations when discovered.
+    # NOT CONSULTED at runtime: these are keys of a single adventure and would
+    # silently never match in dark/tide/point_black. Kept as documented dead
+    # data until they are generalized per adventure or deleted (TECH_DEBT.md).
     SECRET_UNLOCKS = {
         "hidden_passage": "underground_chamber",
         "ritual_chamber_map": "ritual_chamber",
         "keeper_diary": "keeper_quarters_hidden",
     }
 
-    # Secrets that reduce danger when discovered
+    # Secrets that reduce danger when discovered. Same status as above.
     DANGER_REDUCING_SECRETS = {
         "ritual_seal": 2,
         "entity_ward": 3,
         "safe_haven": 2,
     }
+
+    # Bounds on what a location remembers. Keys are engine-generated slugs;
+    # anything that does not fit the slug is discarded without mutating state.
+    MAX_SECRETS_PER_LOCATION = 8
+    MAX_EVENTS_PER_LOCATION = 8
+    KEY_PATTERN = re.compile(r"^[a-z0-9_]{1,40}$")
+    CONTEXT_NAMES_SHOWN = 3  # most recent secrets/events named in the DM context
+
+    @classmethod
+    def sanitize_key(cls, raw) -> Optional[str]:
+        """Normalize a secret/event key to a slug, or None if it can't be one.
+
+        Lowercases, folds runs of anything outside [a-z0-9] into '_', trims.
+        The result must match KEY_PATTERN (1-40 chars) or the key is rejected.
+        """
+        if not isinstance(raw, str):
+            return None
+        slug = re.sub(r"[^a-z0-9]+", "_", raw.strip().lower()).strip("_")
+        if not cls.KEY_PATTERN.match(slug):
+            return None
+        return slug
 
     def __init__(self, persist_dir: Optional[str] = None):
         """
@@ -178,7 +202,9 @@ class LocationStateManager:
         loc.visited_count += 1
         loc.last_visited_turn = current_turn
 
-        # Escalate danger if no secrets found
+        # Escalate danger on revisits while the place keeps its secrets. Once
+        # the investigator has uncovered something here (reveal_secret, fed by
+        # successful discovery rolls in the engine) the escalation stops.
         if not loc.secrets_revealed and loc.visited_count > 1:
             loc.danger_level = min(5, loc.danger_level + 1)
 
@@ -186,48 +212,37 @@ class LocationStateManager:
 
     def reveal_secret(self, location_key: str, secret_key: str) -> Dict:
         """
-        Player discovers a secret - update location state and check for unlocks.
+        Record a secret the investigator uncovered at a location.
 
-        Args:
-            location_key: Location where secret was found
-            secret_key: Secret identifier
+        Resolves the location by key OR display name (the engine tracks the
+        current location by name), sanitizes the key, and is idempotent: a
+        repeated or invalid key never mutates state. At most
+        MAX_SECRETS_PER_LOCATION secrets are kept per location.
 
-        Returns:
-            Dict with unlock info and narrative
+        Returns a dict with "success" and, on refusal, a "reason".
         """
-        if location_key not in self.locations:
-            return {"success": False}
+        loc = self.get_location(location_key)
+        if loc is None:
+            return {"success": False, "reason": "unknown_location"}
 
-        loc = self.locations[location_key]
+        key = self.sanitize_key(secret_key)
+        if key is None:
+            return {"success": False, "reason": "invalid_key"}
 
-        if secret_key in loc.secrets_revealed:
-            return {"success": False, "message": "Already discovered"}
+        if key in loc.secrets_revealed:
+            return {"success": False, "reason": "already_revealed", "secret": key}
 
-        result = {
+        if len(loc.secrets_revealed) >= self.MAX_SECRETS_PER_LOCATION:
+            return {"success": False, "reason": "cap_reached", "secret": key}
+
+        loc.secrets_revealed.append(key)
+        return {
             "success": True,
-            "secret": secret_key,
-            "location": location_key,
-            "unlocked_location": None,
-            "danger_reduced": 0,
-            "narrative": f"You discover: {secret_key}"
+            "secret": key,
+            "location": loc.key,
+            "location_name": loc.name,
+            "narrative": f"You discover: {key.replace('_', ' ')}",
         }
-
-        loc.secrets_revealed.append(secret_key)
-
-        # Reduce danger when secrets found
-        if secret_key in self.DANGER_REDUCING_SECRETS:
-            reduction = self.DANGER_REDUCING_SECRETS[secret_key]
-            loc.danger_level = max(1, loc.danger_level - reduction)
-            result["danger_reduced"] = reduction
-
-        # Unlock new location
-        if secret_key in self.SECRET_UNLOCKS:
-            new_location = self.SECRET_UNLOCKS[secret_key]
-            self.unlocked_locations.add(new_location)
-            result["unlocked_location"] = new_location
-            result["narrative"] += f"\nA new location has become accessible: {new_location}"
-
-        return result
 
     def trigger_event(
         self, location_key: str, event_key: str
@@ -235,22 +250,27 @@ class LocationStateManager:
         """
         Trigger an event at a location (only once per playthrough).
 
-        Args:
-            location_key: Location where event occurs
-            event_key: Event identifier
+        Resolves by key or display name; the key is sanitized; invalid,
+        repeated, or over-cap events return False without mutating state.
 
         Returns:
-            True if event is new, False if already triggered
+            True if event is new, False otherwise
         """
-        if location_key not in self.locations:
+        loc = self.get_location(location_key)
+        if loc is None:
             return False
 
-        loc = self.locations[location_key]
+        key = self.sanitize_key(event_key)
+        if key is None:
+            return False
 
-        if event_key in loc.events_triggered:
+        if key in loc.events_triggered:
             return False  # Already triggered
 
-        loc.events_triggered.append(event_key)
+        if len(loc.events_triggered) >= self.MAX_EVENTS_PER_LOCATION:
+            return False
+
+        loc.events_triggered.append(key)
         return True  # Event is new
 
     def increase_contamination(
@@ -301,7 +321,14 @@ class LocationStateManager:
             parts.append(f"visited {loc.visited_count} time(s)")
 
         if loc.secrets_revealed:
-            parts.append(f"{len(loc.secrets_revealed)} secret(s) found")
+            recent = loc.secrets_revealed[-self.CONTEXT_NAMES_SHOWN:]
+            names = ", ".join(k.replace("_", " ") for k in recent)
+            parts.append(f"{len(loc.secrets_revealed)} secret(s) found: {names}")
+
+        if loc.events_triggered:
+            recent = loc.events_triggered[-self.CONTEXT_NAMES_SHOWN:]
+            names = ", ".join(k.replace("_", " ") for k in recent)
+            parts.append(f"events: {names}")
 
         if loc.danger_level > 1:
             parts.append(f"danger level {loc.danger_level}/5")

@@ -89,8 +89,9 @@ Discarded in #40, on the record:
   never reaches the player). Changes what the player sees; its own decision.
 
 ## One resolver for `DATA_DIR`
-Saves, playtest archives and feedback all resolve through
-`core.generative_save.data_root(data_dir)`: the web app passes the directory
+Saves and playtest archives resolve through
+`core.generative_save.data_root(data_dir)` (feedback is written by the web
+layer straight under its own `data_dir`): the web app passes the directory
 it resolved from its Flask config into every engine it builds or resumes
 (`GenerativeGameEngine(data_dir=...)`, `load_game(..., data_dir=...)`) and
 into every `GenerativeSave` call; the CLI game and standalone tools pass

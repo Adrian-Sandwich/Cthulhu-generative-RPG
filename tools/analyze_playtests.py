@@ -59,7 +59,11 @@ def main():
                     if (d.get("game_state", {}).get("investigator", {}).get("name") or "")
                     .strip().lower() in EXCLUDE]
         saves = [(p, d) for p, d in saves if d not in excluded]
-        print(f"\nEXCLUDED (EXCLUDE_NAMES): {len(excluded)}")
+        # Archived runs carry the investigator at the top level.
+        excluded_pt = [d for _, d in playtests
+                       if ((d.get("investigator") or {}).get("name") or "").strip().lower() in EXCLUDE]
+        playtests = [(p, d) for p, d in playtests if d not in excluded_pt]
+        print(f"\nEXCLUDED (EXCLUDE_NAMES): {len(excluded)} saves, {len(excluded_pt)} archived runs")
 
     # --- sessions (live saves) ---
     print(f"\nSESSIONS: {len(saves)}")

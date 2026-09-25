@@ -76,6 +76,8 @@ a {
 }
 
 .how-to-title {
+    font-size: 1rem;
+    font-weight: normal;
     color: var(--accent);
     margin-bottom: 10px !important;
 }
@@ -172,6 +174,18 @@ input:focus, select:focus {
 
 .menu-keys a {
     margin-left: 10px;
+}
+
+#startup-screen h1 {
+    color: var(--accent);
+    font-size: 1.25rem;
+    line-height: 1.4;
+    margin-bottom: 14px;
+}
+
+.project-links {
+    font-size: 0.85rem;
+    margin-top: 20px;
 }
 
 #available-actions {

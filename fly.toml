@@ -17,6 +17,7 @@ primary_region = 'dfw'
   LLM_MODEL = 'openai/gpt-oss-120b'
   LLM_PROVIDER = 'openai'
   PORT = '8080'
+  PUBLIC_SITE_URL = 'https://lighthouse-cthulhu.fly.dev'
 
 [[mounts]]
   source = 'data'

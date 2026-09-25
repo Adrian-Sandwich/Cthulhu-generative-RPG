@@ -42,6 +42,36 @@ CANNED_DM = (
 )
 
 
+def test_public_discovery_metadata_excludes_game_sessions(tmp_path):
+    import json
+    import re
+    from xml.etree import ElementTree
+    from app import create_app
+    app = create_app({'DATA_DIR': str(tmp_path), 'PUBLIC_SITE_URL': 'https://game.example/'})
+    client = app.test_client()
+    home = client.get('/?session=private', headers={'Host': 'untrusted.example'})
+    html = home.get_data(as_text=True)
+    assert '<h1>The Lighthouse' in html
+    assert '<link rel="canonical" href="https://game.example/">' in html
+    assert 'untrusted.example' not in html and 'session=private' not in html
+    data = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', html, re.S)[1])
+    assert data['@type'] == 'VideoGame' and data['url'] == 'https://game.example/'
+    assert 'Set-Cookie' not in home.headers
+    robots = client.get('/robots.txt').get_data(as_text=True)
+    assert 'Disallow: /api/' in robots and 'https://game.example/sitemap.xml' in robots
+    sitemap = ElementTree.fromstring(client.get('/sitemap.xml').data)
+    assert [node.text for node in sitemap.iter('{http://www.sitemaps.org/schemas/sitemap/0.9}loc')] == ['https://game.example/']
+    assert client.get('/static/social-preview.png').status_code == 200
+
+
+def test_unpublished_install_has_no_public_canonical(tmp_path):
+    from app import create_app
+    client = create_app({'DATA_DIR': str(tmp_path), 'PUBLIC_SITE_URL': ''}).test_client()
+    html = client.get('/').get_data(as_text=True)
+    assert 'noindex, nofollow' in html and 'rel="canonical"' not in html
+    assert 'Disallow: /\n' in client.get('/robots.txt').get_data(as_text=True)
+
+
 @pytest.fixture
 def client(tmp_path):
     """A fresh app client with storage redirected to a temp dir and the LLM

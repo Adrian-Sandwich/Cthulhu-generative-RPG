@@ -31,6 +31,7 @@ def create_app(config=None):
     """
     config = config or {}
     app = Flask(__name__)
+    app.config['PUBLIC_SITE_URL'] = config.get('PUBLIC_SITE_URL', os.environ.get('PUBLIC_SITE_URL', '')).rstrip('/')
     context = GameContext(config)
     app.extensions[EXTENSION_KEY] = context
 

@@ -1,119 +1,133 @@
 [
   {
     "rule": "/",
-    "endpoint": "index",
+    "endpoint": "pages.index",
     "methods": [
       "GET"
     ]
   },
   {
     "rule": "/admin",
-    "endpoint": "admin_dashboard",
+    "endpoint": "admin.admin_dashboard",
     "methods": [
       "GET"
     ]
   },
   {
     "rule": "/api/admin/stats",
-    "endpoint": "admin_stats",
+    "endpoint": "admin.admin_stats",
     "methods": [
       "GET"
     ]
   },
   {
     "rule": "/api/archetypes",
-    "endpoint": "get_archetypes",
+    "endpoint": "api.get_archetypes",
     "methods": [
       "GET"
     ]
   },
   {
     "rule": "/api/feedback",
-    "endpoint": "leave_feedback",
+    "endpoint": "api.leave_feedback",
     "methods": [
       "POST"
     ]
   },
   {
     "rule": "/api/game/action",
-    "endpoint": "process_action",
+    "endpoint": "game.process_action",
     "methods": [
       "POST"
     ]
   },
   {
     "rule": "/api/game/action/stream",
-    "endpoint": "process_action_stream",
+    "endpoint": "game.process_action_stream",
     "methods": [
       "POST"
     ]
   },
   {
     "rule": "/api/game/actions/<action_id>",
-    "endpoint": "get_action_status",
+    "endpoint": "game.get_action_status",
     "methods": [
       "GET"
     ]
   },
   {
     "rule": "/api/game/flee",
-    "endpoint": "flee_combat",
+    "endpoint": "game.flee_combat",
     "methods": [
       "POST"
     ]
   },
   {
     "rule": "/api/game/load",
-    "endpoint": "load_saved_game",
+    "endpoint": "game.load_saved_game",
     "methods": [
       "POST"
     ]
   },
   {
     "rule": "/api/game/reset",
-    "endpoint": "reset_game",
+    "endpoint": "game.reset_game",
     "methods": [
       "POST"
     ]
   },
   {
     "rule": "/api/game/roll",
-    "endpoint": "execute_roll",
+    "endpoint": "game.execute_roll",
     "methods": [
       "POST"
     ]
   },
   {
     "rule": "/api/game/saves",
-    "endpoint": "list_saves",
+    "endpoint": "game.list_saves",
     "methods": [
       "GET"
     ]
   },
   {
     "rule": "/api/game/start",
-    "endpoint": "start_game",
+    "endpoint": "game.start_game",
     "methods": [
       "POST"
     ]
   },
   {
     "rule": "/api/game/state",
-    "endpoint": "get_game_state",
+    "endpoint": "game.get_game_state",
     "methods": [
       "GET"
     ]
   },
   {
     "rule": "/api/health",
-    "endpoint": "health",
+    "endpoint": "api.health",
     "methods": [
       "GET"
     ]
   },
   {
     "rule": "/images/<path:filename>",
-    "endpoint": "serve_generated_image",
+    "endpoint": "pages.serve_generated_image",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "rule": "/robots.txt",
+    "endpoint": "pages.robots",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "rule": "/sitemap.xml",
+    "endpoint": "pages.sitemap",
     "methods": [
       "GET"
     ]

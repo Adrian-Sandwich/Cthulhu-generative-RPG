@@ -89,14 +89,15 @@ def test_injection_rejected_without_model_call_or_turn(client, route):
 def test_unsafe_model_text_never_reaches_sse_or_save(client, unsafe):
     client.post('/api/game/start', json={'name': 'Tester', 'archetype': 'scholar'})
     before = client.get('/api/game/state').json
-    command = {'action': 'I look around', 'action_id': uuid4().hex, 'game_id': before['game_id']}
+    # Receipt IDs may contain any hex digits, including the rejected stat's digits.
+    command = {'action': 'I look around', 'action_id': '999' + uuid4().hex[3:], 'game_id': before['game_id']}
     def poisoned(*args, **kwargs):
         assert kwargs.get('on_chunk') is None, 'raw streaming bypassed guard'
         return unsafe
     with patch('core.llm_client.LLMClient.chat', poisoned):
         response = client.post('/api/game/action/stream', json=command).get_data(as_text=True)
     assert 'event: error' in response
-    assert 'secret analysis' not in response and '999' not in response
+    assert 'secret analysis' not in response and '999 HP' not in response
     assert unsafe not in response
     after = client.get('/api/game/state').json
     assert after == before

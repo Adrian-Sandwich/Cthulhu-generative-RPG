@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "Public title, description and canonical; indexable landing page",
+    "Valid VideoGame JSON-LD and public sharing image",
+    "Robots and sitemap expose only the public landing page",
+    "Live desktop landing page renders without horizontal overflow",
+    "Live mobile landing page renders without horizontal overflow"
+  ]
+}

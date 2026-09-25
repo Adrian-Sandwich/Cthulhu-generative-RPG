@@ -1,5 +1,8 @@
 # Free narration verification — 2026-09-25
 
+Subsequently deployed and checked with the hosted model:
+[production verification](narration-seo-release-20260925/README.md).
+
 ## Changes
 
 - Supply current location, its description, inventory, ammunition and last roll as server facts.

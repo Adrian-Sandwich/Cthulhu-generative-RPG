@@ -1,5 +1,8 @@
 # Search and sharing
 
+Published to the hosted game on 2026-09-25. See the
+[live deployment verification](reports/narration-seo-release-20260925/README.md).
+
 The repository About leads with playing the game, links to the hosted adventure,
 and uses relevant GitHub topics for solo RPGs, interactive fiction, cosmic horror,
 and AI Dungeon Masters. The README provides a direct play link, an actual screenshot,

@@ -1,0 +1,33 @@
+{
+  "checks": [
+    "Public health responds",
+    "New game uses 40-turn clock",
+    "Finite pickup and exact receipt replay",
+    "Inventory query costs no turn",
+    "Forged mechanical tag rejected",
+    "Real hosted narrator answers an action",
+    "Reload preserves inventory, turn and pending die",
+    "Production browser restores session and shows inventory on desktop/mobile",
+    "No additional LLM fallback reported"
+  ],
+  "health_before": {
+    "llm": {
+      "degraded_turns": 0,
+      "model": "openai/gpt-oss-120b"
+    },
+    "sessions": 0,
+    "status": "ok",
+    "storage": "json"
+  },
+  "live_narrative": "The wind howls off the black rocks, a mournful wail that seems to carry faint, low‑frequency thrum from the sea below. A distant, irregular clacking reverberates through the stone walls, as if something metallic is being struck deep beneath the lighthouse.",
+  "health_after": {
+    "llm": {
+      "degraded_turns": 0,
+      "model": "openai/gpt-oss-120b"
+    },
+    "sessions": 3,
+    "status": "ok",
+    "storage": "json"
+  },
+  "own_test_session_reset": true
+}

@@ -1,0 +1,52 @@
+{
+  "timestamp": "2026-09-25T01:51:07.853054+00:00",
+  "profile": "capacity",
+  "model": "simulated",
+  "model_seconds": 0.5,
+  "workers": 2,
+  "threads": 16,
+  "turns_per_client": 2,
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.14.7",
+  "logical_cpus": 8,
+  "machine_ram_gb": 15.73,
+  "stages": [
+    {
+      "attempted": 2,
+      "completed": 2,
+      "outcomes": {
+        "ok": 2
+      },
+      "elapsed_seconds": 3.3899,
+      "completed_per_second": 0.59,
+      "completion_seconds": {
+        "p50": 1.5931,
+        "p95": 1.595,
+        "p99": 1.595
+      },
+      "first_text_seconds": {
+        "p50": 0.1956,
+        "p95": 0.2033,
+        "p99": 0.2033
+      },
+      "users": 1,
+      "admitted": 1,
+      "requested_turns": 2,
+      "setup_outcomes": {
+        "ok": 1
+      },
+      "verification_errors": {}
+    }
+  ],
+  "resources": {
+    "peak_worker_rss_mb": 126.86,
+    "worker_cpu_seconds": 0.156
+  },
+  "audit": {
+    "games": 1,
+    "receipt_statuses": {
+      "completed": 2
+    },
+    "simulated_llm_calls": 3
+  }
+}

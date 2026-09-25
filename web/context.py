@@ -12,11 +12,13 @@ routes reach it through :func:`ctx`, which resolves against ``current_app``.
 """
 
 import logging
+from ipaddress import ip_address, ip_network
 import os
 import secrets
 import threading
 import time
 from collections import deque
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from functools import wraps
 from pathlib import Path
@@ -27,6 +29,8 @@ from flask import current_app, jsonify, request, session
 
 from core.game_generative import GenerativeGameEngine
 from core.generative_save import GenerativeSave
+from core.postgres_store import PostgresStore, StorageUnavailable
+from core.timing import measure
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +44,9 @@ class GameSession:
     engine: Optional[GenerativeGameEngine] = None
     investigator: Optional[object] = None
     pending_roll: Optional[dict] = None
+    game_id: str = field(default_factory=lambda: uuid4().hex)
+    actions: dict = field(default_factory=dict)
+    store: object = None
     lock: threading.Lock = field(default_factory=threading.Lock)
     last_access: float = field(default_factory=time.time)
 
@@ -56,6 +63,17 @@ class GameContext:
     def __init__(self, config: dict):
         self.config = config or {}
         cfg = self.config
+        dsn = cfg.get('DATABASE_URL', os.environ.get('CTHULHU_DATABASE_URL', ''))
+        self.store = PostgresStore(
+            dsn, cfg.get('DATABASE_SCHEMA', 'cthulhu'),
+            pool_size=int(cfg.get('PG_POOL_SIZE', os.environ.get('PG_POOL_SIZE', '4'))),
+            pool_timeout=float(cfg.get('PG_POOL_TIMEOUT', os.environ.get('PG_POOL_TIMEOUT', '2'))),
+        ) if dsn else None
+        if self.store is None and int(os.environ.get('WEB_CONCURRENCY', '1')) > 1:
+            raise RuntimeError('Multiple workers require CTHULHU_DATABASE_URL')
+        self.trusted_proxies = [ip_network(value.strip()) for value in
+                                cfg.get('TRUSTED_PROXIES', os.environ.get('TRUSTED_PROXIES', '')).split(',')
+                                if value.strip()]
 
         self.data_dir = Path(cfg.get('DATA_DIR',
                                      os.environ.get('DATA_DIR',
@@ -101,6 +119,8 @@ class GameContext:
         key = self.config.get('SECRET_KEY') or os.environ.get('SECRET_KEY')
         if key:
             return key
+        if self.store is not None:
+            raise RuntimeError('PostgreSQL deployments require the same SECRET_KEY on every server')
         # In production set SECRET_KEY; the file fallback lives under DATA_DIR
         # so it survives restarts when a volume is mounted there.
         secret_file = self.data_dir / '.flask_secret'
@@ -130,11 +150,14 @@ class GameContext:
         stale = []
         with self._registry_lock:
             for sid, gs in list(self._sessions.items()):
-                if now - gs.last_access > self.session_ttl:
+                if now - gs.last_access > self.session_ttl and gs.lock.acquire(blocking=False):
                     del self._sessions[sid]
                     stale.append(gs)
         for gs in stale:
-            self.cleanup_session(gs)
+            try:
+                self.cleanup_session(gs)
+            finally:
+                gs.lock.release()
 
     def cleanup_session(self, gs: GameSession) -> None:
         """Release a session's engine resources (Neo4j driver, memory)."""
@@ -166,38 +189,107 @@ class GameContext:
         """
         if gs.engine is not None:
             return True
-        if GenerativeSave.exists(gs.sid, self.data_dir):
+        if self.has_save(gs):
             try:
-                gs.engine = GenerativeGameEngine.load_game(gs.sid, data_dir=self.data_dir)
+                gs.engine = GenerativeGameEngine.load_game(gs.sid, data_dir=self.data_dir,
+                                                          store=gs.store, use_memory=False)
                 gs.investigator = gs.engine.state.investigator
-                app_state = GenerativeSave.load_app_state(gs.sid, self.data_dir) or {}
+                app_state = GenerativeSave.load_app_state(gs.sid, self.data_dir, store=gs.store) or {}
                 gs.pending_roll = app_state.get("pending_roll")
+                needs_identity = not app_state.get('game_id')
+                gs.game_id = app_state.get('game_id') or gs.game_id
+                gs.actions = app_state.get('actions', {})
+                interrupted = False
+                for action_id, record in gs.actions.items():
+                    if record['status'] in ('pending', 'running'):
+                        record.update(status='failed', http_status=409, result={
+                            'error': 'Turn interrupted before it was saved. No turn changes were committed.',
+                            'action_id': action_id, 'game_id': gs.game_id,
+                        })
+                        interrupted = True
+                if interrupted or needs_identity:
+                    self.autosave(gs, strict=True)
                 return True
             except Exception:
+                self.cleanup_session(gs)
+                gs.engine = None
+                gs.investigator = None
                 logger.warning("resume failed for sid=%s", gs.sid, exc_info=True)
                 return False
         return False
 
-    def autosave(self, gs: GameSession) -> None:
+    def autosave(self, gs: GameSession, strict=False) -> None:
         """Persist the session's game + app-layer pending_roll, keyed by cookie sid."""
         if not gs.engine:
             return
         try:
-            gs.engine.save_game(app_state={"pending_roll": gs.pending_roll})
+            gs.engine.save_game(app_state={"pending_roll": gs.pending_roll,
+                                           "game_id": gs.game_id, "actions": gs.actions})
         except Exception:
             logger.warning("autosave failed for sid=%s", gs.sid, exc_info=True)
+            if strict or self.store is not None:
+                raise
+
+    def has_save(self, gs):
+        return GenerativeSave.exists(gs.sid, self.data_dir, store=gs.store)
+
+    @contextmanager
+    def session_scope(self, gs, blocking=True):
+        """Serialize locally and remotely, then discard stale process caches."""
+        with measure('session.local_lock'):
+            acquired = gs.lock.acquire(blocking=blocking)
+        if not acquired:
+            yield False
+            return
+        try:
+            if self.store is None:
+                yield True
+                return
+            with self.store.locked(gs.sid, blocking=blocking) as owner:
+                if owner is None:
+                    yield False
+                    return
+                self.cleanup_session(gs)
+                gs.engine = None
+                gs.investigator = None
+                gs.pending_roll = None
+                gs.actions = {}
+                gs.store = owner
+                try:
+                    if self.has_save(gs) and not self.ensure_engine(gs):
+                        raise StorageUnavailable('Could not restore the saved game')
+                    yield True
+                finally:
+                    self.cleanup_session(gs)
+                    gs.engine = None
+                    gs.investigator = None
+                    gs.actions = {}
+                    gs.store = None
+        finally:
+            gs.lock.release()
 
     # -- rate limiting ------------------------------------------------------
 
     def client_ip(self) -> str:
-        return (request.headers.get("CF-Connecting-IP")
-                or (request.headers.get("X-Forwarded-For") or "").split(",")[0].strip()
-                or request.remote_addr or "?")
+        peer = request.remote_addr or "?"
+        try:
+            address = ip_address(peer)
+            # Walk from the socket peer towards the client, stopping at the
+            # first untrusted hop. Forged prefixes never become the identity.
+            for hop in reversed(request.headers.get('X-Forwarded-For', '').split(',')):
+                if not any(address in network for network in self.trusted_proxies):
+                    break
+                address = ip_address(hop.strip())
+            return str(address)
+        except ValueError:
+            return peer
 
     def allow(self, bucket: str) -> bool:
         """Sliding-window check for this IP. False means over budget."""
         limit, window = self.RATE_LIMITS[bucket]
         ip = self.client_ip()
+        if self.store is not None:
+            return self.store.allow(bucket, ip, limit, window)
         now = time.time()
         with self._rl_lock:
             dq = self._rl_hits.setdefault((bucket, ip), deque())
@@ -255,7 +347,7 @@ def synchronized(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         gs = ctx().get_session()
-        with gs.lock:
+        with ctx().session_scope(gs):
             return f(gs, *args, **kwargs)
     return wrapper
 

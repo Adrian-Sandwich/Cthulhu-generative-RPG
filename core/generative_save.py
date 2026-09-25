@@ -7,6 +7,7 @@ Handles serialization and recovery of complete game sessions
 import json
 import os
 import re
+import tempfile
 from pathlib import Path
 from datetime import datetime
 from typing import Tuple, Dict, List, Optional
@@ -77,7 +78,7 @@ class GenerativeSave:
     @staticmethod
     def save(state, session_id: str, model: str, location_state=None, sanity_system=None,
              app_state: Optional[Dict] = None, adventure: Optional[str] = None,
-             language: str = "en", companions=None, data_dir=None) -> str:
+             language: str = "en", companions=None, data_dir=None, store=None) -> str:
         """
         Serialize game state to JSON file.
 
@@ -91,7 +92,8 @@ class GenerativeSave:
         Returns:
             Path to the saved file
         """
-        saves_dir(data_dir).mkdir(parents=True, exist_ok=True)
+        if store is None:
+            saves_dir(data_dir).mkdir(parents=True, exist_ok=True)
 
         # Serialize location state if available
         location_state_data = None
@@ -124,14 +126,27 @@ class GenerativeSave:
             "app_state": app_state  # app-layer state (e.g. web pending_roll) not in GameState
         }
 
+        if store is not None:
+            return store.write(session_id, save_data)
         path = GenerativeSave._save_path(session_id, data_dir)
-        with open(path, 'w', encoding='utf-8') as f:
-            json.dump(save_data, f, indent=2, ensure_ascii=False)
+        temporary = None
+        try:
+            with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8',
+                                             dir=path.parent, prefix=path.name + '.',
+                                             suffix='.tmp', delete=False) as f:
+                temporary = Path(f.name)
+                json.dump(save_data, f, indent=2, ensure_ascii=False)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(temporary, path)
+        finally:
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
 
         return str(path)
 
     @staticmethod
-    def load(session_id: str, data_dir=None) -> Tuple[Dict, Dict, Optional[Dict], Optional[Dict]]:
+    def load(session_id: str, data_dir=None, store=None) -> Tuple[Dict, Dict, Optional[Dict], Optional[Dict]]:
         """
         Load saved game from disk.
 
@@ -145,12 +160,12 @@ class GenerativeSave:
         Raises:
             FileNotFoundError: If save file doesn't exist
         """
-        path = GenerativeSave._save_path(session_id, data_dir)
-        if not path.exists():
-            raise FileNotFoundError(f"Save not found: {path}")
-
-        with open(path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
+        if store is not None:
+            data = store.read(session_id)
+        else:
+            path = GenerativeSave._save_path(session_id, data_dir)
+            with open(path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
 
         return (
             data["metadata"],
@@ -160,8 +175,10 @@ class GenerativeSave:
         )
 
     @staticmethod
-    def load_companions_state(session_id: str, data_dir=None) -> Optional[Dict]:
+    def load_companions_state(session_id: str, data_dir=None, store=None) -> Optional[Dict]:
         """Return the serialized CompanionManager stored with a save, or None."""
+        if store is not None:
+            return store.read(session_id).get('companions_state')
         path = GenerativeSave._save_path(session_id, data_dir)
         if not path.exists():
             return None
@@ -173,11 +190,16 @@ class GenerativeSave:
             return None
 
     @staticmethod
-    def load_app_state(session_id: str, data_dir=None) -> Optional[Dict]:
+    def load_app_state(session_id: str, data_dir=None, store=None) -> Optional[Dict]:
         """
         Return the app-layer state stored alongside a save (e.g. the web
         pending_roll), or None if the save or the field is absent.
         """
+        if store is not None:
+            try:
+                return store.read(session_id).get('app_state')
+            except FileNotFoundError:
+                return None
         path = GenerativeSave._save_path(session_id, data_dir)
         if not path.exists():
             return None
@@ -189,8 +211,10 @@ class GenerativeSave:
             return None
 
     @staticmethod
-    def exists(session_id: str, data_dir=None) -> bool:
+    def exists(session_id: str, data_dir=None, store=None) -> bool:
         """True if a save file exists for this session id."""
+        if store is not None:
+            return store.exists(session_id)
         try:
             return GenerativeSave._save_path(session_id, data_dir).exists()
         except ValueError:
@@ -219,7 +243,7 @@ class GenerativeSave:
         return sorted(saves, key=lambda x: x.get("timestamp", ""), reverse=True)
 
     @staticmethod
-    def get_session_summary(session_id: str, data_dir=None) -> Optional[Dict]:
+    def get_session_summary(session_id: str, data_dir=None, store=None) -> Optional[Dict]:
         """
         Get a summary of a saved session for display before resuming.
 
@@ -230,7 +254,7 @@ class GenerativeSave:
             Dict with session summary, or None if not found
         """
         try:
-            metadata, state_dict, _, _ = GenerativeSave.load(session_id, data_dir)
+            metadata, state_dict, _, _ = GenerativeSave.load(session_id, data_dir, store=store)
 
             inv = state_dict.get("investigator", {})
             sanity = inv.get("characteristics", {}).get("SAN", 75)
@@ -278,8 +302,10 @@ class GenerativeSave:
         return summaries
 
     @staticmethod
-    def delete(session_id: str, data_dir=None):
+    def delete(session_id: str, data_dir=None, store=None):
         """Delete a save file"""
+        if store is not None:
+            return store.delete(session_id)
         path = GenerativeSave._save_path(session_id, data_dir)
         if path.exists():
             path.unlink()

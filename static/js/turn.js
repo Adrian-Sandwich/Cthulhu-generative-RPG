@@ -9,8 +9,21 @@ async function refreshGameState() {
 
     try {
         const response = await fetch('/api/game/state');
-        if (!response.ok) return;
+        if (!response.ok) {
+            if (response.status === 400) {
+                gameStarted = false;
+                gameId = null;
+                document.getElementById('startup-screen').classList.remove('hidden');
+                document.getElementById('game-screen').classList.add('hidden');
+            }
+            return;
+        }
         const data = await response.json();
+        gameId = data.game_id;
+        worldSuggestions = data.world_actions || [];
+        updateStats(data.investigator);
+        if (data.pending_roll) showDiceArea(data.pending_roll);
+        if (data.ending) showEnding(data.ending);
 
         document.getElementById('location-display').textContent = data.location;
         document.getElementById('turn-counter').textContent = data.turn;
@@ -75,7 +88,10 @@ function parseSSE(frame) {
 
 function finishTurnUI(done, action, dmEl) {
     dmEl.textContent = (done.narrative || dmEl.textContent || '...').trim();
-    gameHistory.push({ turn: done.turn, playerAction: action, dmResponse: done.narrative });
+    if (!done.action_id || !gameHistory.some(turn => turn.action_id === done.action_id)) {
+        gameHistory.push({ turn: done.turn, playerAction: action, dmResponse: done.narrative,
+                           action_id: done.action_id });
+    }
     updateStats(done.state);
     if (done.sanity_recovered > 0) {
         setStatus(`Your mind steadies. +${done.sanity_recovered} SAN`);
@@ -93,82 +109,161 @@ function finishTurnUI(done, action, dmEl) {
     maybePromptFeedback(done.turn);
 }
 
-// Submit Player Action — streams the DM narration over SSE, falls back to the
-// plain JSON endpoint if streaming isn't available.
+// One durable command per browser tab, retained across reloads and retries.
+const TURN_STORAGE_KEY = 'lighthouse.pendingTurn';
+let submittingTurn = false;
+let pendingTurn = null;
+
+function rememberTurn(command) {
+    // Persist before sending: if storage is unavailable, do not create a turn
+    // that this tab cannot recover after a reload.
+    sessionStorage.setItem(TURN_STORAGE_KEY, JSON.stringify(command));
+    pendingTurn = command;
+}
+
+function forgetTurn() {
+    sessionStorage.removeItem(TURN_STORAGE_KEY);
+    pendingTurn = null;
+}
+
+function newActionId() {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function turnRequest(url, options = {}) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
+    try {
+        const response = await fetch(url, { cache: 'no-store', ...options, signal: controller.signal });
+        const body = await response.json();
+        return { response, body };
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+async function recoverTurn(command) {
+    setStatus('Reconnecting to your turn...');
+    const deadline = Date.now() + 120000;
+    for (let attempt = 0; attempt < 60 && Date.now() < deadline; attempt++) {
+        try {
+            const { response, body } = await turnRequest(
+                `/api/game/actions/${command.action_id}?game_id=${encodeURIComponent(command.game_id)}`);
+            if (response.ok && ['completed', 'failed'].includes(body.status)) {
+                return body.result;
+            }
+            if (response.status === 409) return { error: body.error };
+            if (response.status === 404) {
+                // It may never have reached the server. Reuse the identical
+                // command; the same ID also makes an ambiguous timeout safe.
+                const retry = await turnRequest('/api/game/action', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(command),
+                });
+                if (retry.response.ok || [400, 409, 413, 422].includes(retry.response.status)) {
+                    return retry.body;
+                }
+            }
+        } catch (error) {
+            // The receipt remains in sessionStorage while the network is down.
+        }
+        await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+    throw new Error('Still reconnecting. Submit again to check this same turn.');
+}
+
+// Submit or recover one command. Double clicks never allocate another ID.
 async function submitAction(event) {
     event.preventDefault();
-
+    if (submittingTurn) return;
     const actionInput = document.getElementById('action-input');
-    const action = actionInput.value.trim();
+    const action = pendingTurn ? pendingTurn.action : actionInput.value.trim();
     if (!action) return;
-
-    // "Lanza el dado" is a question about the controls, not an action.
-    if (ROLL_REQUEST_RE.test(action)) {
-        setStatus(pendingRoll
-            ? 'Haz click en el dado. / Click the die.'
-            : 'Los dados salen solos cuando algo es riesgoso — describe qué haces. '
-              + '/ Dice appear on their own when an action is risky — describe what you do.');
+    if (!pendingTurn && /^(inventory|inventario|ver inventario|mi inventario|show inventory|check inventory|what am i carrying|qu[eé] llevo)[?.!]*$/i.test(action)) {
+        await showSheet();
+        actionInput.value = '';
+        return;
+    }
+    if (!pendingTurn && ROLL_REQUEST_RE.test(action)) {
+        setStatus(pendingRoll ? 'Haz click en el dado. / Click the die.'
+            : 'Dice appear when an action is risky. Describe what you do.');
         actionInput.select();
         return;
     }
-
-    setStatus('The keeper considers…');
+    submittingTurn = true;
     actionInput.disabled = true;
-    hideSuggestions();
-    const { turnEl, dmEl } = beginTurn(action);
-
-    // Abort a stalled turn before the tunnel/proxy kills the connection (~100s),
-    // so the player gets a clean retry instead of the game appearing to close.
-    const ac = new AbortController();
-    const watchdog = setTimeout(() => ac.abort(), 90000);
-
+    let turnEl;
     try {
-        const resp = await fetch('/api/game/action/stream', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action }),
-            signal: ac.signal
-        });
-        if (!resp.ok || !resp.body) throw new Error('stream unavailable');
-
-        const reader = resp.body.getReader();
-        const decoder = new TextDecoder();
-        let buf = '', streamed = '', done = null, errMsg = null;
-
-        while (true) {
-            const { value, done: rdone } = await reader.read();
-            if (rdone) break;
-            buf += decoder.decode(value, { stream: true });
-            let i;
-            while ((i = buf.indexOf('\n\n')) >= 0) {
-                const ev = parseSSE(buf.slice(0, i));
-                buf = buf.slice(i + 2);
-                if (ev.event === 'done') {
-                    done = JSON.parse(ev.data);
-                } else if (ev.event === 'error') {
-                    errMsg = JSON.parse(ev.data).error;
-                } else if (ev.data) {
-                    streamed += (JSON.parse(ev.data).chunk || '');
-                    dmEl.textContent = streamed;
-                    scrollNarrative();
+        if (!gameId) throw new Error('Reload the game before sending an action.');
+        const recovering = Boolean(pendingTurn);
+        if (!pendingTurn) rememberTurn({ action, action_id: newActionId(), game_id: gameId });
+        const command = pendingTurn;
+        hideSuggestions();
+        const view = beginTurn(action);
+        turnEl = view.turnEl;
+        const dmEl = view.dmEl;
+        let result;
+        if (recovering) {
+            result = await recoverTurn(command);
+        } else {
+            setStatus('The keeper considers...');
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 90000);
+            try {
+                const resp = await fetch('/api/game/action/stream', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(command), signal: controller.signal,
+                });
+                if (!resp.ok || !resp.body) {
+                    if ([400, 409, 413, 422].includes(resp.status)) result = await resp.json();
+                    else throw new Error('stream unavailable');
+                } else {
+                    const reader = resp.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '', streamed = '';
+                    while (true) {
+                        const packet = await reader.read();
+                        if (packet.done) break;
+                        buffer += decoder.decode(packet.value, { stream: true });
+                        let boundary;
+                        while ((boundary = buffer.indexOf('\n\n')) >= 0) {
+                            const frame = parseSSE(buffer.slice(0, boundary));
+                            buffer = buffer.slice(boundary + 2);
+                            if (frame.event === 'done' || frame.event === 'error') {
+                                result = JSON.parse(frame.data);
+                            } else if (frame.data) {
+                                streamed += JSON.parse(frame.data).chunk || '';
+                                dmEl.textContent = streamed;
+                                scrollNarrative();
+                            }
+                        }
+                    }
+                    if (!result || result.retry_status) throw new Error('check durable turn status');
                 }
+            } catch (error) {
+                controller.abort();
+                result = await recoverTurn(command);
+            } finally {
+                clearTimeout(timer);
             }
         }
-
-        if (errMsg) { turnEl.remove(); setStatus(errMsg, true); return; }
-        if (done) { setStatus(''); finishTurnUI(done, action, dmEl); actionInput.value = ''; }
-        else { turnEl.remove(); throw new Error('stream ended early'); }
-    } catch (error) {
-        turnEl.remove();
-        // Streaming failed/timed out — try the plain endpoint; if THAT also
-        // fails, keep the game alive with a retry prompt (never a dead UI).
-        const ok = await submitActionFallback(action);
-        if (!ok) {
-            setStatus('The connection wavered. Your action wasn\'t lost — try again.', true);
-            renderSuggestions('explore');
+        if (result.error) {
+            turnEl.remove();
+            setStatus(result.error, true);
+            forgetTurn();
+        } else {
+            finishTurnUI(result, action, dmEl);
+            actionInput.value = '';
+            setStatus('');
+            forgetTurn();
         }
+    } catch (error) {
+        if (turnEl) turnEl.remove();
+        setStatus(error.message, true);
     } finally {
-        clearTimeout(watchdog);
+        submittingTurn = false;
         if (!pendingRoll) {
             actionInput.disabled = false;
             actionInput.focus();
@@ -176,42 +271,42 @@ async function submitAction(event) {
     }
 }
 
-// Non-streaming fallback (original JSON endpoint). Returns true on success so
-// the caller can show a retry prompt if this also fails.
-async function submitActionFallback(action) {
-    const ac = new AbortController();
-    const watchdog = setTimeout(() => ac.abort(), 95000);
+async function restorePendingTurn() {
     try {
-        const response = await fetch('/api/game/action', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action }),
-            signal: ac.signal
-        });
-        const data = await response.json();
-        if (data.success) {
-            addNarrativeTurn(data.turn, action, data.narrative);
-            updateStats(data.state);
-            renderNpcs(data.npcs);
-            renderResources(data.resources);
-            renderCombat(data.combat);
-            applySanityFx(data.sanity_corruption || 0);
-            if (data.ending) showEnding(data.ending);
-            document.getElementById('turn-counter').textContent = data.turn;
-            document.getElementById('location-display').textContent = data.location;
-            document.getElementById('action-input').value = '';
-            setStatus(data.sanity_recovered > 0
-                ? `Your mind steadies. +${data.sanity_recovered} SAN` : '');
-            if (data.pending_roll) showDiceArea(data.pending_roll);
-            else renderSuggestions('explore');
-            refreshGameState();
-            return true;
+        const stored = sessionStorage.getItem(TURN_STORAGE_KEY);
+        if (!stored) {
+            const response = await fetch('/api/game/state');
+            if (!response.ok) return;
+            const state = await response.json();
+            gameId = state.game_id;
+            gameStarted = true;
+            document.getElementById('startup-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            const narrative = document.createElement('div');
+            narrative.className = 'narrative-turn dm-response';
+            narrative.style.whiteSpace = 'pre-wrap';
+            narrative.textContent = (state.narrative || []).join('\n\n');
+            document.getElementById('narrative-content').replaceChildren(narrative);
+            await refreshGameState();
+            if (!pendingRoll && !gameOver) renderSuggestions('explore');
+            return;
         }
-        setStatus(data.error || 'Action failed', true);
-        return false;
+        const command = JSON.parse(stored);
+        if (!command.action_id || !command.game_id || typeof command.action !== 'string') {
+            sessionStorage.removeItem(TURN_STORAGE_KEY);
+            return;
+        }
+        pendingTurn = command;
+        gameId = command.game_id;
+        gameStarted = true;
+        document.getElementById('startup-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+        await submitAction({ preventDefault() {} });
+        // Recover all current UI state as well (e.g. a die resolved in another tab).
+        await refreshGameState();
     } catch (error) {
-        return false;
-    } finally {
-        clearTimeout(watchdog);
+        setStatus('Could not recover the turn. Check the connection and reload.', true);
     }
 }
+
+window.addEventListener('DOMContentLoaded', restorePendingTurn);

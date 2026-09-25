@@ -14,9 +14,12 @@ from dataclasses import asdict
 from typing import Optional, Dict, List, Tuple
 
 from .llm_client import OllamaClient
-from .tag_parser import parse_dm_response
+from .tag_parser import parse_dm_response, _resolve_amount
 from .coc_rules import CoC7eRulesEngine
 from .prompts import PromptBuilder
+from .dm_guardrails import POLICY, InvalidNarration, action_allowed, validate_narration
+from .ending_rules import record_check, try_ending, prompt_context
+from .world_rules import try_world_action, world_context, item_source, reward_error
 from .combat import CombatSystem
 from .state import InvestigatorState, GameState
 from .location_state import LocationStateManager
@@ -96,6 +99,7 @@ class GenerativeGameEngine:
 
     # Item definitions
     ITEMS = {
+        "keeper_key": {"name": "Keeper's Key", "description": "Opens the keeper's quarters"},
         "flashlight": {"name": "Flashlight", "description": "Casts light in darkness"},
         "notebook": {"name": "Notebook", "description": "For recording findings"},
         "revolver": {"name": "Revolver (.38)", "description": "6-shot pistol", "ammo": 6},
@@ -135,7 +139,7 @@ class GenerativeGameEngine:
         }
     }
 
-    def __init__(self, ollama_endpoint: str = "http://localhost:11434", model: str = "mistral",
+    def __init__(self, ollama_endpoint: Optional[str] = None, model: Optional[str] = None,
                  session_id: Optional[str] = None, use_memory: bool = True,
                  use_entity_graph: Optional[bool] = None, adventure: str = "point_black",
                  language: str = "en", data_dir=None):
@@ -143,34 +147,32 @@ class GenerativeGameEngine:
         Initialize game engine.
 
         Args:
-            ollama_endpoint: URL to Ollama service
-            model: LLM model to use
-                - "mistral" - 7B, best quality (5-7 sec/turn)
-                - "neural-chat" - Balanced speed & quality (3-4 sec/turn)
-                - "orca-mini" - Very fast (1-2 sec/turn)
-                - "qwen3:8b" - Advanced reasoning (4-6 sec/turn)
+            ollama_endpoint: Optional URL override for Ollama service
+            model: Optional Ollama model override; defaults to LLM_MODEL,
+                then the provider's default. Hosted APIs use environment config.
             session_id: Unique session identifier (auto-generated if None)
             use_memory: Enable semantic memory with ChromaDB (default True)
         """
         import time
 
-        self.ollama_endpoint = ollama_endpoint
         # In hosted-API mode (LLM_PROVIDER=openai/groq) the environment is the
         # source of truth for endpoint+model; the caller's Ollama-era defaults
         # are ignored so deploys don't need code changes.
         from .llm_client import resolve_llm_config
         _llm_cfg = resolve_llm_config()
+        self.ollama_endpoint = ollama_endpoint or _llm_cfg['base_url']
         if _llm_cfg["provider"] == "openai":
             self.model = _llm_cfg["model"]
             self.llm = OllamaClient()
         else:
-            self.model = model
-            self.llm = OllamaClient(endpoint=ollama_endpoint, model=model)
+            self.model = model or _llm_cfg['model']
+            self.llm = OllamaClient(endpoint=self.ollama_endpoint, model=self.model)
         self.session_id = session_id or f"session_{int(time.time())}"
         # Where this engine persists (saves, playtest archives). The web app
         # passes its own directory so two apps in one process never share one;
         # None means the DATA_DIR env var / current directory (CLI, tools).
         self.data_dir = data_dir
+        self.save_store = None
         self.language = language
         self.state: Optional[GameState] = None
         self.rules = CoC7eRulesEngine()
@@ -187,6 +189,13 @@ class GenerativeGameEngine:
         from .adventure_config import AdventureConfig
         self.adventure_name = adventure
         self.adventure_config = AdventureConfig.from_name(adventure)
+        if any(item not in self.ITEMS for edge in self.adventure_config.passages for item in edge['items']):
+            raise ValueError('Passage requires an unknown item')
+        if any(r['value'] not in self.ITEMS for r in self.adventure_config.rewards.values() if r['type'] == 'item'):
+            raise ValueError('Reward references an unknown item')
+        if any(item not in self.ITEMS for rule in self.adventure_config.ending_rules.values()
+               for item in rule['required_items']):
+            raise ValueError('Ending rule requires an unknown item')
         # Instance attrs shadow the legacy class constants so existing
         # references (self.STORY_SEED, self.NPC_DEFINITIONS) keep working.
         self.STORY_SEED = self.adventure_config.story_seed
@@ -447,13 +456,20 @@ class GenerativeGameEngine:
             "content": prompt + self._lang_reminder()
         })
 
-        return self.llm.chat(
+        from .scene_guardrails import scene_context, validate_scene_narration
+        response = self.llm.chat(
             messages=message_history,
-            system_prompt=system_prompt,
+            system_prompt=system_prompt + POLICY + '\n' + prompt_context(self) + '\n' + world_context(self) + scene_context(self),
             max_tokens=max_tokens,
             temperature=0.5,
-            on_chunk=on_chunk
+            on_chunk=None
         )
+        # Validate before the first byte can reach SSE or the tag parser.
+        validate_narration(response, ending_confirmed=bool(self.state.ending_reached))
+        validate_scene_narration(response, self)
+        if on_chunk:
+            on_chunk(response)
+        return response
 
     def _format_last_roll_info(self) -> str:
         """Format last roll information for DM prompt"""
@@ -489,7 +505,8 @@ class GenerativeGameEngine:
         """
         from .cthulhu_tools import CTHULHU_TOOLS
 
-        system_prompt = self._lang_instruction() + self._build_dm_system_prompt()
+        from .scene_guardrails import scene_context, validate_scene_narration
+        system_prompt = self._lang_instruction() + self._build_dm_system_prompt() + POLICY + '\n' + prompt_context(self) + '\n' + world_context(self) + scene_context(self)
 
         messages = [
             {
@@ -503,7 +520,11 @@ class GenerativeGameEngine:
             }
         ]
 
-        return self.llm.chat_with_tools(messages, CTHULHU_TOOLS)
+        tools = [tool for tool in CTHULHU_TOOLS if tool['function']['name'] != 'pickup_item']
+        response = self.llm.chat_with_tools(messages, tools)
+        validate_narration(response.get('narrative', ''))
+        validate_scene_narration(response.get('narrative', ''), self)
+        return response
 
     def _execute_tool_calls(self, tool_calls: list) -> Dict:
         """
@@ -523,8 +544,12 @@ class GenerativeGameEngine:
             "combat_start": []
         }
 
-        for call in tool_calls:
+        for call in (tool_calls[:16] if isinstance(tool_calls, list) else []):
+            if not isinstance(call, dict):
+                continue
             fn = call.get("function", {})
+            if not isinstance(fn, dict):
+                continue
             name = fn.get("name", "")
             args = fn.get("arguments", {})
 
@@ -533,27 +558,33 @@ class GenerativeGameEngine:
                     args = json.loads(args)
                 except:
                     continue
+            if not isinstance(args, dict):
+                continue
 
             if name == "roll_skill_check":
                 skill = args.get("skill", "unknown")
                 difficulty = args.get("difficulty", "Normal")
+                if not isinstance(skill, str) or len(skill) > 80 or difficulty not in ('Normal', 'Hard', 'Extreme'):
+                    continue
                 results["rolls_requested"].append((skill, difficulty))
 
             elif name == "apply_sanity_damage":
                 damage = args.get("damage", 1)
-                results["sanity_checks"].append(str(damage))
+                results["sanity_checks"].append(_resolve_amount(str(damage)))
 
             elif name == "apply_hp_damage":
                 damage = args.get("damage", 1)
-                results["hp_damage"].append(str(damage))
+                results["hp_damage"].append(_resolve_amount(str(damage)))
 
             elif name == "pickup_item":
                 item_key = args.get("item_key", "")
-                results["items_found"].append(item_key)
+                if isinstance(item_key, str) and item_key in self.ITEMS:
+                    results["items_found"].append(item_key)
 
             elif name == "start_combat":
                 enemy_key = args.get("enemy_key", "")
-                results["combat_start"].append(enemy_key)
+                if isinstance(enemy_key, str) and len(enemy_key) <= 80:
+                    results["combat_start"].append(enemy_key)
 
         return results
 
@@ -574,9 +605,32 @@ class GenerativeGameEngine:
         # Anti-abuse: treat input as an in-world action only. Strip any
         # tag-like directives the player typed (so they can't smuggle mechanic
         # tags into the narrative) and bound the length.
+        if not action_allowed(player_input):
+            return {'error': 'Describe an in-world attempt; the game decides rules and dice.'}
         player_input = self._sanitize_player_input(player_input)
         if not player_input:
             return {"error": "Empty action"}
+
+        from .world_rules import inventory_query, inventory_text
+        if inventory_query(player_input):
+            result = {'narrative': inventory_text(self), 'read_only': True}
+            if on_chunk:
+                on_chunk(result['narrative'])
+            return result
+
+        if self.check_ending_condition():
+            return {'error': 'This game has ended.'}
+        final = try_ending(self, player_input)
+        if final is not None:
+            if on_chunk and final.get('narrative'):
+                on_chunk(final['narrative'])
+            return final
+
+        world_result = try_world_action(self, player_input)
+        if world_result is not None:
+            if on_chunk and world_result.get('narrative'):
+                on_chunk(world_result['narrative'])
+            return world_result
 
         self._track("actions")
 
@@ -621,15 +675,11 @@ class GenerativeGameEngine:
                 npc_dialogue = parsed["npc_dialogue"]
                 clean_response = parsed["clean_response"]
 
-                # Print narrative if streaming callback is provided
-                if on_chunk and clean_response:
-                    on_chunk(clean_response)
-
                 # Tool calling complete - proceed to state update
             else:
                 # Tool calling failed or returned empty - fall back to tag-based system
                 dm_prompt = self._build_dm_prompt(player_input)
-                dm_response = self._call_ollama(dm_prompt, on_chunk=on_chunk)
+                dm_response = self._call_ollama(dm_prompt, on_chunk=None)
                 dm_response = self._retry_if_repetitive(dm_prompt, dm_response)
 
                 parsed = parse_dm_response(dm_response)
@@ -643,7 +693,7 @@ class GenerativeGameEngine:
         else:
             # Model doesn't support tool calling - use tag-based system
             dm_prompt = self._build_dm_prompt(player_input)
-            dm_response = self._call_ollama(dm_prompt, on_chunk=on_chunk)
+            dm_response = self._call_ollama(dm_prompt, on_chunk=None)
             dm_response = self._retry_if_repetitive(dm_prompt, dm_response)
 
             parsed = parse_dm_response(dm_response)
@@ -655,19 +705,11 @@ class GenerativeGameEngine:
             npc_dialogue = parsed["npc_dialogue"]
             clean_response = parsed["clean_response"]
 
-        # Controlled reload: the DM may emit [AMMO_FOUND: n], but the engine
-        # clamps it (per-find + hard ceiling) so "I find 100000 ammo" can't
-        # inflate the count. The number on the HUD is always engine-owned.
-        for found in parsed.get("ammo_found", []):
-            self._grant_ammo(found)
+        if items_found or parsed.get('ammo_found') or parsed.get('location_moves'):
+            raise InvalidNarration('The Keeper proposed an unverified move or reward. Try an explicit in-world action.')
 
-        # Authored endings: the DM may declare a story ending with [ENDING: x]
-        # for outcomes the engine can't detect from stats (escape/victory/
-        # destruction). Only known ending types are honored.
-        for etype in parsed.get("endings", []):
-            if etype in self.ENDINGS and not self.state.ending_reached:
-                self.state.ending_reached = etype
-                break
+        # Parsed ENDING tags are inert: only try_ending and engine-owned stats
+        # may finish a game, even if a caller bypasses narration validation.
 
         # Combat synthesis: the player clearly attacks a present threat but the
         # DM didn't emit [COMBAT_START]. Start the fight so it's mechanized.
@@ -703,17 +745,6 @@ class GenerativeGameEngine:
                 # ordered by what players actually type.
                 self._track("actions_without_check")
                 logger.info("no roll keyword matched: %r", player_input[:120])
-
-        # Same fallback shape as the roll synthesis above, for the one mechanic
-        # that had none: the DM never emits [ITEM_FOUND: key] in practice, so
-        # without this nothing can ever enter the inventory. Player intent only,
-        # registry items only, and the adventure decides where a placed item can
-        # be taken.
-        if not items_found:
-            granted = self._infer_item_pickup(player_input)
-            if granted:
-                items_found = [granted]
-                self._track("items_synthesized")
 
         # Horror has a price: if the player describes witnessing something
         # terrible and the DM forgot the Sanity check, the engine enforces one
@@ -779,36 +810,6 @@ class GenerativeGameEngine:
         # Update sanity system (reduce disorder durations, etc.)
         self.update_sanity_system()
 
-        # Explicit scene change: the DM emitted [LOCATION: name]. Validated
-        # against the adventure's registered locations — language-independent
-        # (fixes Spanish players never matching English keywords) and rejects
-        # invented off-map places (containment).
-        moved_by_tag = False
-        for wanted in parsed.get("location_moves", []):
-            resolved = self._resolve_location(wanted)
-            if resolved and resolved != self.state.location:
-                self.state.location = resolved
-                if self.location_state:
-                    self.location_state.visit_location(resolved, self.state.turn)
-                moved_by_tag = True
-                break
-            elif not resolved:
-                logger.info("DM tagged unknown location %r — ignored", wanted)
-
-        # Keyword fallback — ONLY when the player expressed movement intent.
-        # Keying off the DM's prose alone teleported the player whenever a
-        # room was merely mentioned in narration.
-        pi_lower = player_input.lower()
-        if not moved_by_tag and any(v in pi_lower for v in MOVEMENT_VERBS):
-            haystack = f"{pi_lower} {clean_response.lower()}"
-            location_map = self.adventure_config.location_keywords
-            for keyword, new_location in location_map.items():
-                if keyword in haystack and new_location != self.state.location:
-                    self.state.location = new_location
-                    if self.location_state:
-                        self.location_state.visit_location(new_location, self.state.turn)
-                    break
-
         # If a new roll is requested, clear the previous roll record
         # (DM has now responded to the consequences)
         if rolls_requested:
@@ -819,6 +820,8 @@ class GenerativeGameEngine:
 
         # Low sanity corrupts what the player perceives (outgoing copy only).
         display_narrative, corruption = self._corrupt_narrative(clean_response)
+        if on_chunk:
+            on_chunk(display_narrative)
 
         return {
             "narrative": display_narrative,
@@ -896,6 +899,8 @@ class GenerativeGameEngine:
 
         # Resolve check
         result = self.rules.resolve_skill_check(skill, skill_value, char_value, difficulty)
+        before_objectives = set(self.state.ending_objectives)
+        record_check(self, skill, difficulty, result['success'])
 
         # Spend a round on any firearm attempt (hit or miss).
         if is_firearm:
@@ -911,6 +916,14 @@ class GenerativeGameEngine:
             "target": result['target'],
             "message": result['message']
         }
+        self.state.last_roll['discoveries'] = [key for key in self.state.ending_objectives
+                                               if key not in before_objectives]
+        from .ending_rules import location_name
+        self.state.last_roll['investigation_check'] = any(
+            key not in before_objectives and obj['skill'] == skill.strip().lower().replace(' ', '_')
+            and location_name(self.adventure_config, obj['location']) == self.state.location
+            for key, obj in self.adventure_config.ending_objectives.items()
+            if key in self.adventure_config.investigations)
 
         # Log in narrative
         self.state.narrative.append(f"[ROLL: {result['message']}]")
@@ -1012,6 +1025,9 @@ class GenerativeGameEngine:
         """Add item to inventory"""
         if item_key not in self.ITEMS:
             return f"Item '{item_key}' not found."
+        placed = (self.adventure_config.item_locations or {}).get(item_key)
+        if placed and self.state.location != placed:
+            return 'That item is not available here.'
 
         item = self.ITEMS[item_key]
         item_name = item["name"]
@@ -1020,7 +1036,13 @@ class GenerativeGameEngine:
         if item_name in self.state.investigator.inventory:
             return f"You already have {item_name}."
 
+        source = item_source(self, item_key)
+        error = reward_error(self, source)
+        if error:
+            return error
+
         self.state.investigator.inventory.append(item_name)
+        self.state.claimed_rewards.append(source)
 
         # Finding the firearm loads it with the adventure's ammo (so AMMO stops
         # being a decorative HUD number the player can never use).
@@ -1429,6 +1451,26 @@ class GenerativeGameEngine:
         roll = self.state.last_roll
         consequence = None
 
+        # Critical evidence must reach the player even when the model omits it.
+        if roll.get('discoveries'):
+            from .world_rules import finding
+            consequence = self._success_discovery(roll)
+            text = '\n\n'.join(finding(self, key) for key in roll['discoveries'])
+            self.state.narrative.append(f'DM: {text}')
+            self.state.last_roll = None
+            if on_chunk:
+                on_chunk(text)
+            return {'narrative': text, 'consequence': consequence}
+        if roll.get('investigation_check') and not roll['success']:
+            consequence = self._failure_consequence(roll)
+            text = 'You cannot yet make sense of the evidence. ' + consequence['summary']
+            text += ' You can try the investigation again; no new passage or discovery has been unlocked.'
+            self.state.narrative.append(f'DM: {text}')
+            self.state.last_roll = None
+            if on_chunk:
+                on_chunk(text)
+            return {'narrative': text, 'consequence': consequence}
+
         # Build a simple, direct prompt
         if roll['success']:
             # A discovery success is recorded on the location BEFORE the DM
@@ -1468,7 +1510,15 @@ Make the failure matter and hard to undo. Do NOT contradict the mechanical outco
 NO NEW ROLLS. NO TAGS. Just the outcome."""
 
         # Get DM response for the consequence
-        consequence_response = self._call_ollama(consequence_prompt, max_tokens=120, on_chunk=on_chunk)
+        try:
+            consequence_response = self._call_ollama(consequence_prompt, max_tokens=120, on_chunk=on_chunk)
+        except InvalidNarration:
+            # The dice and their costs already happened. Do not reroll them
+            # because the narrator failed; keep a neutral, non-mechanical line.
+            consequence_response = ('El viento cubre el silencio que sigue.' if self.language == 'es'
+                                    else 'The wind fills the silence that follows.')
+            if on_chunk:
+                on_chunk(consequence_response)
 
         # Parse tags only to strip them; the engine already owns any damage so
         # we must NOT re-apply LLM-emitted HP/SAN here (would double-count).
@@ -1598,7 +1648,7 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             self.state.ending_reached = "madness"
             return "madness"
 
-        # Other endings checked by DM narrative
+        # Other endings require authored player actions and objective evidence.
         return None
 
     def update_npc_reputation(self, npc_key: str, delta: int, reason: str = "") -> int:
@@ -1712,16 +1762,18 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
         events = []
 
         # Items the DM granted
-        for item_key in result.get("items_found", []):
+        for item_key in dict.fromkeys(result.get("items_found", [])):
             events.append({"kind": "item", "text": self.pick_up_item(item_key)})
 
         # Direct HP damage declared inline by the DM
-        for damage in result.get("hp_damage", []):
+        for damage in ([min(MAX_HP_DAMAGE, sum(max(0, int(d)) for d in result['hp_damage']))]
+                       if result.get('hp_damage') else []):
             res = self.apply_hp_damage(int(damage))
             events.append({"kind": "hp", "text": res["message"]})
 
         # Sanity costs (witnessed horror) — companions share the strain
-        for damage in result.get("sanity_checks", []):
+        for damage in ([min(MAX_SAN_DAMAGE, sum(max(0, int(d)) for d in result['sanity_checks']))]
+                       if result.get('sanity_checks') else []):
             res = self.apply_sanity_check(int(damage))
             text = f"You lose {damage} sanity"
             if res.get("broke"):
@@ -1897,6 +1949,7 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             language=getattr(self, "language", "en"),
             companions=self.companions,
             data_dir=self.data_dir,
+            store=getattr(self, 'save_store', None),
         )
 
         # Also persist ChromaDB memory if available
@@ -1908,7 +1961,7 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
     @classmethod
     def load_game(cls, session_id: str,
                   ollama_endpoint: str = "http://localhost:11434",
-                  data_dir=None) -> 'GenerativeGameEngine':
+                  data_dir=None, store=None, use_memory=True) -> 'GenerativeGameEngine':
         """
         Load a saved game session from disk.
 
@@ -1927,7 +1980,7 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
         from .sanity_system import SanitySystem
 
         metadata, state_dict, location_state_data, sanity_state_data = GenerativeSave.load(
-            session_id, data_dir)
+            session_id, data_dir, store=store)
 
         # Reconstruct InvestigatorState from dictionary
         inv_dict = state_dict["investigator"]
@@ -1960,7 +2013,9 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             time_limit=state_dict.get("time_limit", 0),
             last_rest_turn=state_dict.get("last_rest_turn", 0),
             # Saves written before telemetry existed simply start at zero.
-            telemetry=state_dict.get("telemetry", {}) or {}
+            telemetry=state_dict.get("telemetry", {}) or {},
+            ending_objectives=state_dict.get('ending_objectives', []) or [],
+            claimed_rewards=state_dict.get('claimed_rewards', []) or []
         )
 
         # Create engine instance with same model, session, and adventure.
@@ -1969,7 +2024,7 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
             ollama_endpoint=ollama_endpoint,
             model=metadata["model"],
             session_id=session_id,
-            use_memory=True,
+            use_memory=use_memory,
             adventure=metadata.get("adventure") or "point_black",
             language=metadata.get("language") or "en",
             data_dir=data_dir,
@@ -1977,6 +2032,13 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
 
         # Inject the loaded state
         engine.state = state
+        if 'claimed_rewards' not in state_dict:
+            # Legacy held items already came from somewhere. Do not make
+            # dropping them a way to claim a new instance or reload a firearm.
+            state.claimed_rewards = [key for key, reward in engine.adventure_config.rewards.items()
+                                     if reward['type'] == 'item' and
+                                     engine.ITEMS[reward['value']]['name'] in investigator.inventory]
+        engine.save_store = store
 
         # Restore location state if available
         if location_state_data:
@@ -1996,7 +2058,7 @@ Write in Lovecraftian horror style. Be literary, poetic, and dark. 3 paragraphs 
 
         # Restore traveling companions (trusted NPCs who joined the player)
         try:
-            companions_data = GenerativeSave.load_companions_state(session_id, data_dir)
+            companions_data = GenerativeSave.load_companions_state(session_id, data_dir, store=store)
             if companions_data:
                 from .companion_system import CompanionManager
                 engine.companions = CompanionManager.from_dict(companions_data)

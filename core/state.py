@@ -48,3 +48,5 @@ class GameState:
     # but never thrown means the die is not discoverable. With n=4 testers those
     # two were indistinguishable. See docs/PLAYTEST_FINDINGS.md.
     telemetry: Dict[str, int] = field(default_factory=dict)
+    ending_objectives: List[str] = field(default_factory=list)
+    claimed_rewards: List[str] = field(default_factory=list)

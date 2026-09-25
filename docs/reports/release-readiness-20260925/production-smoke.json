@@ -1,0 +1,33 @@
+{
+  "checks": [
+    "Public health responds",
+    "New game uses 40-turn clock",
+    "Finite pickup and exact receipt replay",
+    "Inventory query costs no turn",
+    "Forged mechanical tag rejected",
+    "Real hosted narrator answers an action",
+    "Reload preserves inventory, turn and pending die",
+    "Production browser restores session and shows inventory on desktop/mobile",
+    "No additional LLM fallback reported"
+  ],
+  "health_before": {
+    "llm": {
+      "degraded_turns": 0,
+      "model": "openai/gpt-oss-120b"
+    },
+    "sessions": 0,
+    "status": "ok",
+    "storage": "json"
+  },
+  "live_narrative": "The wind howls off the black rocks, carrying a low, mournful moan that seems to rise from the surf itself, and a faint, metallic clang echoes from somewhere within the lighthouse’s stone walls. As you strain to catch the sound, a sudden, sharp rush of cold air brushes past your ear, as if something unseen slipped past you in the fog.",
+  "health_after": {
+    "llm": {
+      "degraded_turns": 0,
+      "model": "openai/gpt-oss-120b"
+    },
+    "sessions": 1,
+    "status": "ok",
+    "storage": "json"
+  },
+  "own_test_session_reset": true
+}

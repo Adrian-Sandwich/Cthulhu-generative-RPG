@@ -9,6 +9,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { runInNewContext } from 'node:vm';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -117,6 +118,77 @@ check('the guard runs before the turn is sent', guardAt !== -1 && fetchAt !== -1
 
 check('first-roll die tip is still wired', /getElementById\('die-tip'\)/.test(src));
 check('post-roll suggestions still render', /renderSuggestions\('afterRoll'\)/.test(src));
+
+// Exercise the real recovery functions with a simulated browser and server.
+const turnSource = readFileSync(join(root, 'static/js/turn.js'), 'utf8');
+const recoverySource = turnSource.slice(turnSource.indexOf('const TURN_STORAGE_KEY'));
+for (const mode of ['network-error', 'early-eof', 'not-received', 'reload', 'failed', 'offline']) {
+    const calls = [], rendered = [];
+    const storage = new Map();
+    const command = { action: 'look around', action_id: 'persisted-action-001', game_id: 'game-test-001' };
+    if (mode === 'reload') storage.set('lighthouse.pendingTurn', JSON.stringify(command));
+    let status = '', boot;
+    const input = { value: 'look around', disabled: false, focus() {} };
+    let polls = 0;
+    const payload = { success: true, turn: 2, action_id: command.action_id };
+    const context = {
+        document: { getElementById: id => id === 'action-input' ? input : {
+            classList: { add() {}, remove() {} },
+        } },
+        window: { addEventListener: (event, fn) => { boot = fn; } },
+        sessionStorage: {
+            getItem: key => storage.get(key) || null,
+            setItem: (key, value) => storage.set(key, value),
+            removeItem: key => storage.delete(key),
+        },
+        crypto: { getRandomValues: array => array.fill(7) },
+        gameId: command.game_id, gameStarted: true,
+        ROLL_REQUEST_RE: /never-match/, pendingRoll: null,
+        setStatus: text => { status = text; }, hideSuggestions() {}, scrollNarrative() {},
+        beginTurn: () => ({ turnEl: { remove() {} }, dmEl: {} }),
+        finishTurnUI: result => rendered.push(result),
+        refreshGameState: async () => {},
+        AbortController, TextDecoder, Uint8Array,
+        setTimeout: (fn, ms) => ms === 2000 ? (queueMicrotask(fn), 0) : setTimeout(fn, ms),
+        clearTimeout,
+        fetch: async (url, options = {}) => {
+            calls.push({ url, body: options.body });
+            if (mode === 'offline') throw new Error('offline');
+            if (url.endsWith('/stream')) {
+                if (mode === 'network-error' || mode === 'not-received') throw new Error('disconnected');
+                return { ok: true, body: { getReader: () => ({ read: async () => ({ done: true }) }) } };
+            }
+            if (url.includes('/actions/')) {
+                polls++;
+                if (mode === 'not-received') return { ok: false, status: 404, json: async () => ({}) };
+                const state = polls === 1 ? 'running' : mode === 'failed' ? 'failed' : 'completed';
+                return { ok: true, status: 200, json: async () => ({ status: state,
+                    result: mode === 'failed' ? { error: 'Turn interrupted' } : payload }) };
+            }
+            return { ok: true, status: 200, json: async () => payload };
+        },
+    };
+    runInNewContext(recoverySource, context);
+    if (mode === 'reload') await boot();
+    else await runInNewContext('Promise.all([submitAction({preventDefault() {}}), submitAction({preventDefault() {}})])', context);
+    const posts = calls.filter(call => call.body);
+    check(`${mode}: double click sends at most one initial command`, calls.filter(c => c.url.endsWith('/stream')).length <= 1);
+    if (mode === 'not-received') {
+        check('unknown action is retried with identical ID and text', posts.length === 2 && posts[0].body === posts[1].body);
+    } else if (mode !== 'reload') {
+        check(`${mode}: known/ambiguous action is not blindly reposted`, posts.length === 1);
+    }
+    if (mode === 'offline') {
+        check('offline recovery retains durable command', storage.has('lighthouse.pendingTurn'));
+        check('offline recovery does not fabricate success', rendered.length === 0);
+    } else {
+        check(`${mode}: terminal command removed from storage`, !storage.has('lighthouse.pendingTurn'));
+        check(`${mode}: terminal result rendered once`, rendered.length === (mode === 'failed' ? 0 : 1));
+    }
+    if (mode === 'reload') check('reload queries the stored identifier', calls[0].url.includes(command.action_id));
+    if (mode === 'failed') check('failed turn is explained', status.includes('interrupted'));
+    check(`${mode}: input usable again`, !input.disabled);
+}
 
 console.log(`${checks - failures}/${checks} frontend checks passed`);
 if (failures) process.exit(1);

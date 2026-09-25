@@ -7,6 +7,33 @@ on:
     branches: [main, master]
 
 jobs:
+  test-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: cthulhu_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements-dev.txt
+      - name: Real PostgreSQL and multi-process regression tests
+        env:
+          CTHULHU_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/cthulhu_test
+        run: python -m pytest tests/test_postgres.py -q
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -35,7 +62,7 @@ jobs:
           CI: "true"
         run: |
           mkdir -p "$DATA_DIR"
-          pytest tests/test_smoke.py tests/test_engine_units.py tests/test_frontend.py tests/test_url_map.py tests/test_history_viewer.py -q
+          pytest tests/test_smoke.py tests/test_engine_units.py tests/test_frontend.py tests/test_url_map.py tests/test_history_viewer.py tests/test_load_test.py tests/test_timing.py tests/test_capacity.py tests/test_guardrails.py tests/test_endings.py tests/test_world_rules.py -q
 
       # Catches attribute reads that do not exist. Two shipped regressions were
       # exactly that and the suite could not see either. Scoped to one rule in
@@ -70,4 +97,4 @@ jobs:
         shell: bash
         run: |
           mkdir -p "$DATA_DIR"
-          pytest tests/test_smoke.py tests/test_engine_units.py tests/test_frontend.py tests/test_url_map.py tests/test_history_viewer.py -q
+          pytest tests/test_smoke.py tests/test_engine_units.py tests/test_frontend.py tests/test_url_map.py tests/test_history_viewer.py tests/test_load_test.py tests/test_timing.py tests/test_capacity.py tests/test_guardrails.py tests/test_endings.py tests/test_world_rules.py -q

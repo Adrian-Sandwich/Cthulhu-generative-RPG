@@ -1,4 +1,10 @@
 .git
+.runtime/
+.env
+.env.*
+.pytest*/
+.review*/
+pytest-cache-files-*/
 __pycache__
 *.pyc
 legacy/

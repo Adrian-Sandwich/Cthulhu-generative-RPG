@@ -36,8 +36,12 @@ def _resolve_amount(expr: str) -> str:
 
     Accepts "3" or dice notation "1d6" / "2D4".
     """
+    if not isinstance(expr, str) or not re.fullmatch(r'\d{1,6}(?:[dD]\d{1,3})?', expr):
+        return '0'
     if 'd' in expr.lower():
         count, sides = re.split('[dD]', expr)
+        if not 1 <= int(count) <= 10 or not 1 <= int(sides) <= 100:
+            return '0'
         total = sum(random.randint(1, int(sides)) for _ in range(int(count)))
         return str(total)
     return expr

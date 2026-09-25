@@ -16,6 +16,8 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional
+from .ending_rules import validate_rules
+from .world_rules import validate_world
 
 ADVENTURES_DIR = Path(__file__).resolve().parent.parent / "adventures"
 
@@ -45,9 +47,13 @@ class AdventureConfig:
     roll_keywords: Optional[Dict[str, List[str]]] = None
     # finite stakes: {"ammo": int, "time_limit": int (turn doom arrives, 0=off)}
     resources: Dict = field(default_factory=dict)
-    # item key -> location display name. A placed item can only be taken in that
-    # room; anything absent here can be found wherever the DM narrates it.
+    # Legacy item placement constraint; authored rewards own all grant sources.
     item_locations: Dict[str, str] = field(default_factory=dict)
+    ending_objectives: Dict[str, Dict] = field(default_factory=dict)
+    ending_rules: Dict[str, Dict] = field(default_factory=dict)
+    passages: List[Dict] = field(default_factory=list)
+    rewards: Dict[str, Dict] = field(default_factory=dict)
+    investigations: Dict[str, Dict] = field(default_factory=dict)
 
     @classmethod
     def from_name(cls, name: str) -> "AdventureConfig":
@@ -81,6 +87,8 @@ class AdventureConfig:
                     f"allowed: {sorted(_ALLOWED_RELS)}"
                 )
 
+        validate_rules(data)
+        validate_world(data)
         return cls(
             name=name,
             story_seed=data["story_seed"],
@@ -95,6 +103,11 @@ class AdventureConfig:
             roll_keywords=data.get("roll_keywords"),
             resources=data.get("resources", {}) or {},
             item_locations=data.get("item_locations", {}) or {},
+            ending_objectives=data.get('ending_objectives', {}),
+            ending_rules=data.get('ending_rules', {}),
+            passages=data.get('passages', []),
+            rewards=data.get('rewards', {}),
+            investigations=data.get('investigations', {}),
         )
 
     def resolve_location(self, wanted: str) -> Optional[str]:

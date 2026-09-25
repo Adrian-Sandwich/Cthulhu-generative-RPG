@@ -107,11 +107,18 @@ OpenAI-compatible `/moderations` API path exists (`MODERATION=api`) but adds
 per-turn latency/cost and isn't enabled. Turn it on before a truly open,
 unmonitored public launch.
 
-## Single-process session registry
-The in-memory `_sessions` map + per-session locks require gunicorn to run with
-ONE worker (documented in the Dockerfile/DEPLOY). Horizontal scaling would need
-the session/game state moved to a shared store (Redis/DB). Fine for the current
-scale; revisit if one process isn't enough.
+## Session storage and remaining scaling limits
+JSON storage still requires ONE worker. PostgreSQL is available through
+`CTHULHU_DATABASE_URL`: snapshots, receipts, rate limits and feedback are shared;
+session advisory locks serialize mutations across workers, and cached engines
+are discarded after each operation. See `docs/DEPLOY.md` for migration.
+
+Each active operation holds one database connection through LLM generation
+(without an open transaction). There is no durable generation queue or global
+LLM concurrency budget. Receipts are retained inside each game snapshot for
+idempotency, so large games increase write size. Images/playtest exports and
+health counters remain local; they need separate shared storage/aggregation
+if enabled on several hosts.
 
 ## Dead standalone scripts (fan-in 0 in the code graph)
 `game/generate_examples.py`, `game/generate_final_test.py`,

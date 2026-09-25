@@ -8,7 +8,7 @@
   },
   "resources": {
     "ammo": 6,
-    "time_limit": 18
+    "time_limit": 40
   },
   "location_keywords": {
     "keeper": "Keeper's Quarters",
@@ -26,52 +26,93 @@
     {
       "key": "lighthouse_exterior",
       "name": "Point Black Lighthouse - Exterior",
-      "description": "A weathered lighthouse stands on rocky black stone, its paint peeling from decades of exposure to salt spray and Atlantic winds. The structure is perhaps thirty feet tall, surrounded by a low stone wall. The keeper's cottage sits nearby, its windows dark and empty."
+      "description": "A weathered lighthouse stands on rocky black stone, its paint peeling from decades of exposure to salt spray and Atlantic winds. The structure is perhaps thirty feet tall, surrounded by a low stone wall. The keeper's cottage sits nearby, its windows dark and empty.",
+      "aliases": [
+        "exterior",
+        "outside",
+        "fuera",
+        "exterior del faro"
+      ]
     },
     {
       "key": "keeper_quarters",
       "name": "Keeper's Quarters",
-      "description": "The keeper's sparse living space: a cot, a table with a single chair, shelves of maritime equipment. Everything is covered in dust. Through the single window, you can see the lighthouse. There's a faint smell of decay and something else—something chemical."
+      "description": "The keeper's sparse living space: a cot, a table with a single chair, shelves of maritime equipment. Everything is covered in dust. Through the single window, you can see the lighthouse. There's a faint smell of decay and something else—something chemical.",
+      "aliases": [
+        "quarters",
+        "keeper quarters",
+        "habitaciones del farero",
+        "cuarto del farero"
+      ]
     },
     {
       "key": "lighthouse_interior",
       "name": "Lighthouse Interior",
-      "description": "The interior of the lighthouse is a spiral of iron stairs ascending into darkness. The air is thick and stale. Each step groans under your weight. The walls are covered in moisture and a strange luminescent fungus that glows faintly green in the darkness."
+      "description": "The interior of the lighthouse is a spiral of iron stairs ascending into darkness. The air is thick and stale. Each step groans under your weight. The walls are covered in moisture and a strange luminescent fungus that glows faintly green in the darkness.",
+      "aliases": [
+        "interior",
+        "inside",
+        "interior del faro"
+      ]
     },
     {
       "key": "keeper_room_top",
       "name": "Keeper's Room - Lighthouse Top",
-      "description": "At the top of the lighthouse, a small room contains a cot, desk, and the great lamp mechanism. Papers are scattered everywhere—logbooks, journals, sketches of impossible symbols. The light mechanism hasn't been lit in weeks. Through the windows, you can see the entire rocky coast and far out to sea."
+      "description": "At the top of the lighthouse, a small room contains a cot, desk, and the great lamp mechanism. Papers are scattered everywhere—logbooks, journals, sketches of impossible symbols. The light mechanism hasn't been lit in weeks. Through the windows, you can see the entire rocky coast and far out to sea.",
+      "aliases": [
+        "keeper room top",
+        "cuarto superior"
+      ]
     },
     {
       "key": "lantern_room",
       "name": "Lantern Room",
-      "description": "The glass-walled crown of the lighthouse. The great beacon lamp sits cold and dark, its lenses filmed with salt. Ancient symbols have been scratched into the brass fittings—recent work, done with a shaking hand. Through the panes, the ocean stretches gray and endless, and something about the horizon looks subtly wrong."
+      "description": "The glass-walled crown of the lighthouse. The great beacon lamp sits cold and dark, its lenses filmed with salt. Ancient symbols have been scratched into the brass fittings—recent work, done with a shaking hand. Through the panes, the ocean stretches gray and endless, and something about the horizon looks subtly wrong.",
+      "aliases": [
+        "lantern",
+        "sala de la linterna"
+      ]
     },
     {
       "key": "lighthouse_stairs",
       "name": "Lighthouse Stairs",
-      "description": "An iron spiral staircase winds up through the tower's throat. Each step rings hollow and the whole structure trembles faintly in the wind. The lamps here flicker though no draft moves, and the smell of salt gives way to something older—brine and rot from somewhere far below."
+      "description": "An iron spiral staircase winds up through the tower's throat. Each step rings hollow and the whole structure trembles faintly in the wind. The lamps here flicker though no draft moves, and the smell of salt gives way to something older—brine and rot from somewhere far below.",
+      "aliases": [
+        "stairs",
+        "escaleras"
+      ]
     },
     {
       "key": "ground_floor",
       "name": "Ground Floor",
-      "description": "The base of the tower: solid stone walls a yard thick, a packed-earth floor, coils of rope and rusted tools. Sounds echo strangely here, arriving a half-second late, as if the room were larger than its walls. A cold draft seeps up from between the flagstones."
+      "description": "The base of the tower: solid stone walls a yard thick, a packed-earth floor, coils of rope and rusted tools. Sounds echo strangely here, arriving a half-second late, as if the room were larger than its walls. A cold draft seeps up from between the flagstones.",
+      "aliases": [
+        "planta baja"
+      ]
     },
     {
       "key": "upper_level",
       "name": "Upper Level",
-      "description": "A cramped landing below the lantern room, cluttered with supply crates and oil cans. The window is small and rimed with salt. From here the stairs continue up toward the light—and someone has painted a crude warding symbol on the underside of the hatch above."
+      "description": "A cramped landing below the lantern room, cluttered with supply crates and oil cans. The window is small and rimed with salt. From here the stairs continue up toward the light—and someone has painted a crude warding symbol on the underside of the hatch above.",
+      "aliases": [
+        "nivel superior"
+      ]
     },
     {
       "key": "basement",
       "name": "Basement",
-      "description": "A low-ceilinged cellar cut into the living rock beneath the lighthouse. Barrels of lamp oil line one wall, furred with mold. The air is wet and mineral. In the far corner, the floor has been dug up—recently—and the exposed stone beneath bears a hairline crack that weeps seawater, though you are well above the tide line."
+      "description": "A low-ceilinged cellar cut into the living rock beneath the lighthouse. Barrels of lamp oil line one wall, furred with mold. The air is wet and mineral. In the far corner, the floor has been dug up—recently—and the exposed stone beneath bears a hairline crack that weeps seawater, though you are well above the tide line.",
+      "aliases": [
+        "sotano"
+      ]
     },
     {
       "key": "hidden_chamber",
       "name": "Hidden Chamber",
-      "description": "A space that should not exist, sealed behind the basement wall. The chamber is older than the lighthouse—far older. Its walls are covered in carved symbols that hurt to follow, geometry that folds back on itself. At its center, the fissure: a black seam in the rock, breathing cold air that smells of the deep ocean. The keeper's final logbook lies open beside it."
+      "description": "A space that should not exist, sealed behind the basement wall. The chamber is older than the lighthouse—far older. Its walls are covered in carved symbols that hurt to follow, geometry that folds back on itself. At its center, the fissure: a black seam in the rock, breathing cold air that smells of the deep ocean. The keeper's final logbook lies open beside it.",
+      "aliases": [
+        "camara oculta"
+      ]
     }
   ],
   "factions": [
@@ -152,6 +193,400 @@
     }
   ],
   "item_locations": {
-    "revolver": "Keeper's Quarters"
+    "keeper_key": "Point Black Lighthouse - Exterior",
+    "flashlight": "Point Black Lighthouse - Exterior",
+    "notebook": "Keeper's Quarters",
+    "revolver": "Keeper's Quarters",
+    "rope": "Ground Floor",
+    "logbook": "Keeper's Room - Lighthouse Top",
+    "ancient_text": "Lantern Room",
+    "holy_water": "Keeper's Quarters",
+    "dynamite": "Basement"
+  },
+  "ending_objectives": {
+    "safe_route": {
+      "location": "lighthouse_exterior",
+      "skill": "navigate",
+      "difficulty": "Normal",
+      "label": "Find a safe route from the exterior (Navigate)"
+    },
+    "keeper_evidence": {
+      "location": "keeper_quarters",
+      "skill": "spot_hidden",
+      "difficulty": "Normal",
+      "label": "Investigate the keeper's quarters (Spot Hidden)"
+    },
+    "beacon_symbols": {
+      "location": "lantern_room",
+      "skill": "occult",
+      "difficulty": "Normal",
+      "label": "Understand the beacon symbols (Occult in the lantern room)"
+    },
+    "fissure_studied": {
+      "location": "hidden_chamber",
+      "skill": "occult",
+      "difficulty": "Normal",
+      "label": "Understand the fissure (Occult in the hidden chamber)"
+    },
+    "foundation_survey": {
+      "location": "basement",
+      "skill": "investigate",
+      "difficulty": "Normal",
+      "label": "Survey the foundations (Investigate in the basement)"
+    },
+    "shore_search": {
+      "location": "lighthouse_exterior",
+      "skill": "spot_hidden",
+      "difficulty": "Normal",
+      "label": "Search the exterior for the keeper key (Spot Hidden)"
+    }
+  },
+  "ending_rules": {
+    "escape": {
+      "location": "lighthouse_exterior",
+      "requires": [
+        "safe_route"
+      ],
+      "required_items": [],
+      "actions": [
+        "leave the island",
+        "I leave the island",
+        "escape the lighthouse",
+        "abandono la isla",
+        "escapar del faro"
+      ],
+      "narrative": {
+        "en": "You follow the route you charted through the rocks. The lighthouse fades behind the fog. You have escaped, but its red light follows you in memory.",
+        "es": "Sigues la ruta que trazaste entre las rocas. El faro se pierde tras la niebla. Has escapado, pero su luz roja te sigue en la memoria."
+      }
+    },
+    "victory": {
+      "location": "hidden_chamber",
+      "requires": [
+        "keeper_evidence",
+        "beacon_symbols",
+        "fissure_studied"
+      ],
+      "required_items": [],
+      "actions": [
+        "embrace the transformation",
+        "I embrace the transformation",
+        "acepto la transformación",
+        "acepto la transformacion"
+      ],
+      "narrative": {
+        "en": "You understand what took the keeper and what waits beneath the light. With open eyes, you accept the change. The fissure answers, and the last warmth of your human life slips away.",
+        "es": "Comprendes qué se llevó al farero y qué espera bajo la luz. Con los ojos abiertos, aceptas el cambio. La fisura responde y el último calor de tu vida humana se apaga."
+      }
+    },
+    "destruction": {
+      "location": "basement",
+      "requires": [
+        "beacon_symbols",
+        "fissure_studied",
+        "foundation_survey"
+      ],
+      "required_items": [
+        "dynamite"
+      ],
+      "actions": [
+        "detonate the dynamite",
+        "I detonate the dynamite",
+        "detono la dinamita"
+      ],
+      "narrative": {
+        "en": "Knowing the foundations and the fissure beneath them, you place the charges and light the fuse. The tower breaks against the storm. Beneath the fallen stone, the black seam closes. For now.",
+        "es": "Conoces los cimientos y la fisura que yace bajo ellos. Colocas las cargas y enciendes la mecha. La torre se quiebra contra la tormenta. Bajo la piedra caída, la grieta negra se cierra. Por ahora."
+      }
+    }
+  },
+  "passages": [
+    {
+      "from": "lighthouse_exterior",
+      "to": "keeper_quarters",
+      "requires": [],
+      "items": [
+        "keeper_key"
+      ]
+    },
+    {
+      "from": "keeper_quarters",
+      "to": "lighthouse_exterior",
+      "requires": [],
+      "items": []
+    },
+    {
+      "from": "lighthouse_exterior",
+      "to": "lighthouse_interior",
+      "requires": [],
+      "items": []
+    },
+    {
+      "from": "lighthouse_interior",
+      "to": "lighthouse_exterior",
+      "requires": [],
+      "items": []
+    },
+    {
+      "from": "lighthouse_interior",
+      "to": "ground_floor",
+      "requires": [],
+      "items": []
+    },
+    {
+      "from": "ground_floor",
+      "to": "lighthouse_interior",
+      "requires": [],
+      "items": []
+    },
+    {
+      "from": "ground_floor",
+      "to": "basement",
+      "requires": [],
+      "items": []
+    },
+    {
+      "from": "basement",
+      "to": "ground_floor",
+      "requires": [],
+      "items": []
+    },
+    {
+      "from": "lighthouse_interior",
+      "to": "lighthouse_stairs",
+      "requires": [],
+      "items": []
+    },
+    {
+      "from": "lighthouse_stairs",
+      "to": "lighthouse_interior",
+      "requires": [],
+      "items": []
+    },
+    {
+      "from": "lighthouse_stairs",
+      "to": "upper_level",
+      "requires": [],
+      "items": []
+    },
+    {
+      "from": "upper_level",
+      "to": "lighthouse_stairs",
+      "requires": [],
+      "items": []
+    },
+    {
+      "from": "upper_level",
+      "to": "keeper_room_top",
+      "requires": [],
+      "items": []
+    },
+    {
+      "from": "keeper_room_top",
+      "to": "upper_level",
+      "requires": [],
+      "items": []
+    },
+    {
+      "from": "upper_level",
+      "to": "lantern_room",
+      "requires": [],
+      "items": []
+    },
+    {
+      "from": "lantern_room",
+      "to": "upper_level",
+      "requires": [],
+      "items": []
+    },
+    {
+      "from": "basement",
+      "to": "hidden_chamber",
+      "requires": [
+        "foundation_survey",
+        "beacon_symbols"
+      ],
+      "items": []
+    },
+    {
+      "from": "hidden_chamber",
+      "to": "basement",
+      "requires": [],
+      "items": []
+    }
+  ],
+  "rewards": {
+    "keeper_key": {
+      "location": "lighthouse_exterior",
+      "type": "item",
+      "value": "keeper_key",
+      "requires": [
+        "shore_search"
+      ],
+      "aliases": [
+        "keeper key",
+        "key",
+        "llave del farero",
+        "llave"
+      ]
+    },
+    "flashlight": {
+      "location": "lighthouse_exterior",
+      "type": "item",
+      "value": "flashlight",
+      "requires": [],
+      "aliases": [
+        "flashlight",
+        "linterna"
+      ]
+    },
+    "notebook": {
+      "location": "keeper_quarters",
+      "type": "item",
+      "value": "notebook",
+      "requires": [],
+      "aliases": [
+        "notebook",
+        "cuaderno"
+      ]
+    },
+    "revolver": {
+      "location": "keeper_quarters",
+      "type": "item",
+      "value": "revolver",
+      "requires": [],
+      "aliases": [
+        "revolver",
+        "gun",
+        "pistola"
+      ]
+    },
+    "rope": {
+      "location": "ground_floor",
+      "type": "item",
+      "value": "rope",
+      "requires": [],
+      "aliases": [
+        "rope",
+        "cuerda"
+      ]
+    },
+    "logbook": {
+      "location": "keeper_room_top",
+      "type": "item",
+      "value": "logbook",
+      "requires": [
+        "keeper_evidence"
+      ],
+      "aliases": [
+        "logbook",
+        "diario del farero"
+      ]
+    },
+    "ancient_text": {
+      "location": "lantern_room",
+      "type": "item",
+      "value": "ancient_text",
+      "requires": [
+        "beacon_symbols"
+      ],
+      "aliases": [
+        "ancient text",
+        "texto antiguo"
+      ]
+    },
+    "holy_water": {
+      "location": "keeper_quarters",
+      "type": "item",
+      "value": "holy_water",
+      "requires": [
+        "keeper_evidence"
+      ],
+      "aliases": [
+        "holy water",
+        "agua bendita"
+      ]
+    },
+    "dynamite": {
+      "location": "basement",
+      "type": "item",
+      "value": "dynamite",
+      "requires": [
+        "foundation_survey"
+      ],
+      "aliases": [
+        "dynamite",
+        "dinamita"
+      ]
+    },
+    "keeper_ammo": {
+      "location": "keeper_quarters",
+      "type": "ammo",
+      "value": 6,
+      "requires": [
+        "keeper_evidence"
+      ],
+      "aliases": [
+        "ammo",
+        "ammunition",
+        "municion"
+      ]
+    }
+  },
+  "investigations": {
+    "safe_route": {
+      "actions": [
+        "chart a coastal route",
+        "trazo una ruta costera"
+      ],
+      "finding": {
+        "en": "You chart a safe route through the coastal rocks. You can choose to leave the island from the exterior: leave the island."
+      }
+    },
+    "shore_search": {
+      "actions": [
+        "search for the keeper key",
+        "busco la llave del farero"
+      ],
+      "finding": {
+        "en": "Beneath a loose stone by the entrance lies the keeper's key. It opens the keeper's quarters. Collect it with: take keeper key."
+      }
+    },
+    "keeper_evidence": {
+      "actions": [
+        "search the keeper records",
+        "investigo los registros del farero"
+      ],
+      "finding": {
+        "en": "The keeper's records describe a transformation tied to the beacon and the fissure below. Study the beacon symbols in the lantern room. The quarters also hold holy water and an ammunition cache; the keeper's logbook remains in the upper keeper room."
+      }
+    },
+    "foundation_survey": {
+      "actions": [
+        "survey the foundations",
+        "inspecciono los cimientos"
+      ],
+      "finding": {
+        "en": "You trace a sealed passage beneath the foundations. Understanding the beacon symbols will let you open it into the hidden chamber. A dry recess here holds dynamite: take dynamite. To destroy the source, first study the beacon and the fissure, then return here."
+      }
+    },
+    "beacon_symbols": {
+      "actions": [
+        "study the beacon symbols",
+        "estudio los simbolos del faro"
+      ],
+      "finding": {
+        "en": "The beacon symbols reveal how to open the passage in the basement once its foundations have been surveyed. An ancient text rests here: take ancient text. Return through the stairs and ground floor to reach the basement."
+      }
+    },
+    "fissure_studied": {
+      "actions": [
+        "study the fissure",
+        "estudio la fisura"
+      ],
+      "finding": {
+        "en": "You understand the fissure. With the keeper's evidence and beacon symbols, you can choose transformation here: embrace the transformation. Alternatively, with dynamite and a foundation survey, return to the basement and choose: detonate the dynamite."
+      }
+    }
   }
 }

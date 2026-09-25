@@ -52,13 +52,16 @@ def engine(tmp_path):
 
 def test_pick_up_item_adds_to_inventory(engine):
     assert "Revolver (.38)" not in engine.state.investigator.inventory
+    engine.state.location = engine.adventure_config.item_locations["revolver"]
     msg = engine.pick_up_item("revolver")
     assert "Revolver (.38)" in engine.state.investigator.inventory
     assert "loaded" in msg or "pick up" in msg
 
 
 def test_pick_up_item_already_owned(engine):
+    engine.state.location = engine.adventure_config.item_locations["revolver"]
     engine.pick_up_item("revolver")
+    engine.state.location = engine.adventure_config.item_locations["revolver"]
     msg = engine.pick_up_item("revolver")
     assert "already have" in msg
 
@@ -68,6 +71,7 @@ def test_pick_up_unknown_item(engine):
 
 
 def test_drop_item(engine):
+    engine.state.location = "Ground Floor"
     engine.pick_up_item("rope")
     assert "Rope (30ft)" in engine.state.investigator.inventory
     msg = engine.drop_item("Rope (30ft)")
@@ -117,6 +121,7 @@ def test_resolve_combat_round_player_dies(engine):
 
 
 def test_combat_attack_roll_uses_firearm_when_loaded(engine):
+    engine.state.location = engine.adventure_config.item_locations["revolver"]
     engine.pick_up_item("revolver")
     pending = engine.combat_attack_roll()
     assert pending["skill"] == "firearms_revolver"
@@ -157,6 +162,7 @@ def test_apply_hp_damage_death_ending(engine):
 # --- save / load -------------------------------------------------------------
 
 def test_save_and_load_roundtrip(engine, tmp_path):
+    engine.state.location = engine.adventure_config.item_locations["revolver"]
     engine.pick_up_item("revolver")
     engine.start_combat("deep_one_hybrid")
     engine.apply_hp_damage(2)
@@ -226,14 +232,15 @@ def test_resolve_location_invented_place_rejected():
     assert _cfg().resolve_location("Police Station") is None
 
 
-def test_dm_location_tag_moves_player(engine):
+def test_dm_location_tag_cannot_move_player(engine):
     from unittest.mock import patch
     start = engine.state.location
     assert start != "Keeper's Quarters"
     dm = "You climb the stairs into the keeper's room. [LOCATION: Keeper's Quarters]"
     with patch.object(engine, "_call_ollama", return_value=dm):
-        engine.process_player_action("go up to the keeper's quarters")
-    assert engine.state.location == "Keeper's Quarters"
+        with pytest.raises(ValueError, match="unverified"):
+            engine.process_player_action("go up to the keeper's quarters")
+    assert engine.state.location == start
 
 
 def test_dm_invented_location_tag_ignored(engine):
@@ -245,13 +252,8 @@ def test_dm_invented_location_tag_ignored(engine):
     assert engine.state.location == start
 
 
-def test_all_dm_tags_survive_a_turn(engine):
-    """Every tag in tag_parser._TAG_PATTERNS must survive a full turn.
-
-    This is the class-level guard: an orphaned call site on any tag path fails
-    here instead of reaching a player as a 500. ENDING goes in a second turn
-    because it terminates the game.
-    """
+def test_all_dm_tags_obey_authority_boundary(engine):
+    """Cover the parser vocabulary while rejecting unauthorized world changes."""
     from unittest.mock import patch
     from core.tag_parser import _TAG_PATTERNS
 
@@ -268,17 +270,15 @@ def test_all_dm_tags_survive_a_turn(engine):
         assert f"[{tag}" in dm + dm_ending, f"tag {tag} not exercised by this test"
 
     with patch.object(engine, "_call_ollama", return_value=dm):
-        result = engine.process_player_action("search the room")
-    outcome = engine.apply_turn_consequences(result)
-
-    assert "error" not in result
-    assert isinstance(outcome.get("events"), list)
-    assert engine.state.location == "Keeper's Quarters"
-    assert "Revolver (.38)" in engine.state.investigator.inventory
+        with pytest.raises(ValueError, match="unverified"):
+            engine.process_player_action("search the room")
+    assert engine.state.location == engine.adventure_config.start_location
+    assert engine.state.investigator.inventory == []
 
     with patch.object(engine, "_call_ollama", return_value=dm_ending):
         engine.process_player_action("row for the shore")
-    assert engine.state.ending_reached == "escape"
+    # A parsed tag is inert, even if the model guard is bypassed by this mock.
+    assert engine.state.ending_reached is None
 
 
 # --- DM prompt state ---------------------------------------------------------
@@ -392,6 +392,7 @@ def test_telemetry_flags_undiscovered_dice(engine):
 
 def test_telemetry_derives_state_rather_than_counting_it(engine):
     """Derived values must track the state, not a counter that can drift."""
+    engine.state.location = engine.adventure_config.item_locations["revolver"]
     engine.pick_up_item("revolver")
     t = engine.telemetry_summary()
     assert t["has_firearm"] is True
@@ -455,14 +456,15 @@ def test_item_pickup_respects_placement(engine):
     assert engine._infer_item_pickup("agarro el revólver") == "revolver"
 
 
-def test_item_pickup_ignores_unplaced_item_location(engine):
-    """Items the adventure does not place can be taken wherever they are found."""
+def test_rope_requires_its_authored_location(engine):
+    """Previously unplaced items now have an authored source too."""
     engine.state.location = "Lighthouse Interior"
-    assert engine._infer_item_pickup("recojo la cuerda") == "rope"
+    assert engine._infer_item_pickup("recojo la cuerda") is None
 
 
 def test_item_pickup_will_not_regrant(engine):
     _in_quarters(engine)
+    engine.state.location = engine.adventure_config.item_locations["revolver"]
     engine.pick_up_item("revolver")
     assert engine._infer_item_pickup("agarro el revólver") is None
 
@@ -483,27 +485,23 @@ def test_item_pickup_end_to_end_loads_the_firearm(engine):
     # A DM that emits no tags at all — which is what the real models do.
     with patch.object(engine, "_call_ollama",
                       return_value="You rummage through the keeper's effects."):
-        result = engine.process_player_action("registro los efectos y agarro el revólver")
+        result = engine.process_player_action("agarro el revólver")
     engine.apply_turn_consequences(result)
 
     assert "Revolver (.38)" in engine.state.investigator.inventory
     assert engine.state.ammo == 6
     assert engine.resources_status()["has_firearm"] is True
-    assert engine.telemetry_summary().get("items_synthesized") == 1
+    assert "revolver" in engine.state.claimed_rewards
 
 
-def test_dm_tag_still_wins_over_the_fallback(engine):
-    """The fallback is a backstop; a DM that does tag items keeps control."""
+def test_dm_tag_cannot_override_authored_reward(engine):
     from unittest.mock import patch
     _in_quarters(engine)
     dm = "A coil of rope hangs by the door. [ITEM_FOUND: rope]"
     with patch.object(engine, "_call_ollama", return_value=dm):
-        result = engine.process_player_action("miro alrededor")
-    engine.apply_turn_consequences(result)
-
-    assert "Rope (30ft)" in engine.state.investigator.inventory
-    # Tagged, not synthesized — the counter must tell them apart.
-    assert engine.telemetry_summary().get("items_synthesized", 0) == 0
+        with pytest.raises(ValueError, match="unverified"):
+            engine.process_player_action("miro alrededor")
+    assert "Rope (30ft)" not in engine.state.investigator.inventory
 
 
 # --- prompt composed by measured capability ----------------------------------
@@ -532,13 +530,28 @@ def test_tagless_model_gets_no_tag_directives(tmp_path):
     assert leftovers == [], leftovers
 
 
+def test_ollama_model_environment_is_used_unless_explicitly_overridden(tmp_path, monkeypatch):
+    monkeypatch.setenv('LLM_PROVIDER', 'ollama')
+    monkeypatch.setenv('LLM_MODEL', 'qwen2.5:3b')
+    for supplied, expected in ((None, 'qwen2.5:3b'), ('mistral', 'mistral')):
+        engine = GenerativeGameEngine(model=supplied, use_memory=False,
+                                      use_entity_graph=False, data_dir=tmp_path)
+        try:
+            assert engine.model == expected
+            assert engine.llm.model == expected
+        finally:
+            engine.close()
+
+
 def test_tag_capable_model_still_gets_the_protocol(tmp_path):
     from core.cthulhu_tools import TOOL_CAPABLE_MODELS
     model = sorted(TOOL_CAPABLE_MODELS)[0]
     prompt = _prompt_for(model, tmp_path)
     assert TAG_DIRECTIVE.search(prompt), "a capable model lost its tag protocol"
-    for tag in ("[ROLL:", "[ITEM_FOUND:", "[COMBAT_START:", "[LOCATION:"):
+    for tag in ("[ROLL:", "[COMBAT_START:"):
         assert tag in prompt, tag
+    for tag in ("[ITEM_FOUND:", "[LOCATION:", "[AMMO_FOUND:"):
+        assert tag not in prompt, tag
 
 
 def test_containment_rules_ship_to_every_model(tmp_path):

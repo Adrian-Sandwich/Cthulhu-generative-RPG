@@ -1,0 +1,237 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "provider": "openai",
+  "runs": [
+    {
+      "target": "escape",
+      "events": [
+        {
+          "path": "/api/game/start",
+          "input": {
+            "name": "Live route audit",
+            "archetype": "scholar"
+          },
+          "status": 200,
+          "response": {
+            "game_id": "daae55506afb42e98db5c6935dc12f0c",
+            "intro": "ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.",
+            "investigator": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "archetype": "scholar",
+              "maxHP": 10,
+              "name": "Live route audit"
+            },
+            "location": "Point Black Lighthouse - Exterior",
+            "message": "Game started! Welcome, Live route audit",
+            "success": true
+          },
+          "seconds": 0.01,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "I listen to the wind outside the lighthouse",
+            "action_id": "a8150e84159242e7ac49321bdcb133e3",
+            "game_id": "daae55506afb42e98db5c6935dc12f0c"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "a8150e84159242e7ac49321bdcb133e3",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "daae55506afb42e98db5c6935dc12f0c",
+            "location": "Point Black Lighthouse - Exterior",
+            "narrative": "Something feels wrong. You steady yourself and push forward.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 40,
+              "time_remaining": 38
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 2
+          },
+          "seconds": 0.19,
+          "fallbacks": 1
+        }
+      ],
+      "outcome": "blocked",
+      "reason": "Model degraded to fallback; live narration was not validated",
+      "final": {
+        "turn": 2,
+        "location": "Point Black Lighthouse - Exterior",
+        "ending": null,
+        "objectives": [],
+        "inventory": []
+      }
+    },
+    {
+      "target": "victory",
+      "events": [
+        {
+          "path": "/api/game/start",
+          "input": {
+            "name": "Live route audit",
+            "archetype": "scholar"
+          },
+          "status": 200,
+          "response": {
+            "game_id": "f8c175a92ebf44e2a5c5e8a27b295f56",
+            "intro": "ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.",
+            "investigator": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "archetype": "scholar",
+              "maxHP": 10,
+              "name": "Live route audit"
+            },
+            "location": "Point Black Lighthouse - Exterior",
+            "message": "Game started! Welcome, Live route audit",
+            "success": true
+          },
+          "seconds": 0.01,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "I listen to the wind outside the lighthouse",
+            "action_id": "a67c240547594d0986f63efa17b67902",
+            "game_id": "f8c175a92ebf44e2a5c5e8a27b295f56"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "a67c240547594d0986f63efa17b67902",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "f8c175a92ebf44e2a5c5e8a27b295f56",
+            "location": "Point Black Lighthouse - Exterior",
+            "narrative": "Something feels wrong. You steady yourself and push forward.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 40,
+              "time_remaining": 38
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 2
+          },
+          "seconds": 0.18,
+          "fallbacks": 1
+        }
+      ],
+      "outcome": "blocked",
+      "reason": "Model degraded to fallback; live narration was not validated",
+      "final": {
+        "turn": 2,
+        "location": "Point Black Lighthouse - Exterior",
+        "ending": null,
+        "objectives": [],
+        "inventory": []
+      }
+    },
+    {
+      "target": "destruction",
+      "events": [
+        {
+          "path": "/api/game/start",
+          "input": {
+            "name": "Live route audit",
+            "archetype": "scholar"
+          },
+          "status": 200,
+          "response": {
+            "game_id": "59802ff9b5d8410b983f128a6efd54dc",
+            "intro": "ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.",
+            "investigator": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "archetype": "scholar",
+              "maxHP": 10,
+              "name": "Live route audit"
+            },
+            "location": "Point Black Lighthouse - Exterior",
+            "message": "Game started! Welcome, Live route audit",
+            "success": true
+          },
+          "seconds": 0.0,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "I listen to the wind outside the lighthouse",
+            "action_id": "c6bfb8b8ceaa4dbaa2a762093d19fda4",
+            "game_id": "59802ff9b5d8410b983f128a6efd54dc"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "c6bfb8b8ceaa4dbaa2a762093d19fda4",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "59802ff9b5d8410b983f128a6efd54dc",
+            "location": "Point Black Lighthouse - Exterior",
+            "narrative": "Something feels wrong. You steady yourself and push forward.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 40,
+              "time_remaining": 38
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 2
+          },
+          "seconds": 0.23,
+          "fallbacks": 1
+        }
+      ],
+      "outcome": "blocked",
+      "reason": "Model degraded to fallback; live narration was not validated",
+      "final": {
+        "turn": 2,
+        "location": "Point Black Lighthouse - Exterior",
+        "ending": null,
+        "objectives": [],
+        "inventory": []
+      }
+    }
+  ]
+}

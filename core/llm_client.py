@@ -20,6 +20,7 @@ from typing import Callable, Dict, List, Optional
 
 import threading
 import requests
+from core.timing import timed
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +28,17 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Backend pool — spreads load across multiple LLM endpoints (e.g. a CUDA box
 # + the Mac) with least-busy routing and brief failover. Set LLM_ENDPOINTS to
-# a comma-separated list to enable; otherwise it's a single-endpoint no-op.
+# a comma-separated list to enable routing; admission also applies to one endpoint.
 #   LLM_ENDPOINTS=http://192.168.1.50:11434,http://127.0.0.1:11434
 #   LLM_MAX_PARALLEL=2   (concurrent calls allowed per endpoint)
 # ---------------------------------------------------------------------------
-_POOL_LOCK = threading.Lock()
+_POOL_LOCK = threading.RLock()
+_POOL_AVAILABLE = threading.Condition(_POOL_LOCK)
 _POOL = None
+
+
+class LLMBusy(TimeoutError):
+    """The bounded endpoint admission wait expired; no API call was sent."""
 
 
 def _build_pool() -> list:
@@ -40,6 +46,8 @@ def _build_pool() -> list:
     raw = os.environ.get("LLM_ENDPOINTS", "").strip()
     default_parallel = "2" if cfg["provider"] == "ollama" else "32"
     max_parallel = int(os.environ.get("LLM_MAX_PARALLEL", default_parallel))
+    if max_parallel < 1:
+        raise ValueError('LLM_MAX_PARALLEL must be positive')
     entries = ([e.strip() for e in raw.split(",") if e.strip()]
                if raw else [cfg["base_url"]])
     pool = []
@@ -57,29 +65,40 @@ def _build_pool() -> list:
 
 def _pool() -> list:
     global _POOL
-    if _POOL is None:
-        _POOL = _build_pool()
-    return _POOL
-
-
-def _acquire_endpoint(exclude=None):
-    """Pick the least-busy healthy endpoint and mark one call in-flight."""
-    now = time.time()
     with _POOL_LOCK:
-        pool = _pool()
-        candidates = [e for e in pool
-                      if e["down_until"] <= now and e["url"] != exclude] or \
-                     [e for e in pool if e["url"] != exclude] or pool
-        ep = min(candidates, key=lambda e: e["inflight"])
-        ep["inflight"] += 1
-        return ep
+        if _POOL is None:
+            _POOL = _build_pool()
+        return _POOL
+
+
+@timed('llm.endpoint_selection')
+def _acquire_endpoint(exclude=None):
+    """Wait at most LLM_QUEUE_TIMEOUT seconds for an endpoint permit."""
+    timeout = float(os.environ.get('LLM_QUEUE_TIMEOUT', '2'))
+    if not 0 <= timeout <= 60:
+        raise ValueError('LLM_QUEUE_TIMEOUT must be between 0 and 60 seconds')
+    deadline = time.monotonic() + timeout
+    with _POOL_AVAILABLE:
+        while True:
+            available = [e for e in _pool() if e['inflight'] < e['max']]
+            if available:
+                candidates = [e for e in available if e['down_until'] <= time.time() and e['url'] != exclude] or \
+                             [e for e in available if e['url'] != exclude] or available
+                ep = min(candidates, key=lambda e: e['inflight'])
+                ep['inflight'] += 1
+                return ep
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise LLMBusy('Model capacity is busy')
+            _POOL_AVAILABLE.wait(remaining)
 
 
 def _release_endpoint(ep, ok: bool):
-    with _POOL_LOCK:
+    with _POOL_AVAILABLE:
         ep["inflight"] = max(0, ep["inflight"] - 1)
         if not ok:
             ep["down_until"] = time.time() + 30  # brief cooldown on failure
+        _POOL_AVAILABLE.notify_all()
 
 
 def resolve_llm_config() -> Dict:
@@ -157,6 +176,7 @@ class LLMClient:
 
     # -- streaming chat -----------------------------------------------------
 
+    @timed('llm.chat')
     def chat(
         self,
         messages: List[Dict],
@@ -168,9 +188,8 @@ class LLMClient:
         """Streaming chat. Returns full text, or an in-fiction fallback."""
         msgs = list(messages)
         if system_prompt:
-            if self.provider == "openai":
-                msgs = [{"role": "system", "content": system_prompt}] + msgs
-            # ollama takes system as a top-level field (added to payload below)
+            # /api/chat uses a system message, unlike /api/generate's field.
+            msgs = [{"role": "system", "content": system_prompt}] + msgs
 
         if self.provider == "openai":
             payload = {
@@ -187,39 +206,45 @@ class LLMClient:
                     "repeat_penalty": 1.18, "repeat_last_n": 256,
                 },
             }
-            if system_prompt:
-                payload["system"] = system_prompt
 
         path = "/chat/completions" if self.provider == "openai" else "/api/chat"
         tried = None
         attempts = max(2, len(_pool()))
         for attempt in range(attempts):
-            ep = _acquire_endpoint(exclude=tried if attempt else None)
+            try:
+                ep = _acquire_endpoint(exclude=tried if attempt else None)
+            except LLMBusy:
+                return self._degrade('model admission timeout', self.NETWORK_FALLBACK)
             payload["model"] = ep.get("model") or self.model
+            response, ok = None, False
             try:
                 response = requests.post(ep["url"] + path, json=payload,
                                          headers=self._headers(),
                                          timeout=self.timeout, stream=True)
                 response.raise_for_status()
                 full = self._consume_stream(response, on_chunk)
-                _release_endpoint(ep, True)
+                ok = True
                 if full.strip():
                     return full.strip()
                 return self._degrade('empty completion', self.EMPTY_FALLBACK)
             except (requests.Timeout, requests.ConnectionError):
-                _release_endpoint(ep, False)
                 tried = ep["url"]
                 logger.warning("LLM chat network error on %s (attempt %d)", ep["url"], attempt)
                 if attempt < attempts - 1:
                     continue
                 return self.NETWORK_FALLBACK
             except Exception as exc:
-                _release_endpoint(ep, False)
                 tried = ep["url"]
                 logger.warning("LLM chat unexpected error on %s (attempt %d)", ep["url"], attempt, exc_info=True)
                 if attempt < attempts - 1:
                     continue
                 return self._degrade(str(exc)[:200], self.GENERIC_FALLBACK)
+            finally:
+                try:
+                    if response is not None and hasattr(response, 'close'):
+                        response.close()
+                finally:
+                    _release_endpoint(ep, ok)
         return self._degrade('all endpoints failed', self.EMPTY_FALLBACK)
 
     # Reasoning models spend the completion budget thinking before they write.
@@ -273,6 +298,7 @@ class LLMClient:
 
     # -- non-streaming tool calls ------------------------------------------
 
+    @timed('llm.tools')
     def chat_with_tools(
         self,
         messages: List[Dict],
@@ -297,8 +323,12 @@ class LLMClient:
         tried = None
         attempts = max(2, len(_pool()))
         for attempt in range(attempts):
-            ep = _acquire_endpoint(exclude=tried if attempt else None)
+            try:
+                ep = _acquire_endpoint(exclude=tried if attempt else None)
+            except LLMBusy:
+                return {'narrative': '', 'tool_calls': [], 'fallback': True}
             payload["model"] = ep.get("model") or self.model
+            response, ok = None, False
             try:
                 response = requests.post(ep["url"] + path, json=payload,
                                          headers=self._headers(), timeout=self.timeout)
@@ -308,22 +338,26 @@ class LLMClient:
                     msg = (data.get("choices") or [{}])[0].get("message", {})
                 else:
                     msg = data.get("message", {})
-                _release_endpoint(ep, True)
+                ok = True
                 return {"narrative": msg.get("content", "") or "",
                         "tool_calls": msg.get("tool_calls", []) or []}
             except (requests.Timeout, requests.ConnectionError):
-                _release_endpoint(ep, False)
                 tried = ep["url"]
                 if attempt < attempts - 1:
                     continue
                 break
             except Exception:
-                _release_endpoint(ep, False)
                 tried = ep["url"]
                 logger.warning("LLM tool-call error on %s", ep["url"], exc_info=True)
                 if attempt < attempts - 1:
                     continue
                 break
+            finally:
+                try:
+                    if response is not None and hasattr(response, "close"):
+                        response.close()
+                finally:
+                    _release_endpoint(ep, ok)
         return {"narrative": "", "tool_calls": [], "fallback": True}
 
 

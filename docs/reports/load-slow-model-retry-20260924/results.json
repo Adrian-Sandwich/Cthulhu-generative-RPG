@@ -1,0 +1,104 @@
+{
+  "timestamp": "2026-09-25T02:03:01.223119+00:00",
+  "profile": "capacity",
+  "model": "simulated",
+  "model_seconds": 3.0,
+  "workers": 2,
+  "threads": 16,
+  "turns_per_client": 3,
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.14.7",
+  "logical_cpus": 8,
+  "machine_ram_gb": 15.73,
+  "stages": [
+    {
+      "attempted": 24,
+      "completed": 24,
+      "outcomes": {
+        "ok": 24
+      },
+      "elapsed_seconds": 15.9653,
+      "completed_per_second": 1.503,
+      "completion_seconds": {
+        "p50": 6.1548,
+        "p95": 6.2453,
+        "p99": 6.2523
+      },
+      "first_text_seconds": {
+        "p50": 0.938,
+        "p95": 0.9818,
+        "p99": 0.9946
+      },
+      "users": 8,
+      "admitted": 8,
+      "requested_turns": 24,
+      "setup_outcomes": {
+        "ok": 8
+      },
+      "verification_errors": {}
+    },
+    {
+      "attempted": 96,
+      "completed": 96,
+      "outcomes": {
+        "ok": 96
+      },
+      "elapsed_seconds": 18.113,
+      "completed_per_second": 5.3,
+      "completion_seconds": {
+        "p50": 6.3936,
+        "p95": 6.8163,
+        "p99": 6.9314
+      },
+      "first_text_seconds": {
+        "p50": 1.3331,
+        "p95": 1.5539,
+        "p99": 1.6501
+      },
+      "users": 32,
+      "admitted": 32,
+      "requested_turns": 96,
+      "setup_outcomes": {
+        "ok": 32
+      },
+      "verification_errors": {}
+    },
+    {
+      "attempted": 192,
+      "completed": 192,
+      "outcomes": {
+        "ok": 192
+      },
+      "elapsed_seconds": 36.3823,
+      "completed_per_second": 5.277,
+      "completion_seconds": {
+        "p50": 8.5351,
+        "p95": 12.4381,
+        "p99": 12.593
+      },
+      "first_text_seconds": {
+        "p50": 5.6915,
+        "p95": 7.176,
+        "p99": 7.332
+      },
+      "users": 64,
+      "admitted": 64,
+      "requested_turns": 192,
+      "setup_outcomes": {
+        "ok": 64
+      },
+      "verification_errors": {}
+    }
+  ],
+  "resources": {
+    "peak_worker_rss_mb": 139.75,
+    "worker_cpu_seconds": 8.312
+  },
+  "audit": {
+    "games": 104,
+    "receipt_statuses": {
+      "completed": 312
+    },
+    "simulated_llm_calls": 520
+  }
+}

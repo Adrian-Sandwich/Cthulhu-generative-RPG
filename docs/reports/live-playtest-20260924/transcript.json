@@ -1,0 +1,2137 @@
+{
+  "model": "qwen2.5:3b",
+  "provider": "ollama",
+  "runs": [
+    {
+      "target": "escape",
+      "events": [
+        {
+          "path": "/api/game/start",
+          "input": {
+            "name": "Live route audit",
+            "archetype": "scholar"
+          },
+          "status": 200,
+          "response": {
+            "game_id": "e19775d15b944cef898657e1a8de6e88",
+            "intro": "ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.",
+            "investigator": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "archetype": "scholar",
+              "maxHP": 10,
+              "name": "Live route audit"
+            },
+            "location": "Point Black Lighthouse - Exterior",
+            "message": "Game started! Welcome, Live route audit",
+            "success": true
+          },
+          "seconds": 0.02,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "I navigate the coast to find a safe route off the island",
+            "action_id": "fa6c80b6f28b48b0a6651b02d3245153",
+            "game_id": "e19775d15b944cef898657e1a8de6e88"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "fa6c80b6f28b48b0a6651b02d3245153",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "e19775d15b944cef898657e1a8de6e88",
+            "location": "Point Black Lighthouse - Exterior",
+            "narrative": "The winds howl against the window, making any exit seem perilous under this thick fog. You step back from the door, hands fisted by instinctive fear of what might be lurking outside.",
+            "npcs": [],
+            "pending_roll": {
+              "difficulty": "Normal",
+              "skill": "navigate",
+              "target": 80
+            },
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 16
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 2
+          },
+          "seconds": 39.6,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/roll",
+          "input": null,
+          "status": 200,
+          "response": {
+            "combat": null,
+            "consequence": {
+              "amount": 1,
+              "broke": false,
+              "fumble": false,
+              "kind": "san",
+              "label": "−1 SAN",
+              "summary": "The failure rattles you. You lose 1 Sanity (SAN 64)."
+            },
+            "difficulty": "Normal",
+            "empty": false,
+            "ending": null,
+            "game_id": "e19775d15b944cef898657e1a8de6e88",
+            "location": "Point Black Lighthouse - Exterior",
+            "message": "Roll 90 vs navigate(80) - ✗ FAILURE",
+            "narrative": "Your initial attempt to steer clear of danger faltered as the fog closed in unexpectedly, leaving your senses overwhelmed and disoriented. Despite your quick thinking, the harsh reality of your failing to chart an escape path left deep scars on your sanity, lowering it further to SAN 63.",
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 16
+            },
+            "roll": 90,
+            "roll_success": false,
+            "skill": "navigate",
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 64,
+              "maxHP": 10
+            },
+            "success": true,
+            "target": 80,
+            "turn": 2
+          },
+          "seconds": 18.7,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "I navigate the coast to find a safe route off the island",
+            "action_id": "fae707c2e9074957887c2ecfde68fdcc",
+            "game_id": "e19775d15b944cef898657e1a8de6e88"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "fae707c2e9074957887c2ecfde68fdcc",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "e19775d15b944cef898657e1a8de6e88",
+            "location": "Point Black Lighthouse - Exterior",
+            "narrative": "The salty air stings your eyes as you try to make sense of where to go next amidst the dense fog that cloaks everything around. You grip the railing tightly, heart pounding against your chest. Every step feels like wading through treacle, each breath harder than the last. With no landmarks visible beyond the immediate vicinity, navigating this coastal wilderness seems increasingly futile and dangerous.",
+            "npcs": [],
+            "pending_roll": {
+              "difficulty": "Normal",
+              "skill": "navigate",
+              "target": 80
+            },
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 15
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 64,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 3
+          },
+          "seconds": 51.29,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/roll",
+          "input": null,
+          "status": 200,
+          "response": {
+            "combat": null,
+            "consequence": null,
+            "difficulty": "Normal",
+            "empty": false,
+            "ending": null,
+            "game_id": "e19775d15b944cef898657e1a8de6e88",
+            "location": "Point Black Lighthouse - Exterior",
+            "message": "Roll 23 vs navigate(80) - ✓ SUCCESS",
+            "narrative": "With unwavering determination, the player successfully navigated the perilous coastline, narrowly avoiding treacherous reefs and sudden storms. The sun broke through the fog just as they reached open water, revealing a safer passage away from the island's lee.",
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 15
+            },
+            "roll": 23,
+            "roll_success": true,
+            "skill": "navigate",
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 64,
+              "maxHP": 10
+            },
+            "success": true,
+            "target": 80,
+            "turn": 3
+          },
+          "seconds": 19.27,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "leave the island",
+            "action_id": "a5058776f2ef42918597edf236faea99",
+            "game_id": "e19775d15b944cef898657e1a8de6e88"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "a5058776f2ef42918597edf236faea99",
+            "combat": null,
+            "ending": {
+              "name": "Escape",
+              "narrative": "You follow the route you charted through the rocks. The lighthouse fades behind the fog. You have escaped, but its red light follows you in memory.",
+              "type": "escape"
+            },
+            "events": [],
+            "game_id": "e19775d15b944cef898657e1a8de6e88",
+            "location": "Point Black Lighthouse - Exterior",
+            "narrative": "You follow the route you charted through the rocks. The lighthouse fades behind the fog. You have escaped, but its red light follows you in memory.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 14
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 64,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 4
+          },
+          "seconds": 0.05,
+          "fallbacks": 0
+        }
+      ],
+      "outcome": "reached",
+      "final": {
+        "turn": 4,
+        "location": "Point Black Lighthouse - Exterior",
+        "ending": "escape",
+        "objectives": [
+          "safe_route"
+        ],
+        "inventory": []
+      }
+    },
+    {
+      "target": "victory",
+      "events": [
+        {
+          "path": "/api/game/start",
+          "input": {
+            "name": "Live route audit",
+            "archetype": "scholar"
+          },
+          "status": 200,
+          "response": {
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "intro": "ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.",
+            "investigator": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "archetype": "scholar",
+              "maxHP": 10,
+              "name": "Live route audit"
+            },
+            "location": "Point Black Lighthouse - Exterior",
+            "message": "Game started! Welcome, Live route audit",
+            "success": true
+          },
+          "seconds": 0.02,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "I search the exterior for the keeper key",
+            "action_id": "e7a159a59f394228943646fd9489c8f8",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "e7a159a59f394228943646fd9489c8f8",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Point Black Lighthouse - Exterior",
+            "narrative": "You approach the rusted door of the lighthouse but find no obvious way inside without a key. The lock looks secure from here.",
+            "npcs": [],
+            "pending_roll": {
+              "difficulty": "Hard",
+              "skill": "spot_hidden",
+              "target": 22
+            },
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 16
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 2
+          },
+          "seconds": 12.39,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/roll",
+          "input": null,
+          "status": 200,
+          "response": {
+            "combat": null,
+            "consequence": {
+              "amount": 1,
+              "broke": false,
+              "fumble": false,
+              "kind": "san",
+              "label": "−1 SAN",
+              "summary": "The failure rattles you. You lose 1 Sanity (SAN 64)."
+            },
+            "difficulty": "Hard",
+            "empty": false,
+            "ending": null,
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Point Black Lighthouse - Exterior",
+            "message": "Roll 45 vs spot_hidden(22) - ✗ FAILURE",
+            "narrative": "Your keen eyes scan every crack and crevice, hoping to catch even the slightest hint of where the hidden mechanism might be located, but your failed roll leaves you disoriented and frustrated. The room feels like it’s closing in on you, its walls seeming more oppressive now as you realize how much further away from solving this puzzle you’ve become. Your SAN drops another point to 63.",
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 16
+            },
+            "roll": 45,
+            "roll_success": false,
+            "skill": "spot_hidden",
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 64,
+              "maxHP": 10
+            },
+            "success": true,
+            "target": 22,
+            "turn": 2
+          },
+          "seconds": 22.24,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "I search the exterior for the keeper key",
+            "action_id": "6bb794f221e841168fd02ceab9bc9509",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "6bb794f221e841168fd02ceab9bc9509",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Point Black Lighthouse - Exterior",
+            "narrative": "You kneel down to inspect the door closely once again, running your fingers along what appears to be a small indentation near the bottom corner. Despite feeling confident that something here could lead to unlocking the lighthouse's secrets, all you find are faint marks left by rainwater over years.",
+            "npcs": [],
+            "pending_roll": {
+              "difficulty": "Hard",
+              "skill": "spot_hidden",
+              "target": 22
+            },
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 15
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 64,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 3
+          },
+          "seconds": 48.75,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/roll",
+          "input": null,
+          "status": 200,
+          "response": {
+            "combat": null,
+            "consequence": {
+              "amount": 0,
+              "fumble": false,
+              "kind": "secret",
+              "label": "SECRET FOUND",
+              "location": "Point Black Lighthouse - Exterior",
+              "secret": "spot_hidden_turn_3",
+              "summary": "The investigator uncovers a hidden detail of Point Black Lighthouse - Exterior."
+            },
+            "difficulty": "Hard",
+            "empty": false,
+            "ending": null,
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Point Black Lighthouse - Exterior",
+            "message": "Roll 15 vs spot_hidden(22) - ✓ SUCCESS",
+            "narrative": "With practiced eyes, the player succeeded at spotting a subtle engraving etched into one of the stone steps leading up to the entrance of Point Black Lighthouse. It was barely visible but distinct enough—the initials \"J.S.\" carved into the rough surface. This discovery added yet another layer to the mysterious history of the lighthouse, hinting at its connection to someone named John Smith who may have been instrumental or perhaps even vanished from these very grounds long ago.",
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 15
+            },
+            "roll": 15,
+            "roll_success": true,
+            "skill": "spot_hidden",
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 64,
+              "maxHP": 10
+            },
+            "success": true,
+            "target": 22,
+            "turn": 3
+          },
+          "seconds": 26.82,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "take keeper key",
+            "action_id": "16fbe066cb394970a645d0489cb10287",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "16fbe066cb394970a645d0489cb10287",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Point Black Lighthouse - Exterior",
+            "narrative": "You pick up: Keeper's Key",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 14
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 64,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 4
+          },
+          "seconds": 0.04,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "go to Keeper's Quarters",
+            "action_id": "9e6ef57589364ad88db4a50a245afb21",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "9e6ef57589364ad88db4a50a245afb21",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Keeper's Quarters",
+            "narrative": "You enter Keeper's Quarters.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 13
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 64,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 5
+          },
+          "seconds": 0.05,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "I search the quarters for evidence",
+            "action_id": "40a313e38e1d42b882f725b32be01c13",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "40a313e38e1d42b882f725b32be01c13",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Keeper's Quarters",
+            "narrative": "You carefully examine each nook and cranny within Keeper's Quarters, hoping to find any clues that might connect you further to the enigmatic figure of John Smith. The musty air fills your nostrils, mingling with a faint chemical smell that seems out of place here. After several minutes spent scanning the room thoroughly, you notice an old ledger on one corner table; its pages are yellowed but still readable despite their age.",
+            "npcs": [],
+            "pending_roll": {
+              "difficulty": "Hard",
+              "skill": "spot_hidden",
+              "target": 22
+            },
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 12
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 64,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 6
+          },
+          "seconds": 57.15,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/roll",
+          "input": null,
+          "status": 200,
+          "response": {
+            "combat": null,
+            "consequence": {
+              "amount": 0,
+              "fumble": false,
+              "kind": "secret",
+              "label": "SECRET FOUND",
+              "location": "Keeper's Quarters",
+              "secret": "spot_hidden_turn_6",
+              "summary": "The investigator uncovers a hidden detail of Keeper's Quarters."
+            },
+            "difficulty": "Hard",
+            "empty": false,
+            "ending": null,
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Keeper's Quarters",
+            "message": "Roll 11 vs spot_hidden(22) - ✓ SUCCESS",
+            "narrative": "The successful roll reveals a small, weather-beaten note tucked between two loose floorboards near the back wall. It reads \"Meeting points for clandestine meetings.\" This discovery adds another layer to the mystery surrounding Keeper's Quarters and hints at the secretive nature of those who once resided there.",
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 12
+            },
+            "roll": 11,
+            "roll_success": true,
+            "skill": "spot_hidden",
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 64,
+              "maxHP": 10
+            },
+            "success": true,
+            "target": 22,
+            "turn": 6
+          },
+          "seconds": 22.96,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "go to exterior",
+            "action_id": "6df09644e0944ff3a3c0da9d9d511fdd",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "6df09644e0944ff3a3c0da9d9d511fdd",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Point Black Lighthouse - Exterior",
+            "narrative": "You enter Point Black Lighthouse - Exterior.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 11
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 64,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 7
+          },
+          "seconds": 0.04,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "go to interior",
+            "action_id": "a77504a6e7d542aabe8b693cfdd3cd9d",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "a77504a6e7d542aabe8b693cfdd3cd9d",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Lighthouse Interior",
+            "narrative": "You enter Lighthouse Interior.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 10
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 64,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 8
+          },
+          "seconds": 0.04,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "go to ground floor",
+            "action_id": "75cd9386651c4f0a8c8a1f7a4ec2d8a0",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "75cd9386651c4f0a8c8a1f7a4ec2d8a0",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Ground Floor",
+            "narrative": "You enter Ground Floor.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 9
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 64,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 9
+          },
+          "seconds": 0.03,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "go to basement",
+            "action_id": "8a4d12d334304c689ad8c423dabac9ba",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "8a4d12d334304c689ad8c423dabac9ba",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Basement",
+            "narrative": "You enter Basement.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 8
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 64,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 10
+          },
+          "seconds": 0.03,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "I investigate the foundations",
+            "action_id": "5f315fcdb4f0419cba4583ca738e3239",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "5f315fcdb4f0419cba4583ca738e3239",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Basement",
+            "narrative": "You examine the stone foundations carefully but find no immediate clues here beyond the engraving you noticed earlier. The dampness seems to seep into every crevice, making any further investigation challenging without proper lighting.",
+            "npcs": [],
+            "pending_roll": {
+              "difficulty": "Normal",
+              "skill": "investigate",
+              "target": 60
+            },
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 7
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 64,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 11
+          },
+          "seconds": 46.66,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/roll",
+          "input": null,
+          "status": 200,
+          "response": {
+            "combat": null,
+            "consequence": {
+              "amount": 2,
+              "broke": false,
+              "fumble": false,
+              "kind": "san",
+              "label": "−2 SAN",
+              "summary": "The failure rattles you. You lose 2 Sanity (SAN 62)."
+            },
+            "difficulty": "Normal",
+            "empty": false,
+            "ending": null,
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Basement",
+            "message": "Roll 93 vs investigate(60) - ✗ FAILURE",
+            "narrative": "Your inquiries seem misguided as you stumble upon a hidden trapdoor beneath one of the stones. It creaks ominously when you try to open it, revealing a narrow passage leading deeper underground. The air grows colder and heavier, and your heart races as you realize this was not where you should have been investigating. Your initial mistake has now placed both yourself and others in danger, forcing you to navigate through uncharted territory while maintaining your sanity amidst treacherous surroundings.",
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 7
+            },
+            "roll": 93,
+            "roll_success": false,
+            "skill": "investigate",
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 62,
+              "maxHP": 10
+            },
+            "success": true,
+            "target": 60,
+            "turn": 11
+          },
+          "seconds": 40.45,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "I investigate the foundations",
+            "action_id": "82f3ae733f774959992450fe251e33c7",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "82f3ae733f774959992450fe251e33c7",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Basement",
+            "narrative": "The dampness seeps into every crevice, making any further investigation challenging without proper lighting. You focus on examining the stone foundations more closely but find no immediate clues beyond the engraving etched into one of the steps. As you stand there for what feels like an eternity, the cold air seems to intensify around you, heightening your sense of unease.",
+            "npcs": [],
+            "pending_roll": {
+              "difficulty": "Normal",
+              "skill": "investigate",
+              "target": 60
+            },
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 6
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 62,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 12
+          },
+          "seconds": 69.17,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/roll",
+          "input": null,
+          "status": 200,
+          "response": {
+            "combat": null,
+            "consequence": {
+              "amount": 0,
+              "fumble": false,
+              "kind": "secret",
+              "label": "SECRET FOUND",
+              "location": "Basement",
+              "secret": "investigate_turn_12",
+              "summary": "The investigator uncovers a hidden detail of Basement."
+            },
+            "difficulty": "Normal",
+            "empty": false,
+            "ending": null,
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Basement",
+            "message": "Roll 19 vs investigate(60) - ✓ SUCCESS",
+            "narrative": "The investigator uncovers a secret ventilation shaft beneath the floorboards leading down deeper into the basement. This new discovery reveals that the dungeon extends even lower than previously suspected, with potential access points yet undiscovered.",
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 6
+            },
+            "roll": 19,
+            "roll_success": true,
+            "skill": "investigate",
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 62,
+              "maxHP": 10
+            },
+            "success": true,
+            "target": 60,
+            "turn": 12
+          },
+          "seconds": 29.54,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "go to ground floor",
+            "action_id": "b545b5c2f47f4b22b6e6c4445523adfa",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "b545b5c2f47f4b22b6e6c4445523adfa",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Ground Floor",
+            "narrative": "You enter Ground Floor.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 5
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 62,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 13
+          },
+          "seconds": 0.03,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "go to interior",
+            "action_id": "ff02549a139440e5982dc3644613981d",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "ff02549a139440e5982dc3644613981d",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Lighthouse Interior",
+            "narrative": "You enter Lighthouse Interior.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 4
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 62,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 14
+          },
+          "seconds": 0.03,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "go to stairs",
+            "action_id": "977f209f3cb34014bae3f72238b5c220",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "977f209f3cb34014bae3f72238b5c220",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Lighthouse Stairs",
+            "narrative": "You enter Lighthouse Stairs.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 3
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 62,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 15
+          },
+          "seconds": 0.03,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "go to upper level",
+            "action_id": "fa246d9a851945ba8c647fc4a30b9654",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "fa246d9a851945ba8c647fc4a30b9654",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Upper Level",
+            "narrative": "You enter Upper Level.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 2
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 62,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 16
+          },
+          "seconds": 0.03,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "go to lantern room",
+            "action_id": "fdcb8d6329d743c789097c4e18dc1c5b",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "fdcb8d6329d743c789097c4e18dc1c5b",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Lantern Room",
+            "narrative": "You enter Lantern Room.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 1
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 62,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 17
+          },
+          "seconds": 0.04,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "I interpret the occult symbols around the beacon",
+            "action_id": "e83f2a6e778148758995fca6f66fdbfc",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "e83f2a6e778148758995fca6f66fdbfc",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Lantern Room",
+            "narrative": "You examine the occult symbols more closely but find no immediate understanding of their meaning amidst the heat from the lamp. Your eyes strain against the light, trying to decipher any hidden messages within the patterns etched onto the walls.",
+            "npcs": [],
+            "pending_roll": {
+              "difficulty": "Hard",
+              "skill": "occult",
+              "target": 25
+            },
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 0
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 62,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 18
+          },
+          "seconds": 53.82,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/roll",
+          "input": null,
+          "status": 200,
+          "response": {
+            "combat": null,
+            "consequence": {
+              "amount": 2,
+              "broke": false,
+              "fumble": false,
+              "kind": "san",
+              "label": "−2 SAN",
+              "summary": "The failure rattles you. You lose 2 Sanity (SAN 60)."
+            },
+            "difficulty": "Hard",
+            "empty": false,
+            "ending": null,
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Lantern Room",
+            "message": "Roll 80 vs occult(25) - ✗ FAILURE",
+            "narrative": "Your examination of the arcane markings only serves to heighten your unease; they seem almost alive, shifting under the flickering light like shadows taking shape. This unsettling realization leaves a deep impression on your psyche, further eroding your fragile grip on reality as SAN drops to 58.",
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 0
+            },
+            "roll": 80,
+            "roll_success": false,
+            "skill": "occult",
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 60,
+              "maxHP": 10
+            },
+            "success": true,
+            "target": 25,
+            "turn": 18
+          },
+          "seconds": 25.73,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "I interpret the occult symbols around the beacon",
+            "action_id": "6464af95c1274d34877da18162efdc91",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "6464af95c1274d34877da18162efdc91",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Lantern Room",
+            "narrative": "You focus intently on the intricate designs surrounding the beacon, attempting to discern any cryptic meanings that might hint at the lighthouse's dark past. The heat from the lamp obscures much detail but you can't shake off an odd sense of familiarity about these symbols, making their interpretation even more perplexing.",
+            "npcs": [],
+            "pending_roll": {
+              "difficulty": "Hard",
+              "skill": "occult",
+              "target": 25
+            },
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 0
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 58,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 19
+          },
+          "seconds": 47.77,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/roll",
+          "input": null,
+          "status": 200,
+          "response": {
+            "combat": null,
+            "consequence": {
+              "amount": 2,
+              "broke": false,
+              "fumble": false,
+              "kind": "san",
+              "label": "−2 SAN",
+              "summary": "The failure rattles you. You lose 2 Sanity (SAN 56)."
+            },
+            "difficulty": "Hard",
+            "empty": false,
+            "ending": null,
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Lantern Room",
+            "message": "Roll 75 vs occult(25) - ✗ FAILURE",
+            "narrative": "Your failed attempt to decipher the labyrinthine symbols sends shockwaves through you, reinforcing doubts already gnawing at your sanity. Despite your determination, they seem designed to elude understanding, leaving you shaken and perpetually vigilant against whatever secrets lurk within this very structure.",
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 0
+            },
+            "roll": 75,
+            "roll_success": false,
+            "skill": "occult",
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 56,
+              "maxHP": 10
+            },
+            "success": true,
+            "target": 25,
+            "turn": 19
+          },
+          "seconds": 26.29,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "I interpret the occult symbols around the beacon",
+            "action_id": "31ecfe1e15c24828bd9f400edd9696e6",
+            "game_id": "44f92906a1b145c1bc0117604d120f3a"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "31ecfe1e15c24828bd9f400edd9696e6",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Lantern Room",
+            "narrative": "You focus intently on the intricate designs surrounding the beacon, attempting to discern any cryptic meanings that might hint at the lighthouse's dark past. The heat from the lamp obscures much detail but an odd sense of familiarity about these symbols makes their interpretation even more perplexing.",
+            "npcs": [],
+            "pending_roll": {
+              "difficulty": "Hard",
+              "skill": "occult",
+              "target": 25
+            },
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 0
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 54,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 20
+          },
+          "seconds": 68.01,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/roll",
+          "input": null,
+          "status": 200,
+          "response": {
+            "combat": null,
+            "consequence": {
+              "amount": 1,
+              "broke": false,
+              "fumble": false,
+              "kind": "san",
+              "label": "−1 SAN",
+              "summary": "The failure rattles you. You lose 1 Sanity (SAN 53)."
+            },
+            "difficulty": "Hard",
+            "empty": false,
+            "ending": null,
+            "game_id": "44f92906a1b145c1bc0117604d120f3a",
+            "location": "Lantern Room",
+            "message": "Roll 38 vs occult(25) - ✗ FAILURE",
+            "narrative": "The failure rips open a fissure in reality itself, as if the arcane energies were testing the limits of your comprehension. It seeps into every corner of your mind like quicksilver, making it harder than ever before to shake off those unsettling shadows that now dance just beyond your perception. Your SAN drops further still to 52, leaving you forever wary of delving deeper into this sinister place.",
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 0
+            },
+            "roll": 38,
+            "roll_success": false,
+            "skill": "occult",
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 53,
+              "maxHP": 10
+            },
+            "success": true,
+            "target": 25,
+            "turn": 20
+          },
+          "seconds": 41.94,
+          "fallbacks": 0
+        }
+      ],
+      "outcome": "blocked",
+      "reason": "Objective not earned within attempt budget: beacon_symbols",
+      "final": {
+        "turn": 20,
+        "location": "Lantern Room",
+        "ending": null,
+        "objectives": [
+          "shore_search",
+          "keeper_evidence",
+          "foundation_survey"
+        ],
+        "inventory": [
+          "Keeper's Key"
+        ]
+      }
+    },
+    {
+      "target": "destruction",
+      "events": [
+        {
+          "path": "/api/game/start",
+          "input": {
+            "name": "Live route audit",
+            "archetype": "scholar"
+          },
+          "status": 200,
+          "response": {
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd",
+            "intro": "ALONE AGAINST THE DARK - Point Black Lighthouse\n\n    You arrive at the remote Point Black Lighthouse on the rocky Maine coast.\n    Lieutenant Warner called you: the lighthouse keeper has vanished.\n    But when you examine the logs, something is wrong. The keeper was dead for two weeks\n    before anyone found him—yet someone has been writing in the logs ever since.\n\n    The fog rolls in. The light blinks red. Something ancient stirs beneath the waves.",
+            "investigator": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "archetype": "scholar",
+              "maxHP": 10,
+              "name": "Live route audit"
+            },
+            "location": "Point Black Lighthouse - Exterior",
+            "message": "Game started! Welcome, Live route audit",
+            "success": true
+          },
+          "seconds": 0.01,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "go to interior",
+            "action_id": "544f649995474ca38689be1a0e929db1",
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "544f649995474ca38689be1a0e929db1",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd",
+            "location": "Lighthouse Interior",
+            "narrative": "You enter Lighthouse Interior.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 16
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 2
+          },
+          "seconds": 0.03,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "go to ground floor",
+            "action_id": "49ebb4efa9ed4309ad264bf209e474f8",
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "49ebb4efa9ed4309ad264bf209e474f8",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd",
+            "location": "Ground Floor",
+            "narrative": "You enter Ground Floor.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 15
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 3
+          },
+          "seconds": 0.03,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "go to basement",
+            "action_id": "ab40b2cf39a74581a064ba2ccf2ec4ba",
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "ab40b2cf39a74581a064ba2ccf2ec4ba",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd",
+            "location": "Basement",
+            "narrative": "You enter Basement.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 14
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 4
+          },
+          "seconds": 0.04,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "I investigate the foundations",
+            "action_id": "152e07f17db147c0a6635d16a8e0e2bb",
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "152e07f17db147c0a6635d16a8e0e2bb",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd",
+            "location": "Basement",
+            "narrative": "You carefully examine the damp stone walls of the foundation, searching for clues beneath the surface.",
+            "npcs": [],
+            "pending_roll": {
+              "difficulty": "Normal",
+              "skill": "investigate",
+              "target": 60
+            },
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 13
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 5
+          },
+          "seconds": 27.05,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/roll",
+          "input": null,
+          "status": 200,
+          "response": {
+            "combat": null,
+            "consequence": {
+              "amount": 0,
+              "fumble": false,
+              "kind": "secret",
+              "label": "SECRET FOUND",
+              "location": "Basement",
+              "secret": "investigate_turn_5",
+              "summary": "The investigator uncovers a hidden detail of Basement."
+            },
+            "difficulty": "Normal",
+            "empty": false,
+            "ending": null,
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd",
+            "location": "Basement",
+            "message": "Roll 5 vs investigate(60) - ✓ SUCCESS [CRITICAL SUCCESS]",
+            "narrative": "Success looks like uncovering an ancient well that had long been sealed off during renovations. Its presence suggests previous clandestine activities or discoveries beneath the current structure's foundation.",
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 13
+            },
+            "roll": 5,
+            "roll_success": true,
+            "skill": "investigate",
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "maxHP": 10
+            },
+            "success": true,
+            "target": 60,
+            "turn": 5
+          },
+          "seconds": 14.84,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "take dynamite",
+            "action_id": "a679dbf5bc92462fba3712b0083c22be",
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "a679dbf5bc92462fba3712b0083c22be",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd",
+            "location": "Basement",
+            "narrative": "You pick up: Dynamite (3 sticks)",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 12
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 6
+          },
+          "seconds": 0.03,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "go to ground floor",
+            "action_id": "d9e6aa7776004c3aab7b64dc0284c979",
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "d9e6aa7776004c3aab7b64dc0284c979",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd",
+            "location": "Ground Floor",
+            "narrative": "You enter Ground Floor.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 11
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 7
+          },
+          "seconds": 0.03,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "go to interior",
+            "action_id": "d1fb2e7411434cdf847cd05bea48be1b",
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "d1fb2e7411434cdf847cd05bea48be1b",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd",
+            "location": "Lighthouse Interior",
+            "narrative": "You enter Lighthouse Interior.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 10
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 8
+          },
+          "seconds": 0.03,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "go to stairs",
+            "action_id": "63590e95abff4901b7593f29ac18f20d",
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "63590e95abff4901b7593f29ac18f20d",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd",
+            "location": "Lighthouse Stairs",
+            "narrative": "You enter Lighthouse Stairs.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 9
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 9
+          },
+          "seconds": 0.03,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "go to upper level",
+            "action_id": "9c6b17fc70214eac883a672a1bb0c7f0",
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "9c6b17fc70214eac883a672a1bb0c7f0",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd",
+            "location": "Upper Level",
+            "narrative": "You enter Upper Level.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 8
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 10
+          },
+          "seconds": 0.03,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "go to lantern room",
+            "action_id": "923f714bf2764ebca69ce8460b1e26a4",
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "923f714bf2764ebca69ce8460b1e26a4",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd",
+            "location": "Lantern Room",
+            "narrative": "You enter Lantern Room.",
+            "npcs": [],
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 7
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 11
+          },
+          "seconds": 0.03,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "I interpret the occult symbols around the beacon",
+            "action_id": "2fd09e01f2904cf2bcbd7273062fe65d",
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "2fd09e01f2904cf2bcbd7273062fe65d",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd",
+            "location": "Lantern Room",
+            "narrative": "You examine the scattered papers more closely for any hidden messages or patterns related to the mysterious symbols surrounding the lighthouse’s beacon light.",
+            "npcs": [],
+            "pending_roll": {
+              "difficulty": "Hard",
+              "skill": "occult",
+              "target": 25
+            },
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 6
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 65,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 12
+          },
+          "seconds": 39.8,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/roll",
+          "input": null,
+          "status": 200,
+          "response": {
+            "combat": null,
+            "consequence": {
+              "amount": 2,
+              "broke": false,
+              "fumble": false,
+              "kind": "san",
+              "label": "−2 SAN",
+              "summary": "The failure rattles you. You lose 2 Sanity (SAN 63)."
+            },
+            "difficulty": "Hard",
+            "empty": false,
+            "ending": null,
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd",
+            "location": "Lantern Room",
+            "message": "Roll 67 vs occult(25) - ✗ FAILURE",
+            "narrative": "Your efforts to decipher the arcane markings only serve to agitate your mind further. As if by some malevolent force, they seem designed to unsettle you deeply instead of enlighten you. This futile attempt leaves a lasting impression on your psyche, reducing your Sanity to 61.",
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 6
+            },
+            "roll": 67,
+            "roll_success": false,
+            "skill": "occult",
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 63,
+              "maxHP": 10
+            },
+            "success": true,
+            "target": 25,
+            "turn": 12
+          },
+          "seconds": 28.38,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "I interpret the occult symbols around the beacon",
+            "action_id": "f5a0355374b44102bf35b8efac8731f5",
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "f5a0355374b44102bf35b8efac8731f5",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd",
+            "location": "Lantern Room",
+            "narrative": "The ancient symbols appear even more cryptic under moonlight, their meanings shrouded like mist over distant hills. Your attempts at interpretation feel increasingly futile, each symbol seeming to mock rather than reveal truth.",
+            "npcs": [],
+            "pending_roll": {
+              "difficulty": "Hard",
+              "skill": "occult",
+              "target": 25
+            },
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 5
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 63,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 13
+          },
+          "seconds": 48.47,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/roll",
+          "input": null,
+          "status": 200,
+          "response": {
+            "combat": null,
+            "consequence": {
+              "amount": 2,
+              "broke": false,
+              "fumble": false,
+              "kind": "san",
+              "label": "−2 SAN",
+              "summary": "The failure rattles you. You lose 2 Sanity (SAN 61)."
+            },
+            "difficulty": "Hard",
+            "empty": false,
+            "ending": null,
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd",
+            "location": "Lantern Room",
+            "message": "Roll 58 vs occult(25) - ✗ FAILURE",
+            "narrative": "The failed roll left you feeling disoriented and unsettled, as if the very air itself was conspiring against you. The unsettling energy of the lighthouse's symbols seemed to seep into every pore of your being, making it harder for you to shake off this encounter without further loss.",
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 5
+            },
+            "roll": 58,
+            "roll_success": false,
+            "skill": "occult",
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 61,
+              "maxHP": 10
+            },
+            "success": true,
+            "target": 25,
+            "turn": 13
+          },
+          "seconds": 26.44,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/action",
+          "input": {
+            "action": "I interpret the occult symbols around the beacon",
+            "action_id": "041f4b942a4e48799c097dfe0e4f6d50",
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd"
+          },
+          "status": 200,
+          "response": {
+            "action_id": "041f4b942a4e48799c097dfe0e4f6d50",
+            "combat": null,
+            "ending": null,
+            "events": [],
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd",
+            "location": "Lantern Room",
+            "narrative": "The room grows heavier, the light from the beacon casting long shadows across scattered papers. You squint at the markings but see only more complexity, their meaning eluding all attempts at understanding.",
+            "npcs": [],
+            "pending_roll": {
+              "difficulty": "Hard",
+              "skill": "occult",
+              "target": 25
+            },
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 4
+            },
+            "sanity_corruption": 0,
+            "sanity_recovered": 0,
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 61,
+              "maxHP": 10
+            },
+            "success": true,
+            "turn": 14
+          },
+          "seconds": 51.27,
+          "fallbacks": 0
+        },
+        {
+          "path": "/api/game/roll",
+          "input": null,
+          "status": 200,
+          "response": {
+            "combat": null,
+            "consequence": {
+              "amount": 2,
+              "broke": false,
+              "fumble": false,
+              "kind": "san",
+              "label": "−2 SAN",
+              "summary": "The failure rattles you. You lose 2 Sanity (SAN 59)."
+            },
+            "difficulty": "Hard",
+            "empty": false,
+            "ending": null,
+            "game_id": "dfdf054967f0421690ebcaa61bf6c1dd",
+            "location": "Lantern Room",
+            "message": "Roll 61 vs occult(25) - ✗ FAILURE",
+            "narrative": "Your efforts to decipher the arcane symbols leave a lingering sense of futility, causing you great distress and frustration. The deeper you delve into their mysteries, the clearer it becomes how little they reveal about anything meaningful or true. This futile endeavor leaves an indelible mark on your psyche, reducing your Sanity score to 57.",
+            "pending_roll": null,
+            "resources": {
+              "ammo": 0,
+              "has_firearm": false,
+              "time_limit": 18,
+              "time_remaining": 4
+            },
+            "roll": 61,
+            "roll_success": false,
+            "skill": "occult",
+            "state": {
+              "HP": 10,
+              "Luck": 50,
+              "SAN": 59,
+              "maxHP": 10
+            },
+            "success": true,
+            "target": 25,
+            "turn": 14
+          },
+          "seconds": 30.27,
+          "fallbacks": 0
+        }
+      ],
+      "outcome": "blocked",
+      "reason": "Objective not earned within attempt budget: beacon_symbols",
+      "final": {
+        "turn": 14,
+        "location": "Lantern Room",
+        "ending": null,
+        "objectives": [
+          "foundation_survey"
+        ],
+        "inventory": [
+          "Dynamite (3 sticks)"
+        ]
+      }
+    }
+  ]
+}

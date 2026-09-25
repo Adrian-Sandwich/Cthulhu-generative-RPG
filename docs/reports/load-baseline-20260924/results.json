@@ -1,0 +1,156 @@
+{
+  "timestamp": "2026-09-25T01:52:08.031190+00:00",
+  "profile": "capacity",
+  "model": "simulated",
+  "model_seconds": 0.5,
+  "workers": 2,
+  "threads": 16,
+  "turns_per_client": 4,
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.14.7",
+  "logical_cpus": 8,
+  "machine_ram_gb": 15.73,
+  "stages": [
+    {
+      "attempted": 4,
+      "completed": 4,
+      "outcomes": {
+        "ok": 4
+      },
+      "elapsed_seconds": 6.6448,
+      "completed_per_second": 0.602,
+      "completion_seconds": {
+        "p50": 1.5934,
+        "p95": 1.66,
+        "p99": 1.66
+      },
+      "first_text_seconds": {
+        "p50": 0.2019,
+        "p95": 0.2627,
+        "p99": 0.2627
+      },
+      "users": 1,
+      "admitted": 1,
+      "requested_turns": 4,
+      "setup_outcomes": {
+        "ok": 1
+      },
+      "verification_errors": {}
+    },
+    {
+      "attempted": 32,
+      "completed": 32,
+      "outcomes": {
+        "ok": 32
+      },
+      "elapsed_seconds": 7.0533,
+      "completed_per_second": 4.537,
+      "completion_seconds": {
+        "p50": 1.6733,
+        "p95": 1.7074,
+        "p99": 1.7238
+      },
+      "first_text_seconds": {
+        "p50": 0.2872,
+        "p95": 0.3224,
+        "p99": 0.3289
+      },
+      "users": 8,
+      "admitted": 8,
+      "requested_turns": 32,
+      "setup_outcomes": {
+        "ok": 8
+      },
+      "verification_errors": {}
+    },
+    {
+      "attempted": 64,
+      "completed": 64,
+      "outcomes": {
+        "ok": 64
+      },
+      "elapsed_seconds": 7.7742,
+      "completed_per_second": 8.232,
+      "completion_seconds": {
+        "p50": 1.7725,
+        "p95": 1.8782,
+        "p99": 1.9069
+      },
+      "first_text_seconds": {
+        "p50": 0.3797,
+        "p95": 0.4904,
+        "p99": 0.5143
+      },
+      "users": 16,
+      "admitted": 16,
+      "requested_turns": 64,
+      "setup_outcomes": {
+        "ok": 16
+      },
+      "verification_errors": {}
+    },
+    {
+      "attempted": 128,
+      "completed": 128,
+      "outcomes": {
+        "ok": 128
+      },
+      "elapsed_seconds": 9.3508,
+      "completed_per_second": 13.689,
+      "completion_seconds": {
+        "p50": 2.0118,
+        "p95": 2.2601,
+        "p99": 2.3731
+      },
+      "first_text_seconds": {
+        "p50": 0.6178,
+        "p95": 0.8424,
+        "p99": 0.9827
+      },
+      "users": 32,
+      "admitted": 32,
+      "requested_turns": 128,
+      "setup_outcomes": {
+        "ok": 32
+      },
+      "verification_errors": {}
+    },
+    {
+      "attempted": 256,
+      "completed": 256,
+      "outcomes": {
+        "ok": 256
+      },
+      "elapsed_seconds": 18.0497,
+      "completed_per_second": 14.183,
+      "completion_seconds": {
+        "p50": 3.3714,
+        "p95": 4.2158,
+        "p99": 4.2896
+      },
+      "first_text_seconds": {
+        "p50": 1.9637,
+        "p95": 2.8054,
+        "p99": 2.8585
+      },
+      "users": 64,
+      "admitted": 64,
+      "requested_turns": 256,
+      "setup_outcomes": {
+        "ok": 64
+      },
+      "verification_errors": {}
+    }
+  ],
+  "resources": {
+    "peak_worker_rss_mb": 145.25,
+    "worker_cpu_seconds": 11.484
+  },
+  "audit": {
+    "games": 121,
+    "receipt_statuses": {
+      "completed": 484
+    },
+    "simulated_llm_calls": 847
+  }
+}

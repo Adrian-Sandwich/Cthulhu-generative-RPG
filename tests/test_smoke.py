@@ -35,14 +35,10 @@ def _make_app(data_dir):
     return app_module.create_app({"DATA_DIR": str(data_dir)})
 
 
-# A canned DM reply that actually carries mechanic tags. The tags matter: the
-# [LOCATION: name] path lost its resolver in a refactor and shipped broken
-# because this fixture claimed to be "tag-rich" while returning bare prose, so
-# nothing exercised it. Terminal tags (ROLL, COMBAT_START, ENDING) stay out —
-# they would change game phase for every test sharing this fixture.
+# A valid narrator response. World tags are tested separately as adversarial inputs.
 CANNED_DM = (
     "You press deeper into the dark. Something stirs. "
-    "[LOCATION: Keeper's Quarters] [ITEM_FOUND: revolver]"
+    "[NPC_DIALOGUE: warner]"
 )
 
 
@@ -89,23 +85,13 @@ def test_action_turn(client):
     assert r.get_json()["success"]
 
 
-def test_dm_tags_take_mechanical_effect_over_http(client):
-    """The tags in CANNED_DM must change real state, not just parse.
-
-    Regression: [LOCATION: name] used to raise AttributeError inside
-    process_player_action, which app.py turns into a 500 — so the most common
-    player action (moving) lost the turn.
-    """
+def test_engine_movement_has_no_unsolicited_reward_over_http(client):
     _start(client)
-    before = client.get("/api/game/state").get_json()
-    assert before["location"] != "Keeper's Quarters"
-
-    r = client.post("/api/game/action", json={"action": "go up to the keeper's quarters"})
+    r = client.post("/api/game/action", json={"action": "go to interior"})
     assert r.status_code == 200, r.get_data(as_text=True)
-
     after = client.get("/api/game/state").get_json()
-    assert after["location"] == "Keeper's Quarters"
-    assert "Revolver (.38)" in after["investigator"]["inventory"]
+    assert after["location"] == "Lighthouse Interior"
+    assert after["investigator"]["inventory"] == []
 
 
 def test_action_stream(client):
@@ -165,6 +151,373 @@ def test_reset(client):
 
 
 # --- input guards ----------------------------------------------------------
+
+def _command(client, action_id='recovery-test-001', action='look around'):
+    state = client.get('/api/game/state').get_json()
+    return {'action': action, 'action_id': action_id, 'game_id': state['game_id']}
+
+
+def _restart_client(client):
+    game = client.application.extensions['cthulhu']
+    fresh = _make_app(game.data_dir).test_client()
+    with client.session_transaction() as old:
+        sid = old['sid']
+    with fresh.session_transaction() as new:
+        new['sid'] = sid
+    return fresh
+
+
+@pytest.mark.parametrize('first_stream', [False, True])
+def test_action_receipt_replays_across_endpoints_and_restart(client, first_stream):
+    import json
+    _start(client)
+    command = _command(client)
+    endpoint = '/api/game/action/stream' if first_stream else '/api/game/action'
+    first = client.post(endpoint, json=command)
+    if first_stream:
+        body = first.get_data(as_text=True)
+        payload = json.loads(body.split('event: done\ndata: ')[1].split('\n\n')[0])
+    else:
+        payload = first.get_json()
+    state = client.get('/api/game/state').get_json()
+    fresh = _restart_client(client)
+    with patch('core.game_generative.GenerativeGameEngine.process_player_action',
+               side_effect=AssertionError('duplicate execution')):
+        assert fresh.post('/api/game/action', json=command).get_json() == payload
+        stream = fresh.post('/api/game/action/stream', json=command).get_data(as_text=True)
+        assert 'event: done' in stream
+        receipt = fresh.get('/api/game/actions/' + command['action_id']).get_json()
+    assert receipt['status'] == 'completed'
+    assert receipt['result'] == payload
+    assert fresh.get('/api/game/state').get_json() == state
+
+
+def test_duplicate_id_conflicts_and_new_game_rejects_old_command(client):
+    _start(client)
+    command = _command(client)
+    assert client.post('/api/game/action', json=command).status_code == 200
+    assert client.post('/api/game/action', json=dict(command, action='run away')).status_code == 409
+    _start(client)
+    assert client.post('/api/game/action', json=command).status_code == 409
+    assert client.get('/api/game/actions/' + command['action_id'],
+                      query_string={'game_id': command['game_id']}).status_code == 409
+
+
+@pytest.mark.parametrize('status', ['pending', 'running'])
+def test_restart_marks_uncommitted_turn_failed_without_reexecuting(client, status):
+    _start(client)
+    command = _command(client)
+    game = client.application.extensions['cthulhu']
+    gs = next(iter(game.sessions.values()))
+    before = gs.engine.state.turn
+    gs.actions[command['action_id']] = {'action': command['action'], 'status': status}
+    game.autosave(gs, strict=True)
+    gs.engine.state.turn += 10  # lost in-memory work at the simulated crash
+    fresh = _restart_client(client)
+    with patch('core.game_generative.GenerativeGameEngine.process_player_action',
+               side_effect=AssertionError('interrupted turn was reexecuted')):
+        receipt = fresh.get('/api/game/actions/' + command['action_id']).get_json()
+        assert receipt['status'] == 'failed'
+        assert fresh.post('/api/game/action', json=command).status_code == 409
+    assert fresh.get('/api/game/state').get_json()['turn'] == before
+
+
+def test_concurrent_duplicate_runs_once_and_status_does_not_block(client, monkeypatch):
+    import threading
+    _start(client)
+    command = _command(client)
+    game = client.application.extensions['cthulhu']
+    gs = next(iter(game.sessions.values()))
+    original = gs.engine.process_player_action
+    entered, release = threading.Event(), threading.Event()
+    calls, responses = [], []
+    def slow(*args, **kwargs):
+        calls.append(1)
+        entered.set()
+        assert release.wait(10)
+        return original(*args, **kwargs)
+    monkeypatch.setattr(gs.engine, 'process_player_action', slow)
+    def duplicate_client():
+        other = client.application.test_client()
+        with other.session_transaction() as session:
+            session['sid'] = gs.sid
+        return other
+    def send():
+        responses.append(duplicate_client().post('/api/game/action', json=command).get_json())
+    first = threading.Thread(target=send)
+    second = threading.Thread(target=send)
+    first.start()
+    try:
+        assert entered.wait(3)
+        second.start()
+        receipt = duplicate_client().get('/api/game/actions/' + command['action_id']).get_json()
+        assert receipt['status'] == 'running'
+        assert calls == [1]
+    finally:
+        release.set()
+        first.join(5)
+        if second.ident:
+            second.join(5)
+    assert len(responses) == 2 and responses[0] == responses[1]
+    assert calls == [1]
+
+
+def test_failed_commit_rolls_back_mechanics_and_never_reports_success(client, monkeypatch):
+    _start(client)
+    command = _command(client)
+    game = client.application.extensions['cthulhu']
+    gs = next(iter(game.sessions.values()))
+    before = client.get('/api/game/state').get_json()
+    original = gs.engine.save_game
+    def fail_commit(app_state=None):
+        receipt = app_state.get('actions', {}).get(command['action_id'], {})
+        if receipt.get('status') == 'completed':
+            raise OSError('disk full')
+        return original(app_state=app_state)
+    monkeypatch.setattr(gs.engine, 'save_game', fail_commit)
+    response = client.post('/api/game/action', json=command)
+    assert response.status_code == 503
+    assert client.get('/api/game/state').get_json() == before
+    receipt = client.get('/api/game/actions/' + command['action_id']).get_json()
+    assert receipt['status'] == 'failed'
+    with patch.object(gs.engine, 'process_player_action', side_effect=AssertionError('reexecuted')):
+        assert client.post('/api/game/action', json=command).status_code == 503
+
+
+def test_receipts_are_private_to_the_session(client):
+    _start(client)
+    command = _command(client)
+    client.post('/api/game/action', json=command)
+    other = client.application.test_client()
+    _start(other)
+    assert other.get('/api/game/actions/' + command['action_id']).status_code == 404
+
+
+@pytest.mark.parametrize('fail_on', [1, 2])
+def test_checkpoint_failure_never_calls_model(client, monkeypatch, fail_on):
+    _start(client)
+    command = _command(client)
+    game = client.application.extensions['cthulhu']
+    gs = next(iter(game.sessions.values()))
+    original = gs.engine.save_game
+    count = 0
+    def fail_checkpoint(app_state=None):
+        nonlocal count
+        count += 1
+        if count == fail_on:
+            raise OSError('checkpoint failed')
+        return original(app_state=app_state)
+    monkeypatch.setattr(gs.engine, 'save_game', fail_checkpoint)
+    with patch.object(gs.engine, 'process_player_action', side_effect=AssertionError('model called')):
+        assert client.post('/api/game/action', json=command).status_code == 503
+    assert client.get('/api/game/state').get_json()['turn'] == 1
+    receipt = client.get('/api/game/actions/' + command['action_id'])
+    if fail_on == 1:
+        assert receipt.status_code == 404
+    else:
+        assert receipt.get_json()['status'] == 'failed'
+
+
+def test_failed_action_restores_state_and_replays_error(client, monkeypatch):
+    _start(client)
+    command = _command(client)
+    game = client.application.extensions['cthulhu']
+    gs = next(iter(game.sessions.values()))
+    before = client.get('/api/game/state').get_json()
+    def partial(*args, **kwargs):
+        gs.engine.state.turn += 1
+        gs.investigator.characteristics['HP'] = 0
+        raise RuntimeError('partial failure')
+    monkeypatch.setattr(gs.engine, 'process_player_action', partial)
+    first = client.post('/api/game/action', json=command)
+    assert first.status_code == 500
+    assert client.get('/api/game/state').get_json() == before
+    fresh = _restart_client(client)
+    assert fresh.post('/api/game/action', json=command).get_json() == first.get_json()
+
+
+def test_client_action_id_requires_game_identity(client):
+    _start(client)
+    assert client.post('/api/game/action', json={
+        'action': 'look', 'action_id': 'valid-id-001',
+    }).status_code == 400
+
+
+@pytest.mark.parametrize('action_id', ['', 'short', '../escape', [], 42, 'x' * 129])
+def test_invalid_action_ids_do_not_execute(client, action_id):
+    _start(client)
+    assert client.post('/api/game/action', json={'action': 'look', 'action_id': action_id}).status_code == 400
+
+
+def test_completed_receipt_replays_even_with_a_pending_roll(client):
+    _start(client)
+    command = _command(client)
+    first = client.post('/api/game/action', json=command).get_json()
+    gs = next(iter(client.application.extensions['cthulhu'].sessions.values()))
+    gs.pending_roll = {'skill': 'spot_hidden', 'difficulty': 'regular'}
+    assert client.post('/api/game/action', json=command).get_json() == first
+
+@pytest.mark.parametrize('endpoint', ['/api/game/start', '/api/game/action',
+                                      '/api/game/action/stream', '/api/feedback'])
+@pytest.mark.parametrize('body', [[], ['bad'], 'bad', 42, False, None])
+def test_json_must_be_an_object(client, endpoint, body):
+    import json
+    _start(client)
+    before = client.get('/api/game/state').get_json()
+    response = client.post(endpoint, data=json.dumps(body), content_type='application/json')
+    assert response.status_code == 400
+    assert response.is_json
+    assert client.get('/api/game/state').get_json() == before
+
+
+@pytest.mark.parametrize('fields', [{'name': []}, {'name': ' '}, {'name': 'a' * 101},
+                                   {'archetype': []}, {'archetype': 'unknown'}])
+def test_invalid_character_does_not_replace_game(client, fields):
+    _start(client)
+    before = client.get('/api/game/state').get_json()
+    assert _start(client, **fields).status_code == 400
+    assert client.get('/api/game/state').get_json() == before
+
+
+def test_forged_ip_headers_do_not_reset_rate_limit(client):
+    codes = [client.post('/api/game/start', json=[], headers={
+        'CF-Connecting-IP': f'192.0.2.{i}', 'X-Forwarded-For': f'198.51.100.{i}'
+    }).status_code for i in range(8)]
+    assert codes == [400] * 6 + [429] * 2
+
+
+@pytest.mark.parametrize('peer,forwarded,expected', [
+    ('127.0.0.1', '192.0.2.1', '192.0.2.1'),
+    ('127.0.0.1', '203.0.113.9, 192.0.2.1', '192.0.2.1'),
+    ('127.0.0.1', '192.0.2.1, 10.0.0.2', '192.0.2.1'),
+    ('192.0.2.2', '203.0.113.9', '192.0.2.2'),
+    ('127.0.0.1', 'garbage', '127.0.0.1'),
+    ('::1', '2001:db8::1', '2001:db8::1'),
+])
+def test_trusted_proxy_chain(client, peer, forwarded, expected):
+    from ipaddress import ip_network
+    game = client.application.extensions['cthulhu']
+    game.trusted_proxies = [ip_network(cidr) for cidr in ['127.0.0.1/32', '10.0.0.2/32', '::1/128']]
+    with client.application.test_request_context('/', environ_base={'REMOTE_ADDR': peer},
+                                                 headers={'X-Forwarded-For': forwarded}):
+        assert game.client_ip() == expected
+
+
+@pytest.mark.parametrize('stage', ['process_player_action', 'apply_turn_consequences'])
+def test_stream_reports_worker_exception(client, monkeypatch, stage):
+    _start(client)
+    game = client.application.extensions['cthulhu']
+    gs = next(iter(game.sessions.values()))
+    def fail(*args, **kwargs):
+        raise RuntimeError('simulated failure')
+    monkeypatch.setattr(gs.engine, stage, fail)
+    response = client.post('/api/game/action/stream', json={'action': 'look'})
+    body = response.get_data(as_text=True)
+    assert 'event: error' in body and 'simulated failure' in body
+    assert 'event: done' not in body
+    assert gs.lock.acquire(blocking=False)
+    gs.lock.release()
+
+
+def test_slow_stream_consumer_still_receives_saved_result(client, monkeypatch):
+    import threading
+    _start(client)
+    gs = next(iter(client.application.extensions['cthulhu'].sessions.values()))
+    original = gs.engine.process_player_action
+    overflowed = threading.Event()
+    def burst(action, on_chunk):
+        for _ in range(100):
+            on_chunk('A wave breaks. ')
+        overflowed.set()
+        return original(action, on_chunk=on_chunk)
+    monkeypatch.setattr(gs.engine, 'process_player_action', burst)
+    response = client.post('/api/game/action/stream', json={'action': 'look'}, buffered=False)
+    try:
+        assert overflowed.wait(5), 'producer stalled on full queue'
+        body = response.get_data(as_text=True)
+        assert body.count('event: done') == 1
+        assert 'event: error' not in body
+    finally:
+        response.close()
+
+
+def test_disconnect_keeps_lock_until_turn_is_saved(client, monkeypatch):
+    import threading
+    import time
+    from core.generative_save import GenerativeSave
+    _start(client)
+    game = client.application.extensions['cthulhu']
+    gs = next(iter(game.sessions.values()))
+    original = gs.engine.process_player_action
+    release = threading.Event()
+    closing = threading.Event()
+    closed = threading.Event()
+    before = gs.engine.state.turn
+    command = _command(client)
+    def slow(action, on_chunk):
+        on_chunk('Waiting in the dark.')
+        assert release.wait(15), 'test failed to release worker'
+        return original(action, on_chunk=on_chunk)
+    monkeypatch.setattr(gs.engine, 'process_player_action', slow)
+    response = client.post('/api/game/action/stream', json=command, buffered=False)
+    assert b'Waiting' in next(iter(response.response))
+    def close():
+        closing.set()
+        try:
+            response.close()
+        finally:
+            closed.set()
+    closer = threading.Thread(target=close)
+    closer.start()
+    try:
+        assert closing.wait(1)
+        assert not closed.wait(5.2), 'disconnect released a still-active worker'
+        assert gs.lock.locked()
+        gs.last_access = time.time() - game.session_ttl - 1
+        game._sweep_idle()
+        assert game.sessions[gs.sid] is gs, 'active game was evicted'
+    finally:
+        release.set()
+        closer.join(5)
+    assert closed.is_set()
+    assert not gs.lock.locked()
+    assert gs.engine.state.turn > before
+    metadata, _, _, _ = GenerativeSave.load(gs.sid, game.data_dir)
+    assert metadata['turn'] == gs.engine.state.turn
+    fresh = _restart_client(client)
+    recovered = fresh.get('/api/game/actions/' + command['action_id']).get_json()
+    assert recovered['status'] == 'completed'
+    with patch('core.game_generative.GenerativeGameEngine.process_player_action',
+               side_effect=AssertionError('disconnected turn executed twice')):
+        assert fresh.post('/api/game/action', json=command).get_json() == recovered['result']
+
+
+@pytest.mark.parametrize('failure', ['dump', 'replace'])
+def test_failed_save_preserves_previous_autosave(client, monkeypatch, failure):
+    from core.generative_save import GenerativeSave
+    _start(client)
+    game = client.application.extensions['cthulhu']
+    gs = next(iter(game.sessions.values()))
+    path = GenerativeSave._save_path(gs.sid, game.data_dir)
+    previous = path.read_bytes()
+    def interrupted_dump(data, output, **kwargs):
+        output.write('{')
+        raise OSError('interrupted write')
+    def interrupted_replace(*args):
+        raise OSError('replace failed')
+    with monkeypatch.context() as m:
+        if failure == 'dump':
+            m.setattr('core.generative_save.json.dump', interrupted_dump)
+        else:
+            m.setattr('core.generative_save.os.replace', interrupted_replace)
+        with pytest.raises(OSError):
+            gs.engine.save_game()
+    assert path.read_bytes() == previous
+    assert not list(path.parent.glob('*.tmp'))
+    assert GenerativeSave.load(gs.sid, game.data_dir)[0]['turn'] == gs.engine.state.turn
+    gs.engine.state.turn += 1
+    gs.engine.save_game()
+    assert GenerativeSave.load(gs.sid, game.data_dir)[0]['turn'] == gs.engine.state.turn
 
 def test_empty_action_400(client):
     _start(client)
@@ -246,6 +599,7 @@ def test_ammo_and_firearm():
     e = GenerativeGameEngine(model="mistral", use_memory=False, session_id="u2")
     e.create_game(create_investigator("T", "scholar"))
     assert e.state.ammo == 0 and e.resources_status()["has_firearm"] is False
+    e.state.location = e.adventure_config.item_locations["revolver"]
     e.pick_up_item("revolver")
     assert e.state.ammo > 0 and e.resources_status()["has_firearm"] is True
 

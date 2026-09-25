@@ -1,211 +1,123 @@
-# Alone Against the Dark: Generative Edition
+# The Lighthouse — Solo Horror RPG with an AI Dungeon Master
 
-**A Call of Cthulhu 7e RPG with an AI Dungeon Master**
+**A browser-based cosmic horror text adventure. Investigate a missing lighthouse keeper, follow unsettling clues, and decide how far you will go to uncover the truth.**
 
----
+## Play now
 
-## ⚡ Quick Start
+**[Enter the lighthouse — play in your browser](https://lighthouse-cthulhu.fly.dev/)**
 
-```bash
-# Make sure Ollama is running first
-ollama serve
+No download, account, or personal API key is required to play the hosted game. Open it on desktop or mobile, create an investigator, and describe your first action. The web adventure is currently in English.
 
-# In another terminal
-cd /Users/adrianmedina/src/Cthulhu
-python3 games/play_generative.py
-```
+The story unfolds through an AI Dungeon Master, called the Keeper. Your choices shape the investigation, while the game engine handles dice, inventory, health, sanity, and progression. Free-form narration meets an authored mystery with concrete rules and consequences.
 
-Then:
-1. Choose your LLM model (Mistral 7B recommended)
-2. Pick an investigator (prebuilt or custom)
-3. Press ENTER to begin your investigation
-4. Type actions in natural language
+![The Lighthouse browser RPG showing the investigation and player interface](docs/reports/release-readiness-20260925/production-desktop.png)
 
----
+## How to play
 
-## 🌐 Web Game (recommended)
+1. **Create your investigator.** Choose a name and archetype, then enter Point Black Lighthouse on the Maine coast.
+2. **Describe what you attempt.** Try `I listen to the wind outside` or examine your surroundings. When the game requests a skill check, roll the dice in the interface.
+3. **Follow the evidence.** Open **Inventory & Clues** to review what you carry, confirmed discoveries, and available commands. Use those commands to move, investigate, and collect items.
 
-The full experience — 3D dice, adaptive horror music, combat, sanity
-corruption — runs in the browser.
+Type `inventory` or `inventario` to open your sheet without spending a turn. Reloading the page in the same browser restores your saved session, including a pending roll.
 
-```bash
-# Local (Ollama at localhost:11434):
-./launch.command          # macOS: double-click; opens http://127.0.0.1:5001
-# or:
-PORT=5001 python3 -m gunicorn --worker-class gthread --workers 1 \
-    --threads 16 --bind 0.0.0.0:5001 app:app
-```
+A description is an attempt: saying you found a key or rolled a success does not make it true. The engine checks routes, items, discoveries, and ending requirements. Watch your remaining time, health, and sanity.
 
-Open **http://127.0.0.1:5001** (use `127.0.0.1`, not `localhost`).
+## What makes this AI text adventure different?
 
-- **LAN play**: `LAN=1 ./launch.command` → others join at `http://<your-ip>:5001`.
-- **Run under gunicorn** (not the Flask dev server) for multiple players — the
-  dev server buckles under concurrent streaming.
+- **Solo cosmic horror:** an atmospheric lighthouse mystery inspired by Call of Cthulhu 7e mechanics.
+- **Free-form actions:** write what you want to try instead of choosing every interaction from a fixed menu.
+- **Rules that hold:** server-resolved dice, finite rewards, gated locations, and explicit inventory changes.
+- **Consequential endings:** escape, seal the threat, or destroy its foothold when you meet the requirements; injury and madness can also end an investigation.
+- **A persistent investigator:** saved progress, a clue journal, inventory, and ammunition tracking.
+- **Desktop and mobile play:** a responsive web interface with streamed turn events and clickable dice.
+- **Run it yourself:** use a local Ollama model or configure an OpenAI-compatible model endpoint.
 
-### Configuration (env)
-| Var | Purpose |
-|-----|---------|
-| `LLM_PROVIDER` | `ollama` (default) or `openai` (Groq / any OpenAI-compatible API) |
-| `LLM_BASE_URL` / `LLM_MODEL` / `LLM_API_KEY` | hosted-API settings |
-| `LLM_ENDPOINTS` | comma list for the multi-GPU pool (`url@model` per box) |
-| `DATA_DIR` | where saves / feedback / playtests are written (volume in prod) |
-| `SECRET_KEY` | stable Flask cookie key (set in production) |
-| `MODERATION` | `local` (default) / `off` / `api` |
+The project is under active development. Narration quality and response time depend on the model. Output checks catch known problems, but cannot guarantee that every sentence is free of contradictions.
 
-Full env reference: [`.env.example`](.env.example).
+## Does it have an installer?
 
-### Deploy to production
-Fly.io + a hosted LLM (Groq): see **[docs/DEPLOY.md](docs/DEPLOY.md)**.
-Security & rate-limit notes: **[docs/ABUSE_POLICY.md](docs/ABUSE_POLICY.md)**.
+There is **no standalone Windows or macOS installer** yet. The easiest way to play is the [hosted browser game](https://lighthouse-cthulhu.fly.dev/).
 
-### Tests & analytics
-```bash
-python3 -m pytest tests/test_smoke.py -q     # fast regression suite (no Ollama)
-python3 tools/analyze_playtests.py           # summarize saves + feedback
-```
+For local use, follow the Python setup below. The repository also includes a macOS `launch.command` helper; it is a launcher for an already configured environment, not an installer.
 
----
+## Run the RPG locally
 
-## What Is This?
+You need **Python 3.11 or newer**, Git, and a running model backend. PostgreSQL is optional; local saves use JSON by default.
 
-A text-based RPG where:
-- **You** play an investigator at Point Black Lighthouse
-- **An AI** (powered by local Mistral 7B) is your Dungeon Master
-- **You control when to roll the dice** - like a tabletop RPG
-- **Your choices matter** - the AI adapts to your decisions
-- **Horror unfolds** - cosmic dread grows as you explore
-
-**Status**: ✅ Complete & Tested - Ready for Extended Play
-
----
-
-## Key Features
-
-### 🎲 Interactive Skill Checks
-Player-controlled rolling where YOU decide when to roll:
-```
-DM: "You attempt to climb the crumbling staircase..."
-    Press ENTER to test your fate
-[You press ENTER]
-✓ SUCCESS! Roll 42 vs 45 (Climb)
-```
-
-### 🎬 Proper Ending Sequences (5 endings)
-- ESCAPE - You survive but traumatized
-- MADNESS - Your mind shatters (SAN = 0)
-- DEATH - You die (HP = 0)
-- DESTRUCTION - Destroy the lighthouse
-- THE ASCENDED - You transform
-
-### 👥 NPC Dialogue
-Talk to Lt. Warner and Dr. Armitage - they remember your conversations
-
-### 📦 Inventory System
-Collect & use 8 items: flashlight, revolver, rope, dynamite, holy water, logbook, ancient text, notebook
-
-### ⚔️ Combat System
-Full combat with enemy HP tracking, damage rolls, and AI counter-attacks
-
-### 💔 Sanity & HP Tracking
-Witness cosmic horror → lose SAN. Take damage → lose HP. Reach 0 → game over.
-
----
-
-## Test Results
-
-✅ **ALL TESTS PASSED**
-
-### Playthroughs Completed
-- **Mistral 7B**: 8 turns in 142s (17.8s/turn) ✓
-- **Neural Chat 7B**: 8 turns in 157s (19.7s/turn) ✓
-- **Orca Mini 3B**: 8 turns in 109s (13.7s/turn) ✓
-
-**Total**: 24 turns across 3 models - zero crashes, zero errors
-
-### Feature Validation
-- ✅ Interactive rolling
-- ✅ Ending narrative generation
-- ✅ NPC dialogue
-- ✅ Inventory management
-- ✅ Combat system
-- ✅ Sanity checks
-- ✅ HP damage system
-
----
-
-## Documentation
-
-- **GAMEPLAY_GUIDE.md** - Complete guide with examples
-- **QUICK_REFERENCE.md** - Print-friendly command reference
-- **TEST_RESULTS.md** - Full test results & metrics
-- **IMPLEMENTATION_SUMMARY.md** - Technical details
-- **MODEL_COMPARISON.md** - Performance comparison
-
----
-
-## Commands
-
-| Command | Usage |
-|---------|-------|
-| `[action]` | Describe what you do |
-| `[i]` | Check inventory |
-| `[u] item` | Use an item |
-| `[d] item` | Drop an item |
-| `[s]` | View character stats |
-| `talk to npc` | Speak to character |
-| `[h]` | Show help |
-| `[q]` | Quit game |
-
----
-
-## Model Selection
-
-| Model | Speed | Quality | Memory | Best For |
-|-------|-------|---------|--------|----------|
-| **Mistral 7B** | 5-7s | ⭐⭐⭐⭐⭐ | 8GB | Story immersion |
-| **Neural Chat 7B** | 3-4s | ⭐⭐⭐⭐ | 5GB | Balanced play |
-| **Orca Mini 3B** | 1-2s | ⭐⭐⭐ | 3GB | Speed testing |
-
----
-
-## Requirements
-
-- macOS/Linux/Windows
-- Python 3.8+
-- Ollama installed & running
-- 3-8GB RAM (model-dependent)
-
-## Setup
+### 1. Clone and install dependencies
 
 ```bash
-# Download models (choose at least one)
-ollama pull mistral
-ollama pull neural-chat
-ollama pull orca-mini
-
-# Run game
-python3 games/play_generative.py
+git clone https://github.com/Adrian-Sandwich/Cthulhu-generative-RPG.git
+cd Cthulhu-generative-RPG
 ```
 
----
+**Windows PowerShell**
 
-## Project Status
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
 
-**Version**: 1.1.1  
-**Date**: April 10, 2026  
-**Status**: ✅ Production Ready  
+**macOS / Linux**
 
-All features implemented, tested, and validated. Ready for extended playtesting and user sessions.
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
 
----
+### 2. Choose a model backend
 
-## Next Steps
+For local inference, install and start [Ollama](https://ollama.com/), then download a model. This small model is an example used in local smoke tests, not a guarantee of narrative quality:
 
-1. **Play**: `python3 games/play_generative.py`
-2. **Learn**: Read `GAMEPLAY_GUIDE.md`
-3. **Reference**: Use `QUICK_REFERENCE.md`
-4. **Verify**: See `TEST_RESULTS.md`
+```bash
+ollama pull qwen2.5:3b
+```
 
----
+Set the exact model name and start the web app in the same terminal.
 
-**Welcome to Point Black Lighthouse. The light blinks red. Something ancient stirs.**
+**Windows PowerShell**
+
+```powershell
+$env:LLM_PROVIDER = 'ollama'
+$env:LLM_MODEL = 'qwen2.5:3b'
+.\.venv\Scripts\python.exe app.py
+```
+
+**macOS / Linux**
+
+```bash
+export LLM_PROVIDER=ollama
+export LLM_MODEL=qwen2.5:3b
+python app.py
+```
+
+Open **[localhost:5000](http://127.0.0.1:5000)**. Keep Ollama and the app running while you play.
+
+For a hosted model, configure `LLM_PROVIDER=openai`, `LLM_BASE_URL`, `LLM_MODEL`, and `LLM_API_KEY` instead. The provider name selects the OpenAI-compatible protocol. See [.env.example](.env.example) for supported settings. **Export variables in your shell or configure them on your host: `app.py` does not automatically read `.env`.**
+
+### 3. Deploy or extend the adventure
+
+Use the [deployment guide](docs/DEPLOY.md) for production hosting, secrets, storage, and multiple workers. Adventure content lives in [the Point Black configuration](adventures/point_black/config.json).
+
+| Want to work on… | Start here |
+| --- | --- |
+| Narrator boundaries and anti-cheating | [Dungeon Master guardrails](docs/DM_GUARDRAILS.md) |
+| Movement, items, and discoveries | [World rules](docs/WORLD_RULES.md) |
+| Ending requirements | [Ending rules](docs/ENDING_RULES.md) |
+| Real-model playtesting | [Live playtest guide](docs/LIVE_PLAYTEST.md) |
+| Capacity and performance | [Load testing](docs/LOAD_TESTING.md) and [observability](docs/OBSERVABILITY.md) |
+| Release verification | [September 2026 release evidence](docs/reports/release-readiness-20260925/README.md) |
+| Known engineering work | [Technical debt](docs/TECH_DEBT.md) |
+
+## Help improve the game
+
+**Play a session and tell us where the mystery stops making sense.** Unexpected narration, confusing commands, broken continuity, or an unclear next step are useful reports.
+
+[Report a bug or suggest an improvement](https://github.com/Adrian-Sandwich/Cthulhu-generative-RPG/issues). Include your action, what happened, and what you expected. Please leave out API keys, cookies, and private save data.
+
+For development, install `requirements-dev.txt` and run `python -m pytest -q`. Frontend checks require Node.js; PostgreSQL integration tests additionally require `CTHULHU_TEST_DATABASE_URL` pointing to a dedicated test database. CI covers Python tests, frontend checks, static attribute checks, and PostgreSQL integration.
+
+This is an independent project, not an official Call of Cthulhu product.
+
+**[Ready to investigate? Play The Lighthouse.](https://lighthouse-cthulhu.fly.dev/)**

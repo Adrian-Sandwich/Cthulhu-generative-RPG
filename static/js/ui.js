@@ -40,7 +40,8 @@ async function showSheet() {
     try {
         const response = await fetch('/api/game/state');
         if (!response.ok) return;
-        const inv = (await response.json()).investigator;
+        const data = await response.json();
+        const inv = data.investigator;
 
         renderSheet(document.getElementById('sheet-content'), {
             description: null,
@@ -48,6 +49,25 @@ async function showSheet() {
             derived: { HP: inv.HP, SAN: inv.SAN, Luck: inv.Luck },
             skills: inv.skills
         });
+        document.getElementById('inventory-content').textContent =
+            (inv.inventory.length ? inv.inventory.join('\n') : 'Your inventory is empty.') +
+            `\nAmmunition: ${data.resources.ammo}`;
+        document.getElementById('discoveries-content').textContent =
+            (data.discoveries || []).join('\n\n') || 'No confirmed discoveries yet.';
+        const actions = document.getElementById('available-actions');
+        actions.replaceChildren();
+        for (const command of (data.world_actions || [])) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = command;
+            button.disabled = Boolean(data.pending_roll || pendingTurn || submittingTurn);
+            button.onclick = () => {
+                showNarrative();
+                document.getElementById('action-input').value = command;
+                submitAction({ preventDefault() {} });
+            };
+            actions.appendChild(button);
+        }
 
         hidePanels();
         document.getElementById('sheet-display').classList.remove('hidden');
@@ -96,6 +116,8 @@ async function startGame(event) {
 
         if (data.success) {
             gameStarted = true;
+            gameId = data.game_id;
+            forgetTurn();
             gameHistory = [];
             maxHP = data.investigator.maxHP || data.investigator.HP;
 
@@ -191,6 +213,7 @@ function showEnding(ending) {
     document.getElementById('action-input').disabled = true;
     hideDiceArea();
     hideSuggestions();
+    document.getElementById('action-input').disabled = true;
     document.getElementById('combat-bar').classList.add('hidden');
     stopHeartbeat();
     // let the dread music resolve into silence
@@ -288,8 +311,8 @@ const ROLL_REQUEST_RE = new RegExp(
 const SUGGESTION_POOLS = {
     explore: [
         'Look around carefully', 'Examine that more closely', 'Search for anything useful',
-        'Listen for sounds', 'Move deeper inside', 'Check the logs and papers',
-        'Look for a weapon', 'Head toward the stairs',
+        'Listen for sounds', 'Check the logs and papers',
+        'Look for a weapon',
     ],
     shaken: ['Take a breath and steady yourself', 'Pray quietly for a moment'],
     afterRoll: ['Press on', 'Search the area', 'Back away slowly'],
@@ -298,7 +321,7 @@ const SUGGESTION_POOLS = {
 function renderSuggestions(kind) {
     const box = document.getElementById('suggestions');
     if (pendingRoll) { box.classList.add('hidden'); return; }  // dice first
-    const picks = [];
+    const picks = worldSuggestions.slice(0, 2);
     const pool = [...SUGGESTION_POOLS[kind === 'afterRoll' ? 'afterRoll' : 'explore']];
     while (picks.length < 3 && pool.length) {
         picks.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);

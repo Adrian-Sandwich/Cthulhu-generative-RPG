@@ -17,9 +17,9 @@ RUN mkdir -p /data
 ENV HOST=0.0.0.0 PORT=8080 FLASK_DEBUG=0
 EXPOSE 8080
 
-# Single worker: the session registry + per-session locks live in process
-# memory (not shared across workers). gthread handles concurrency AND the SSE
-# streaming responses; sync workers would buffer and break streaming.
+# JSON storage requires one worker. PostgreSQL deployments may set
+# WEB_CONCURRENCY after initializing the schema and sharing SECRET_KEY.
+# gthread handles concurrency and SSE streaming.
 # Shell form so $PORT (Render sets it; Fly uses 8080 from env) is honored.
-CMD gunicorn --worker-class gthread --workers 1 --threads 16 \
+CMD gunicorn --worker-class gthread --workers ${WEB_CONCURRENCY:-1} --threads 16 \
     --timeout 180 --bind 0.0.0.0:${PORT:-8080} app:app

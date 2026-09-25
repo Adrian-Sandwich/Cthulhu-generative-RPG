@@ -98,7 +98,7 @@ class PromptBuilder:
             r_one_check = ("1. ONE ROLL TAG MAXIMUM - If you output [ROLL:], do it ONCE only. "
                            "Never [ROLL: climb/normal] AND [ROLL: climb/hard]. Pick ONE.")
             r_end_with = "END with: [ROLL: skill/difficulty]"
-            r_outcomes = ("  → Only END with a tag if player finds something: [ITEM_FOUND: key]\n"
+            r_outcomes = ("  → Items are collected only through explicit player commands to the engine\n"
                           "  → Or if they trigger combat: [COMBAT_START: enemy_key]\n"
                           "  → Or if they witness horror: [SANITY_CHECK: damage]\n"
                           "  → Or if they take environmental damage: [HP_DAMAGE: damage]")
@@ -106,16 +106,16 @@ class PromptBuilder:
             r_one_check = ("1. ONE CHECK MAXIMUM - never set up two tests in one response. "
                            "Pick the single thing that is uncertain.")
             r_end_with = "END at the moment of uncertainty — do not resolve it yourself"
-            r_outcomes = ("  → If the player finds something, name it plainly in the prose\n"
+            r_outcomes = ("  → Only engine-confirmed discoveries establish new clues or items\n"
                           "  → If they provoke a creature, describe it closing in and stop\n"
                           "  → If they witness something unnatural, let the horror land")
 
         if tags_supported:
             r_authority = (
                 "- The GAME ENGINE owns all numbers (HP, SAN, ammo, rolls, items). You only\n"
-                "  narrate. Resources change ONLY via valid tags, and the engine clamps them.\n"
-                "- You may grant a few rounds of ammunition in a plausible cache with\n"
-                "  [AMMO_FOUND: n] where n ≤ 6. Never promise more.")
+                "  narrate. Damage tags are bounded by the engine.\n"
+                "- Never grant items, ammunition or movement. The engine checks the player's\n"
+                "  explicit commands against the authored map and finite reward sources.")
             r_failure_costs = (
                 "  - Apply consequences with tags if appropriate:\n"
                 "    → Physical failures (climb, dodge, fight): add [HP_DAMAGE: 2-4]\n"
@@ -177,7 +177,7 @@ invent a different price:
         # the model cannot act on them, and listing enemy and item keys invites
         # it to print those keys as prose.
         mechanics_sections = """=== ITEMS (when player finds something) ===
-Emit: [ITEM_FOUND: item_key]
+Suggest an explicit 'take <item>' command for an available authored source. Never emit item tags.
 Available: flashlight, notebook, revolver, dynamite, holy_water, rope, logbook, ancient_text
 
 === COMBAT (when player fights creature) ===
@@ -190,7 +190,7 @@ Emit: [NPC_DIALOGUE: npc_key]
 Available: warner, armitage
 """ if tags_supported else """=== THE WORLD ===
 The keeper's things, the lighthouse and its dark hold what the story needs.
-Describe what the investigator finds; the engine records it.
+Describe the scene without granting discoveries; the engine supplies confirmed findings.
 """
 
         return f"""You are the Dungeon Master for Call of Cthulhu 7th Edition.
@@ -381,7 +381,7 @@ DO NOT output template text. Do not show IF/ELSE logic. Just tell the story.
         location_details = {
             "Point Black Lighthouse - Exterior": "salt-air smell, dark rocks, crashing waves, fog, lighthouse tower visible above",
             "Lighthouse Interior": "damp stone walls, spiral iron stairs, salt smell, cold stone, strange luminescent fungus glowing faintly green",
-            "Keeper's Quarters": "sparse furniture, dust, faded pictures, musty air, old maritime books, personal effects, chemical smell; among the keeper's things a holstered .38 revolver can be found (grant it with [ITEM_FOUND: revolver] if the player searches)",
+            "Keeper's Quarters": "sparse furniture, dust, faded pictures, musty air, old maritime books, personal effects, chemical smell; the engine's world context determines whether a holstered revolver is still available to collect",
             "Lighthouse Stairs": "spiral stone stairs groaning underfoot, flickering light from above, salt smell, echoing sounds, fungus on walls",
             "Lantern Room": "bright beacon light, wide windows with ocean view, mechanical gears, heat from lamp, scattered papers with symbols",
             "Ground Floor": "solid stone floor, damp smell, darkness beyond flashlight range, echoing sounds, metal door",
@@ -404,7 +404,7 @@ DO NOT output template text. Do not show IF/ELSE logic. Just tell the story.
 CRITICAL - LOCATION ANCHOR:
 1. You are ONLY in: {state.location}
 2. Sensory details of this location: {sensory_grounding}
-3. Do NOT suddenly shift locations without player requesting it and a transition
+3. Do NOT narrate a location change; suggest a valid engine movement command instead
 4. Do NOT introduce areas (crypts, caves, dungeons, forests, buildings) not mentioned
 5. Do NOT create enemies/guards that weren't established in previous narrative
 6. Stay grounded in THIS PLACE with its details

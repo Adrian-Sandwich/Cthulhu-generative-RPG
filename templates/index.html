@@ -80,6 +80,7 @@
                 <span class="menu-keys">
                     <a onclick="showHelp()">[help]</a>
                     <a onclick="showSheet()">[sheet]</a>
+                    <a onclick="showSheet()">[inventory & clues]</a>
                     <a onclick="showHistory()">[history]</a>
                     <a id="sound-toggle" onclick="toggleSound()">[sound on]</a>
                     <a onclick="showFeedback(false)">[feedback]</a>
@@ -110,6 +111,12 @@
                     <a onclick="showNarrative()">[close]</a>
                 </div>
                 <div id="sheet-content" class="sheet"></div>
+                <h3>INVENTORY</h3>
+                <div id="inventory-content" style="white-space: pre-wrap"></div>
+                <h3>CONFIRMED DISCOVERIES</h3>
+                <div id="discoveries-content" style="white-space: pre-wrap"></div>
+                <h3>AVAILABLE HERE</h3>
+                <div id="available-actions"></div>
             </div>
 
             <div id="help-display" class="hidden">
@@ -127,9 +134,14 @@
                        language. Examples:</p>
                     <ul>
                         <li><span class="eg">examine the door</span></li>
-                        <li><span class="eg">climb the stairs to the top</span></li>
+                        <li><span class="eg">go to interior</span></li>
                         <li><span class="eg">talk to the lieutenant about the logs</span></li>
                     </ul>
+                    <p><b>Inventory and clues.</b> Open [inventory &amp; clues] or
+                       type <span class="eg">inventory</span> to check your belongings,
+                       ammunition, confirmed discoveries and available actions.
+                       Looking at this panel costs no turn. Essential investigations
+                       use normal difficulty; their discoveries come from the game rules.</p>
 
                     <p><b>Dice.</b> Risky actions trigger a roll. A pixel die
                        appears with a target number — click it (or press

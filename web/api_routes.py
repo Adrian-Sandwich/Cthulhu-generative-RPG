@@ -11,6 +11,7 @@ from datetime import datetime
 from flask import Blueprint, jsonify, request
 
 from core.archetypes import get_archetype_sheets
+from core.postgres_store import StorageUnavailable
 from web.context import ctx, rate_limited, synchronized
 
 logger = logging.getLogger(__name__)
@@ -29,7 +30,9 @@ def get_archetypes():
 @synchronized
 def leave_feedback(gs):
     """Store player feedback, linked to their session."""
-    data = request.get_json(silent=True) or {}
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Expected a JSON object"}), 400
     text = data.get('text', '')
     if not isinstance(text, str) or not text.strip():
         return jsonify({"error": "Feedback cannot be empty"}), 400
@@ -37,6 +40,9 @@ def leave_feedback(gs):
         return jsonify({"error": "Feedback too long"}), 413
     rating = data.get('rating')
     rating = int(rating) if isinstance(rating, (int, float)) and 1 <= rating <= 5 else None
+
+    if ctx().store is not None:
+        ctx().ensure_engine(gs)
 
     entry = {
         "at": datetime.now().isoformat(),
@@ -47,6 +53,9 @@ def leave_feedback(gs):
         "investigator": gs.investigator.name if gs.investigator else None,
         "location": gs.engine.state.location if gs.engine and gs.engine.state else None,
     }
+    if ctx().store is not None:
+        ctx().store.add_feedback(entry)
+        return jsonify({"success": True, "message": "Thank you, investigator."})
     try:
         fb_dir = ctx().data_dir / "feedback"
         fb_dir.mkdir(parents=True, exist_ok=True)
@@ -80,4 +89,11 @@ def health():
     }
     if degraded:
         body["llm"]["last_error"] = LLMClient.last_error
+    body['storage'] = 'postgres' if ctx().store is not None else 'json'
+    if ctx().store is not None:
+        try:
+            ctx().store.ready()
+        except StorageUnavailable:
+            body['status'] = 'unavailable'
+            return jsonify(body), 503
     return jsonify(body)

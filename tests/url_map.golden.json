@@ -49,6 +49,13 @@
     ]
   },
   {
+    "rule": "/api/game/actions/<action_id>",
+    "endpoint": "get_action_status",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
     "rule": "/api/game/flee",
     "endpoint": "flee_combat",
     "methods": [

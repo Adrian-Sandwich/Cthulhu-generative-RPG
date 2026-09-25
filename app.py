@@ -11,11 +11,13 @@ import logging
 import os
 from pathlib import Path
 
-from flask import Flask
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from web.context import EXTENSION_KEY, GameContext
 from web import admin_routes, api_routes, game_routes, page_routes
+from core.postgres_store import StorageUnavailable
+from core.timing import TimingMiddleware, logger as timing_logger, log_record
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +33,10 @@ def create_app(config=None):
     app = Flask(__name__)
     context = GameContext(config)
     app.extensions[EXTENSION_KEY] = context
+
+    @app.errorhandler(StorageUnavailable)
+    def storage_unavailable(error):
+        return jsonify({'error': 'Game storage is temporarily unavailable. Please retry.'}), 503
 
     app.config['SECRET_KEY'] = context.load_secret_key()
     # Cookie hardening: Lax blocks cross-site POST CSRF (e.g. a forged /reset
@@ -53,6 +59,20 @@ def create_app(config=None):
     app.register_blueprint(api_routes.bp)
     app.register_blueprint(admin_routes.bp)
     app.register_blueprint(page_routes.bp)
+
+    if config.get('REQUEST_TIMING', os.environ.get('REQUEST_TIMING', '0') == '1'):
+        @app.after_request
+        def timing_route(response):
+            request.environ['cthulhu.route'] = request.url_rule.rule if request.url_rule else '<unmatched>'
+            return response
+
+        if not timing_logger.handlers:
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter('%(message)s'))
+            timing_logger.addHandler(handler)
+        timing_logger.setLevel(logging.INFO)
+        timing_logger.propagate = False
+        app.wsgi_app = TimingMiddleware(app.wsgi_app, config.get('TIMING_SINK', log_record))
 
     return app
 

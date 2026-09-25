@@ -6,6 +6,8 @@
 // THE LIGHTHOUSE - Client Logic
 
 let gameStarted = false;
+let gameId = null;
+let worldSuggestions = [];
 let gameHistory = [];
 let maxHP = null; // Set from server responses (max_hp from the investigator sheet)
 let imagePollTimer = null;

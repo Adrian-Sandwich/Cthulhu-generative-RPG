@@ -43,6 +43,9 @@ ROLL_KEYWORDS: Dict[str, Tuple[str, str]] = {
     'brawl': ('brawl', 'Normal'),
 
     # Search/Investigation
+    'navigate': ('navigate', 'Normal'),
+    'trazo una ruta': ('navigate', 'Normal'),
+    'trazar una ruta': ('navigate', 'Normal'),
     'search': ('spot_hidden', 'Hard'),
     'search for': ('spot_hidden', 'Hard'),
     'investigate': ('investigate', 'Normal'),

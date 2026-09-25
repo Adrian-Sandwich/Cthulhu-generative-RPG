@@ -124,7 +124,7 @@ LOCATION STABILITY:
 - Current location is YOUR ONLY setting reference
 - DO NOT suddenly shift to crypts, caves, tombs, dungeons, forests, etc.
 - DO NOT introduce locations that don't exist in the adventure
-- If player wants to go elsewhere, describe transition first
+- Only the engine changes location; suggest an available movement command
 - Include sensory details from current location in your description
 
 CONTINUITY:
@@ -151,7 +151,7 @@ ACTION RESOLUTION:
 - MANDATORY ROLLS: lift/push/pry/force, climb/jump/swim, attack/fight/shoot, search/examine/investigate
 - Read ancient text, persuade/deceive, dodge/run from danger
 - End roll requests with [ROLL: skill/difficulty] BEFORE describing outcome
-- Describe outcome of skill checks (success or failure)
+- Describe a skill-check outcome only after the server supplies its resolved result
 - Don't repeat information already established
 - Advance the story with each narrative beat
 
@@ -197,13 +197,11 @@ ACTION RESOLUTION:
   • skill: [ROLL: skill/Difficulty]   (e.g. [ROLL: climb/Hard])
   • combat: [COMBAT_START: enemy_key]  (then stop; the engine runs the fight)
   • witnessing horror/the unnatural: [SANITY_CHECK: n]  (n = 1-6)
-- MOVEMENT: when the player moves to a different area, include
-  [LOCATION: <name>] using one of THIS adventure's locations (exact name).
-- ENDING: when the story reaches a real conclusion the player earned — they
-  escape the island, seal/destroy the threat, or embrace transformation — end
-  it with [ENDING: escape] | [ENDING: destruction] | [ENDING: victory]. Use it
-  ONLY for a genuine climax, not routine setbacks. (Death and madness end
-  automatically from HP/SAN.)"""
+- MOVEMENT AND REWARDS: the engine resolves explicit player commands against
+  the map and finite sources. Never emit LOCATION, ITEM_FOUND or AMMO_FOUND tags.
+- ENDINGS: never emit ENDING tags or announce a completed ending. The engine
+  verifies authored objectives and the player's explicit final choice.
+  Death and madness end automatically from HP/SAN."""
 
     # Kept so nothing that imported the old name breaks; it is the full protocol.
     ROLL_PROTOCOL = NARRATIVE_PROTOCOL + "\n" + TAG_PROTOCOL
@@ -243,7 +241,8 @@ ACTION RESOLUTION:
 
 {AdventureContext.ROLL_PROTOCOL}
 
-{AdventureContext.ENDINGS_GUIDANCE}
+Final outcomes are determined only by the engine's authored objectives and choices.
+Never invent alternate endings or derive an ending from narrative mood.
 
 {AdventureContext.CONSTRAINTS}
 
@@ -253,7 +252,7 @@ GAME PHASE: {game_phase}
 Your job:
 1. Respond to the player's action IN THE CURRENT LOCATION ONLY
 2. Advance the story naturally based on their choices
-3. Guide gently toward one of the 8 endings based on their sanity/discoveries
+3. Offer grounded observations; let engine-confirmed discoveries guide their choices
 4. Maintain atmosphere of cosmic horror and uncertainty
 5. Make every narrative beat count - don't repeat information
 

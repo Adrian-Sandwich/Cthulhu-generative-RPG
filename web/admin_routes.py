@@ -29,12 +29,17 @@ def _admin_authorized() -> bool:
 def _playtest_stats() -> dict:
     import glob
     sessions = []
-    for p in glob.glob(str(ctx().data_dir / "saves" / "generative" / "*.json")):
-        try:
-            with open(p, encoding="utf-8") as f:
-                d = json.load(f)
-        except Exception:
-            continue
+    if ctx().store is not None:
+        snapshots = ctx().store.snapshots()
+    else:
+        snapshots = []
+        for path in glob.glob(str(ctx().data_dir / "saves" / "generative" / "*.json")):
+            try:
+                with open(path, encoding='utf-8') as saved:
+                    snapshots.append((json.load(saved), os.path.getmtime(path)))
+            except (OSError, ValueError):
+                continue
+    for d, mtime in snapshots:
         st = d.get("game_state", {})
         inv = st.get("investigator", {})
         narr = st.get("narrative", [])
@@ -55,15 +60,15 @@ def _playtest_stats() -> dict:
             "hp": inv.get("characteristics", {}).get("HP", 0),
             "location": st.get("location", "?"),
             "ending": st.get("ending_reached"),
-            "mtime": os.path.getmtime(p),
+            "mtime": float(mtime),
         })
     real = [s for s in sessions if s["name"].strip().lower() not in ctx().exclude_names]
     played = [s for s in real if s["actions"] > 0]
     real.sort(key=lambda s: (-s["actions"], -s["mtime"]))
 
-    feedback = []
+    feedback = ctx().store.feedback() if ctx().store is not None else []
     fb = ctx().data_dir / "feedback" / "feedback.jsonl"
-    if fb.exists():
+    if ctx().store is None and fb.exists():
         with open(fb, encoding="utf-8") as f:
             for line in f:
                 if line.strip():
